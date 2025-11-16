@@ -4,6 +4,32 @@ Placeholder client for Xentral ERP API access.
 Reference docs: https://developer.xentral.com/reference
 This mock implementation focuses on shaping the interface that the
 Demand Analyst agent expects. Replace the internals with real calls later.
+
+---
+Xentral API vs. ERP UI Terminology Mapping
+---
+
+This section maps Xentral API resources/fields to what KAKO colleagues
+see in the ERP frontend so developers can align vocabulary.
+
+Endpoint: /api/v1/salesOrders  (API label: Sales Orders)
+    ERP UI menu: "Aufträge" (Customer Orders)
+    status -> UI column "Status" (ANGEBOTEN, IN BEARBEITUNG, ...)
+    name -> UI column "Bezeichnung"
+    customer.name -> UI column "Kunde"
+    deliveryAddress.zip -> UI column "PLZ (Liefer)"
+
+Endpoint: /api/v1/article  (API label: Articles)
+    ERP UI menu: "Artikel" (Parts/Articles)
+    name -> UI column "Artikelname"
+    number -> UI column "Artikelnr."
+    stock.stock -> UI column "Lagerbestand"
+
+Endpoint: /api/v1/purchaseorder  (API label: Purchase Orders)
+    ERP UI menu: "Bestellungen" (Procurement Orders)
+    status -> UI column "Status" (BESTELLT, GELIEFERT, ...)
+    supplier.name -> UI column "Lieferant"
+    deliveryDate -> UI column "Liefertermin"
 """
 from __future__ import annotations
 
