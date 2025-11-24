@@ -3,10 +3,7 @@ from __future__ import annotations
 import dspy
 
 from backend.src.models import BillOfMaterials
-from backend.src.config import GOOGLE_API_KEY
-
-dspy.configure(lm=dspy.LM("gemini/gemini-2.5-flash", api_key=GOOGLE_API_KEY))
-
+from backend.src.config import GEMINI_2_5_FLASH
 
 class BOMExtraction(dspy.Signature):
     """Extract a structured BOM from a technical drawing ('Zeichnung')."""
@@ -27,6 +24,7 @@ def run_bom_extraction(drawing_image: dspy.Image) -> BillOfMaterials:
 
 
 if __name__ == "__main__":
-    image = dspy.Image('./example_bom.png')
-    bom = run_bom_extraction(image)
-    print(bom.model_dump_json(indent=2))
+    with dspy.context(lm=GEMINI_2_5_FLASH):
+        image = dspy.Image('./example_bom.png')
+        bom = run_bom_extraction(image)
+        print(bom.model_dump_json(indent=2))

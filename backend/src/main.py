@@ -1,7 +1,12 @@
 """FastAPI application bootstrap."""
 from fastapi import FastAPI
+import dspy
 
-from src.routers import bom
+from backend.src.routers import bom
+from backend.src.config import GEMINI_2_5_PRO
+
+# --- Configure LLM globally ---
+dspy.configure(lm=GEMINI_2_5_PRO)
 
 app = FastAPI(title="KakoAI")
 app.include_router(bom.router)

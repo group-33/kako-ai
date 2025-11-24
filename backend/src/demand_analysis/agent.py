@@ -5,7 +5,7 @@ import dspy
 from backend.src.models import BillOfMaterials
 from backend.src.demand_analysis import tools
 from backend.src.demand_analysis.feasibility import run_structured_feasibility_check
-
+from backend.src.config import GEMINI_2_5_PRO
 
 class DemandAnalyst(dspy.Signature):
     """As a senior demand analyst for KAKO, use the available tools to complete the user's inventory/feasibility request."""
@@ -49,6 +49,8 @@ class DemandAnalystAgent:
         return self.agent(user_request=user_request, bom=bom, quantity_required=quantity_required)
 
 
-def build_agent() -> DemandAnalystAgent:
-    """Helper to build the demand analyst agent."""
-    return DemandAnalystAgent()
+if __name__ == '__main__':
+    with dspy.context(lm=GEMINI_2_5_PRO):
+        agent = DemandAnalystAgent()
+        result = agent(user_request='Zeige mir alle Stücklisten für die nächsten 6 Wochen.')
+        print(result.process_result)
