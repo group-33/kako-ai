@@ -4,13 +4,13 @@ import json
 
 import dspy
 
-from backend.src.models import BillOfMaterials, DemandAnalysisResponse
+from backend.src.models import BillOfMaterials
+from backend.src.demand_analysis.models import FeasibilityAnalysis
 from backend.src.demand_analysis.tools import run_full_feasibility_analysis
 
 
 class FeasibilityCheck(dspy.Signature):
     """Determine if the requested quantity can be built given the BOM and current context."""
-
     user_query = dspy.InputField(
         desc="User's feasibility question, e.g., 'Can we build 500 units?'"
     )
@@ -30,17 +30,21 @@ class FeasibilityCheck(dspy.Signature):
         desc="JSON string of existing customer orders competing for stock."
     )
 
-    analysis_report: DemandAnalysisResponse = dspy.OutputField(
+    analysis_report: FeasibilityAnalysis = dspy.OutputField(
         desc="Structured feasibility analysis with status and any lacking materials."
     )
+
+
+# Instantiate the predictor once at the module level for reuse
+_FEASIBILITY_PREDICTOR = dspy.ChainOfThought(FeasibilityCheck)
 
 
 def run_structured_feasibility_check(
     user_request: str,
     bom: BillOfMaterials,
     quantity_required: int = 1,
-) -> DemandAnalysisResponse:
-    """Run full feasibility check: fetch context, then produce a structured DemandAnalysisResponse."""
+) -> FeasibilityAnalysis:
+    """Run full feasibility check: fetch context, then produce a structured FeasibilityAnalysis."""
     context = run_full_feasibility_analysis(bom=bom, quantity_required=quantity_required)
 
     bom_json = bom.model_dump_json()
@@ -48,8 +52,7 @@ def run_structured_feasibility_check(
     pending_json = json.dumps(context.get("pending_procurement", []), default=str)
     existing_json = json.dumps(context.get("existing_orders", []), default=str)
 
-    feasibility_predictor = dspy.ChainOfThought(FeasibilityCheck)
-    result = feasibility_predictor(
+    result = _FEASIBILITY_PREDICTOR(
         user_query=user_request,
         quantity_required=str(quantity_required),
         bom_json=bom_json,

@@ -7,7 +7,6 @@ from backend.src.config import GEMINI_2_5_FLASH
 
 class BOMExtraction(dspy.Signature):
     """Extract a structured BOM from a technical drawing ('Zeichnung')."""
-
     drawing = dspy.InputField(desc="Customer technical drawing as an image.")
     bom: BillOfMaterials = dspy.OutputField(desc="Structured Bill of Materials.")
 
