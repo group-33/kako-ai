@@ -2,6 +2,7 @@
 import dspy
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 
+from backend.src.bom_extraction.perform_extraction import run_bom_extraction
 from backend.src.bom_extraction.models import BOMExtractionResponse
 from backend.src.models import BillOfMaterials
 
@@ -34,9 +35,9 @@ async def extract_bom(
             raise HTTPException(status_code=400, detail="Provide image_path or image_url when no file is uploaded.")
         drawing_image = dspy.Image(image_source)
 
-    result = extractor(drawing=drawing_image)
+    try:
+        bom = run_bom_extraction(drawing_image, extractor=extractor)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Extraction failed: {str(e)}")
 
-    if not isinstance(result.bom, BillOfMaterials):
-        raise HTTPException(status_code=500, detail="Extraction did not return a BOM.")
-
-    return BOMExtractionResponse(bom=result.bom)
+    return BOMExtractionResponse(bom=bom)

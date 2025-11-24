@@ -5,20 +5,29 @@ import dspy
 from backend.src.models import BillOfMaterials
 from backend.src.config import GEMINI_2_5_FLASH
 
+
 class BOMExtraction(dspy.Signature):
     """Extract a structured BOM from a technical drawing ('Zeichnung')."""
     drawing = dspy.InputField(desc="Customer technical drawing as an image.")
     bom: BillOfMaterials = dspy.OutputField(desc="Structured Bill of Materials.")
 
 
-def run_bom_extraction(drawing_image: dspy.Image) -> BillOfMaterials:
+def run_bom_extraction(
+    drawing_image: dspy.Image,
+    extractor: dspy.Module | None = None
+) -> BillOfMaterials:
     """
     Run BOM extraction on a given image and return the BillOfMaterials.
 
-    Configure your LM with a vision-capable model (e.g., gemini) before calling.
+    Args:
+        drawing_image: The DSPy image object.
+        extractor: Optional pre-instantiated DSPy module (dependency injection).
+                   If None, a fresh predictor is created (useful for local scripts).
     """
-    bom_extractor = dspy.Predict(BOMExtraction)
-    result = bom_extractor(drawing=drawing_image)
+    if extractor is None:
+        extractor = dspy.Predict(BOMExtraction)
+
+    result = extractor(drawing=drawing_image)
     return result.bom
 
 
