@@ -26,4 +26,4 @@ def service_health() -> dict:
 
     return {"status": "healthy", "message": "KakoAI API is up and running"}
 
-# Run with: uvicorn src.main:app --reload
+# Run with: uvicorn backend.src.main:app --reload
