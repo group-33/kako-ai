@@ -9,24 +9,35 @@ and assists in finding optimal procurement options.
 
 ```
 .
-├── src/                      # Python package with all application code
-│   ├── main.py               # FastAPI entrypoint (run via uvicorn src.main:app --reload)
-│   ├── config.py             # Scratchpad for shared config constants (e.g., model IDs)
-│   ├── models.py             # Pydantic BaseModel definitions for agent IO
-│   └── routers/              # FastAPI routers grouped by domain
-│       └── bom.py            # Example BOM router with /bom/health
-├── .env                      # Local environment variables for secrets and API keys
-└── requirements.txt          # Runtime dependencies (FastAPI, uvicorn, pydantic, etc.)
+├── backend/
+│   └── src/
+│       ├── main.py                 # FastAPI entrypoint (uvicorn backend.src.main:app --reload)
+│       ├── config.py               # Env-driven config (LLM keys, Xentral settings)
+│       ├── models.py               # Shared data shapes
+│       ├── bom_extraction/         # BOM extraction feature module
+│       ├── demand_analysis/        # Demand analysis feature module
+│       └── routers/                # FastAPI routers by domain
+│           ├── bom.py              # /bom/extract
+│           └── demand.py           # /demand/analysis
+├── .env                            # Local environment variables (gitignored)
+└── requirements.txt                # Runtime dependencies (FastAPI, uvicorn, DSPy, etc.)
 ```
 
 ### Develop & Run
 
 - Install dependencies into your virtualenv: `pip install -r requirements.txt`.
-- Start the API locally: `uvicorn src.main:app --reload` (currently serves `/health` and `/bom/health`).
-- Add new endpoints by creating routers under `src/routers/` and including them in `src/main.py`.
+- From the repo root, start the API: `uvicorn backend.src.main:app --reload`.
+- Visit Swagger UI at `http://127.0.0.1:8000/docs`.
+- Add new endpoints by creating routers under `backend/src/routers/` and including them in `backend/src/main.py`.
 
 ### Conventions
 
-- Create a subfolder under `src/` for each KakoAI functionality.
-- Define shared configuration nuggets (e.g., LLM names) in `src/config.py`.
-- Use Pydantic models within `src/models.py` to document agent inputs/outputs before wiring implementations.
+- Create a subfolder under `backend/src/` for each KakoAI functionality.
+- Define shared configuration nuggets (e.g., LLM names) in `backend/src/config.py`; load secrets via `.env`.
+- Use feature-local models in their packages (`bom_extraction/models.py`, `demand_analysis/models.py`); keep any shared shapes in `backend/src/models.py`.
+
+### API Surface (current)
+
+- `GET /health` – service health.
+- `POST /bom/extract` – multipart file upload (`file`) for a drawing; returns `BOMExtractionResponse` with an extracted BOM.
+- `POST /demand/analysis` – demand analyst agent; body `DemandAnalysisRequest` with optional BOM, returns natural-language `process_result`.
