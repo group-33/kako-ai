@@ -2,42 +2,7 @@ import sys
 import json
 from .nexarSupplyClient import NexarClient
 from ..config import NEXAR_CLIENT_ID, NEXAR_CLIENT_SECRET
-
-DEFAULT_QUERY = """
-query ($mpn: String!) {
-  supSearchMpn(
-    q: $mpn
-    limit: 1
-  ){
-    results {
-      part {
-        category {
-          parentId
-          id
-          name
-          path
-        }
-        mpn
-        manufacturer {
-          name
-        }
-        shortDescription
-        descriptions {
-          text
-          creditString
-        }
-        specs {
-          attribute {
-            name
-            shortname
-          }
-          displayValue
-        }
-      }
-    }
-  }
-}
-"""
+from query_manager import DEFAULT_QUERY
 
 
 def setup_api():

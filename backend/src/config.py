@@ -6,7 +6,10 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+# LLM Configuration
 # LLM = "gpt-5-2025-08-07"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+PROCUREMENT_LLM_MODEL = "gemini/gemini-2.0-flash"
 
 # Nexar API Credentials
 NEXAR_CLIENT_ID = os.getenv("NEXAR_CLIENT_ID", "")
