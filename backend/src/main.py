@@ -1,24 +1,34 @@
-"""FastAPI application bootstrap."""
+"""FastAPI entrypoint exposing the unified KakoAI agent."""
 import dspy
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, Form, Request
 
-from backend.src.bom_extraction.perform_extraction import BOMExtraction
 from backend.src.config import GEMINI_2_5_PRO
-from backend.src.demand_analysis.agent import DemandAnalystAgent
-from backend.src.routers import bom, demand
+from backend.src.agent import KakoAgent
 
 # --- Configure LLM globally ---
 dspy.configure(lm=GEMINI_2_5_PRO)
 
 app = FastAPI(title="KakoAI")
 
-# Instantiate agents once and store on app state for DI access
-app.state.bom_extractor = dspy.Predict(BOMExtraction)
-app.state.demand_analyst_agent = DemandAnalystAgent()
+# Instantiate the unified agent once and store on app state for DI access
+app.state.agent = KakoAgent()
 
-app.include_router(bom.router)
-app.include_router(demand.router)
 
+def get_agent(request: Request) -> KakoAgent:
+    agent = getattr(request.app.state, "agent", None)
+    if agent is None:
+        print("Agent not initialized, creating new instance..")
+        agent = KakoAgent()
+        request.app.state.agent = agent
+    return agent
+
+
+@app.post("/agent/run")
+async def run_agent(
+    user_query: str = Form(..., description="Natural language request to complete."),
+    agent: KakoAgent = Depends(get_agent),
+):
+    return agent(user_query=user_query)
 
 @app.get("/health")
 def service_health() -> dict:
