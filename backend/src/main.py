@@ -23,7 +23,7 @@ def get_agent(request: Request) -> KakoAgent:
     return agent
 
 
-@app.post("/agent/run")
+@app.post("/agent")
 async def run_agent(
     user_query: str = Form(..., description="Natural language request to complete."),
     agent: KakoAgent = Depends(get_agent),

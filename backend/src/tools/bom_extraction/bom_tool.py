@@ -39,5 +39,5 @@ def perform_bom_extraction(file_path: str) -> BillOfMaterials | str:
 
 
 if __name__ == '__main__':
-    bom = perform_bom_extraction('./example_bom.png')
+    bom = perform_bom_extraction('example_bom.png')
     print(bom.model_dump_json(indent=2))

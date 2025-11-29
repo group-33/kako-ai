@@ -13,7 +13,9 @@ and assists in finding optimal procurement options.
 │   └── src/
 │       ├── main.py       # FastAPI entrypoint (uvicorn backend.src.main:app --reload)
 │       ├── agent.py      # ReAct agent wiring available tools
-│       ├── tools/        # Tool modules exposed to the agent (e.g., BOM extraction)
+│       ├── tools/        # Tool modules exposed to the agent
+│       │   ├── bom_extraction/    # BOM extraction tool
+│       │   └── demand_analysis/   # Demand analysis tools
 │       ├── config.py     # Env-driven config (LLM keys, Xentral settings)
 │       └── models.py     # Shared data shapes
 ├── .env                  # Local environment variables (gitignored)
@@ -28,7 +30,12 @@ and assists in finding optimal procurement options.
 
 ### API Surface (current)
 
-- `POST /agent/run` – ReAct agent entrypoint. Send form field:
+- `GET /health` – service health.
+- `POST /agent` – ReAct agent entrypoint. Send form field:
   - `user_query` (str, required)
 
-The agent currently exposes a BOM extraction tool that expects a local file path string; file upload handling is not yet wired into this endpoint.
+Tools available to the agent:
+- BOM extraction (`bom_extraction/bom_tool.py`): expects a local file path string for an image.
+- Demand analysis (`demand_analysis/`): inventory context helpers and a structured feasibility check.
+
+Note: File upload handling for BOM extraction is not yet wired into the API; the agent cannot read uploaded files directly.

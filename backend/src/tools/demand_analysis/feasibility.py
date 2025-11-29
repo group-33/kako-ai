@@ -1,12 +1,12 @@
+"""Structured feasibility check tool for demand analysis."""
 from __future__ import annotations
 
 import json
-
 import dspy
 
 from backend.src.models import BillOfMaterials
-from backend.src.demand_analysis.models import FeasibilityAnalysis
-from backend.src.demand_analysis.tools import run_full_feasibility_analysis
+from backend.src.tools.demand_analysis.schemas import FeasibilityAnalysis
+from backend.src.tools.demand_analysis.inventory import run_full_feasibility_analysis
 
 
 class FeasibilityCheck(dspy.Signature):

@@ -1,3 +1,4 @@
+"""Inventory and procurement context helpers for demand analysis tools."""
 from __future__ import annotations
 
 import requests
