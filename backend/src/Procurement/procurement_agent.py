@@ -8,7 +8,7 @@ from ..config import (
     GEMINI_API_KEY,
     PROCUREMENT_LLM_MODEL,
 )
-from query_manager import DEFAULT_QUERY
+from query_manager import DEFAULT_QUERY, MULTI_QUERY_FULL
 
 
 #### Signatures for Procurement Agent ####
@@ -49,7 +49,7 @@ class ProcurementAgent:
         tools = [
             dspy.Tool(
                 name="search_part_by_mpn",
-                description="Search for a part by its Manufacturer Part Number (MPN).",
+                description="Search for parts by their Manufacturer Part Numbers (MPNs).",
                 func=self._tool_search_part_by_mpn,
                 # signature=, TODO define signature
             ),
@@ -69,10 +69,19 @@ class ProcurementAgent:
         return tools
 
     #### Tool implementations ####
-    def _tool_search_part_by_mpn(self, mpn: str, quantity: int = 1) -> str:
+    def _tool_search_part_by_mpn(self, mpns: List[str], quantity: int = 1) -> str:
+        """
+        Searches for multiple parts by their MPNs.
+        
+        Args:
+            mpns: A list of strings, where each string is a Manufacturer Part Number.
+        """
+        if not mpns or not isinstance(mpns, list):
+            return json.dumps({"error": "Input must be a non-empty list of MPN strings."})
+        variables = {"queries": [{"mpnOrSku": mpn, "limit": 1, "start": 0} for mpn in mpns]}
         # TODO handling of quantity etc.
         try:
-            data = self.api_client.get_query(DEFAULT_QUERY, {"mpn": mpn})
+            data = self.api_client.get_query(MULTI_QUERY_FULL, variables)
             return json.dumps(data)
         except Exception as e:
             return json.dumps({"error": str(e)})
