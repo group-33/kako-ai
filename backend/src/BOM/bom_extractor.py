@@ -490,6 +490,31 @@ class BOMExtractor(dspy.Module):
             print(f"   ⚠️ Gemini Failed: {e}")
             return BillOfMaterials(items=[])
 
+_extractor_instance = BOMExtractor()
+
+class RetrieveBOM(dspy.Module):
+    """
+    A tool to extract the Bill of Materials (BOM) from a technical drawing.
+    Input must be the filename of the drawing (e.g., "123-456.pdf").
+    Returns a string representation of the parts list.
+    """
+    name = "retrieve_bom"
+    input_variable = "filename"
+    desc = "Takes a filename of a technical drawing and returns the Bill of Materials (BOM) containing part numbers and quantities."
+
+    def __call__(self, filename: str):
+        print(f"\n[Tool] Agent requested BOM for: {filename}")
+        try:
+            # Call your existing forward method
+            bom_result = _extractor_instance.forward(filename)
+            
+            # The Agent needs TEXT/STRING back, not a Pydantic object
+            # We convert the BOM object to a clean string format
+            return bom_result.model_dump_json()
+            
+        except Exception as e:
+            return f"Error: Failed to extract BOM. Reason: {str(e)}"
+
 # --- 4. Test Runner ---
 def test_bom_extractor():
     
