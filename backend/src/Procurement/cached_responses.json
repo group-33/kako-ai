@@ -1,0 +1,1293 @@
+[
+  {
+    "mpn": "691381000005",
+    "defaultQuery": {
+      "supSearchMpn": {
+        "results": [
+          {
+            "part": {
+              "category": {
+                "parentId": "4364",
+                "id": "5267",
+                "name": "Terminal Blocks",
+                "path": "/electronic-parts/connectors/terminal-blocks"
+              },
+              "mpn": "691381000005",
+              "manufacturer": {
+                "name": "Wurth Elektronik"
+              },
+              "shortDescription": "Terminal Block, Pluggable, 5Pos, 16Awg Rohs Compliant: Yes |Wurth Elektronik 691381000005",
+              "descriptions": [
+                {
+                  "text": "Terminal Block, Pluggable, 5Pos, 16Awg Rohs Compliant: Yes |Wurth Elektronik 691381000005",
+                  "creditString": "Newark"
+                },
+                {
+                  "text": "TERMINAL BLOCK, 2.50MM, VERTICAL CAB, PLUG SCREWLESS, 16-24 AWG, 5 PINS",
+                  "creditString": "RS (Formerly Allied Electronics)"
+                },
+                {
+                  "text": "WR-TBL Terminal block - Plug Screwless Push In",
+                  "creditString": "Wurth Elektronik"
+                },
+                {
+                  "text": "Socket Rating to EN: 12 A @ 300 VAC Temperature range: -40 ... 105 \u00b0C Colour: Green Connection direction: Straight Gender of contacts: Female Housing Material: Polyamide (PA 66) Pitch: 2.5 mm Series: WR-TBL / 382 Termination type: Spring Clamp Terminals Poles: 5 Rated current to EN: 12 A Rated voltage to EN: 300 VAC",
+                  "creditString": "Distrelec"
+                }
+              ],
+              "specs": [
+                {
+                  "attribute": {
+                    "name": "Color",
+                    "shortname": "color"
+                  },
+                  "displayValue": "Green"
+                },
+                {
+                  "attribute": {
+                    "name": "Contact Plating",
+                    "shortname": "contactplating"
+                  },
+                  "displayValue": "Tin"
+                },
+                {
+                  "attribute": {
+                    "name": "Current",
+                    "shortname": "current"
+                  },
+                  "displayValue": "12 A"
+                },
+                {
+                  "attribute": {
+                    "name": "Gender",
+                    "shortname": "gender"
+                  },
+                  "displayValue": "Female"
+                },
+                {
+                  "attribute": {
+                    "name": "Length",
+                    "shortname": "length"
+                  },
+                  "displayValue": "13.1 mm"
+                },
+                {
+                  "attribute": {
+                    "name": "Max Operating Temperature",
+                    "shortname": "maxoperatingtemperature"
+                  },
+                  "displayValue": "105 \u00b0C"
+                },
+                {
+                  "attribute": {
+                    "name": "Min Operating Temperature",
+                    "shortname": "minoperatingtemperature"
+                  },
+                  "displayValue": "-40 \u00b0C"
+                },
+                {
+                  "attribute": {
+                    "name": "Mount",
+                    "shortname": "mount"
+                  },
+                  "displayValue": "Cable"
+                },
+                {
+                  "attribute": {
+                    "name": "Number of Levels",
+                    "shortname": "numberoflevels"
+                  },
+                  "displayValue": "1"
+                },
+                {
+                  "attribute": {
+                    "name": "Number of Pins",
+                    "shortname": "numberofpins"
+                  },
+                  "displayValue": "5"
+                },
+                {
+                  "attribute": {
+                    "name": "Number of Positions",
+                    "shortname": "numberofpositions"
+                  },
+                  "displayValue": "5"
+                },
+                {
+                  "attribute": {
+                    "name": "Number of Positions Per Level",
+                    "shortname": "numberofpositionsperlevel"
+                  },
+                  "displayValue": "5"
+                },
+                {
+                  "attribute": {
+                    "name": "Packaging",
+                    "shortname": "packaging"
+                  },
+                  "displayValue": "Box"
+                },
+                {
+                  "attribute": {
+                    "name": "Pitch",
+                    "shortname": "pitch"
+                  },
+                  "displayValue": "2.5 mm"
+                },
+                {
+                  "attribute": {
+                    "name": "RoHS",
+                    "shortname": "rohs"
+                  },
+                  "displayValue": "Compliant"
+                },
+                {
+                  "attribute": {
+                    "name": "Termination",
+                    "shortname": "termination"
+                  },
+                  "displayValue": "Screwless"
+                },
+                {
+                  "attribute": {
+                    "name": "Voltage",
+                    "shortname": "voltage"
+                  },
+                  "displayValue": "300 V"
+                },
+                {
+                  "attribute": {
+                    "name": "Wire Gauge (Max)",
+                    "shortname": "wiregauge_max_"
+                  },
+                  "displayValue": "24 AWG"
+                },
+                {
+                  "attribute": {
+                    "name": "Wire Gauge (Min)",
+                    "shortname": "wiregauge_min_"
+                  },
+                  "displayValue": "16 AWG"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "searchByCategoryQuery": {
+      "supSearch": {
+        "hits": 1,
+        "results": [
+          {
+            "part": {
+              "id": "52676049",
+              "name": "Wurth Elektronik 691381000005",
+              "mpn": "691381000005",
+              "manufacturer": {
+                "name": "Wurth Elektronik"
+              },
+              "shortDescription": "Terminal Block, Pluggable, 5Pos, 16Awg Rohs Compliant: Yes |Wurth Elektronik 691381000005",
+              "category": {
+                "id": "5267",
+                "name": "Terminal Blocks"
+              },
+              "specs": [
+                {
+                  "attribute": {
+                    "name": "Color",
+                    "shortname": "color"
+                  },
+                  "value": "Green",
+                  "displayValue": "Green"
+                },
+                {
+                  "attribute": {
+                    "name": "Contact Plating",
+                    "shortname": "contactplating"
+                  },
+                  "value": "Tin",
+                  "displayValue": "Tin"
+                },
+                {
+                  "attribute": {
+                    "name": "Current",
+                    "shortname": "current"
+                  },
+                  "value": "12",
+                  "displayValue": "12 A"
+                },
+                {
+                  "attribute": {
+                    "name": "Gender",
+                    "shortname": "gender"
+                  },
+                  "value": "Female",
+                  "displayValue": "Female"
+                },
+                {
+                  "attribute": {
+                    "name": "Length",
+                    "shortname": "length"
+                  },
+                  "value": "13.1",
+                  "displayValue": "13.1 mm"
+                },
+                {
+                  "attribute": {
+                    "name": "Max Operating Temperature",
+                    "shortname": "maxoperatingtemperature"
+                  },
+                  "value": "105",
+                  "displayValue": "105 \u00b0C"
+                },
+                {
+                  "attribute": {
+                    "name": "Min Operating Temperature",
+                    "shortname": "minoperatingtemperature"
+                  },
+                  "value": "-40",
+                  "displayValue": "-40 \u00b0C"
+                },
+                {
+                  "attribute": {
+                    "name": "Mount",
+                    "shortname": "mount"
+                  },
+                  "value": "Cable",
+                  "displayValue": "Cable"
+                },
+                {
+                  "attribute": {
+                    "name": "Number of Levels",
+                    "shortname": "numberoflevels"
+                  },
+                  "value": "1",
+                  "displayValue": "1"
+                },
+                {
+                  "attribute": {
+                    "name": "Number of Pins",
+                    "shortname": "numberofpins"
+                  },
+                  "value": "5",
+                  "displayValue": "5"
+                },
+                {
+                  "attribute": {
+                    "name": "Number of Positions",
+                    "shortname": "numberofpositions"
+                  },
+                  "value": "5",
+                  "displayValue": "5"
+                },
+                {
+                  "attribute": {
+                    "name": "Number of Positions Per Level",
+                    "shortname": "numberofpositionsperlevel"
+                  },
+                  "value": "5",
+                  "displayValue": "5"
+                },
+                {
+                  "attribute": {
+                    "name": "Packaging",
+                    "shortname": "packaging"
+                  },
+                  "value": "Box",
+                  "displayValue": "Box"
+                },
+                {
+                  "attribute": {
+                    "name": "Pitch",
+                    "shortname": "pitch"
+                  },
+                  "value": "2.5",
+                  "displayValue": "2.5 mm"
+                },
+                {
+                  "attribute": {
+                    "name": "RoHS",
+                    "shortname": "rohs"
+                  },
+                  "value": "Compliant",
+                  "displayValue": "Compliant"
+                },
+                {
+                  "attribute": {
+                    "name": "Termination",
+                    "shortname": "termination"
+                  },
+                  "value": "Screwless",
+                  "displayValue": "Screwless"
+                },
+                {
+                  "attribute": {
+                    "name": "Voltage",
+                    "shortname": "voltage"
+                  },
+                  "value": "300",
+                  "displayValue": "300 V"
+                },
+                {
+                  "attribute": {
+                    "name": "Wire Gauge (Max)",
+                    "shortname": "wiregauge_max_"
+                  },
+                  "value": "24",
+                  "displayValue": "24 AWG"
+                },
+                {
+                  "attribute": {
+                    "name": "Wire Gauge (Min)",
+                    "shortname": "wiregauge_min_"
+                  },
+                  "value": "16",
+                  "displayValue": "16 AWG"
+                }
+              ],
+              "totalAvail": 55765,
+              "sellers": [
+                {
+                  "company": {
+                    "name": "Newark",
+                    "isVerified": false
+                  },
+                  "offers": [
+                    {
+                      "sku": "691381000005",
+                      "inventoryLevel": 126,
+                      "moq": 1,
+                      "prices": [
+                        {
+                          "quantity": 1,
+                          "convertedPrice": 5.39,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 10,
+                          "convertedPrice": 4.81,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 25,
+                          "convertedPrice": 4.52,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 50,
+                          "convertedPrice": 4.23,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 100,
+                          "convertedPrice": 3.72,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 500,
+                          "convertedPrice": 3.42,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 1000,
+                          "convertedPrice": 3.28,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 2500,
+                          "convertedPrice": 3.14,
+                          "convertedCurrency": "USD"
+                        }
+                      ],
+                      "factoryLeadDays": null
+                    }
+                  ],
+                  "isAuthorized": true
+                },
+                {
+                  "company": {
+                    "name": "RS (Formerly Allied Electronics)",
+                    "isVerified": false
+                  },
+                  "offers": [
+                    {
+                      "sku": "74394829",
+                      "inventoryLevel": 9,
+                      "moq": 1,
+                      "prices": [
+                        {
+                          "quantity": 1,
+                          "convertedPrice": 1.57,
+                          "convertedCurrency": "USD"
+                        }
+                      ],
+                      "factoryLeadDays": null
+                    }
+                  ],
+                  "isAuthorized": true
+                },
+                {
+                  "company": {
+                    "name": "Mouser",
+                    "isVerified": false
+                  },
+                  "offers": [
+                    {
+                      "sku": "710-691381000005",
+                      "inventoryLevel": 369,
+                      "moq": 1,
+                      "prices": [
+                        {
+                          "quantity": 1,
+                          "convertedPrice": 5.04,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 10,
+                          "convertedPrice": 4.46,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 50,
+                          "convertedPrice": 3.88,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 100,
+                          "convertedPrice": 3.37,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 1000,
+                          "convertedPrice": 3.07,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 10000,
+                          "convertedPrice": 2.79,
+                          "convertedCurrency": "USD"
+                        }
+                      ],
+                      "factoryLeadDays": null
+                    }
+                  ],
+                  "isAuthorized": true
+                },
+                {
+                  "company": {
+                    "name": "DigiKey",
+                    "isVerified": false
+                  },
+                  "offers": [
+                    {
+                      "sku": "732-6034-ND",
+                      "inventoryLevel": 0,
+                      "moq": 1,
+                      "prices": [
+                        {
+                          "quantity": 1,
+                          "convertedPrice": 4.54,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 10,
+                          "convertedPrice": 4.019,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 50,
+                          "convertedPrice": 3.4956,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 100,
+                          "convertedPrice": 3.0393,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 430,
+                          "convertedPrice": 2.763,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 860,
+                          "convertedPrice": 2.51191,
+                          "convertedCurrency": "USD"
+                        }
+                      ],
+                      "factoryLeadDays": 49
+                    }
+                  ],
+                  "isAuthorized": true
+                },
+                {
+                  "company": {
+                    "name": "Farnell",
+                    "isVerified": false
+                  },
+                  "offers": [
+                    {
+                      "sku": "3767010",
+                      "inventoryLevel": 126,
+                      "moq": 1,
+                      "prices": [
+                        {
+                          "quantity": 1,
+                          "convertedPrice": 5.201803291807827,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 10,
+                          "convertedPrice": 4.134766719129298,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 100,
+                          "convertedPrice": 3.134419932243178,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 250,
+                          "convertedPrice": 2.9877024034998807,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 500,
+                          "convertedPrice": 2.8409848747565825,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 1000,
+                          "convertedPrice": 2.587563688745432,
+                          "convertedCurrency": "USD"
+                        }
+                      ],
+                      "factoryLeadDays": null
+                    }
+                  ],
+                  "isAuthorized": true
+                },
+                {
+                  "company": {
+                    "name": "element14 APAC",
+                    "isVerified": false
+                  },
+                  "offers": [
+                    {
+                      "sku": "3767010",
+                      "inventoryLevel": 126,
+                      "moq": 1,
+                      "prices": [
+                        {
+                          "quantity": 1,
+                          "convertedPrice": 5.087856236792998,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 10,
+                          "convertedPrice": 4.501092846813836,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 100,
+                          "convertedPrice": 3.404771776063296,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 250,
+                          "convertedPrice": 3.250360357647727,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 500,
+                          "convertedPrice": 3.0959489392321577,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 1000,
+                          "convertedPrice": 2.8102878151633557,
+                          "convertedCurrency": "USD"
+                        }
+                      ],
+                      "factoryLeadDays": null
+                    }
+                  ],
+                  "isAuthorized": true
+                },
+                {
+                  "company": {
+                    "name": "Easev",
+                    "isVerified": false
+                  },
+                  "offers": [
+                    {
+                      "sku": "691381000005",
+                      "inventoryLevel": 2532,
+                      "moq": null,
+                      "prices": [
+                        {
+                          "quantity": 1,
+                          "convertedPrice": 1.73215,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 100,
+                          "convertedPrice": 1.64554,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 1000,
+                          "convertedPrice": 1.50697,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 10000,
+                          "convertedPrice": 1.24715,
+                          "convertedCurrency": "USD"
+                        }
+                      ],
+                      "factoryLeadDays": null
+                    }
+                  ],
+                  "isAuthorized": false
+                },
+                {
+                  "company": {
+                    "name": "Fmall Co., Limited",
+                    "isVerified": false
+                  },
+                  "offers": [
+                    {
+                      "sku": "691381000005",
+                      "inventoryLevel": 45840,
+                      "moq": null,
+                      "prices": [
+                        {
+                          "quantity": 1,
+                          "convertedPrice": 3.5224,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 100,
+                          "convertedPrice": 3.2951,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 1000,
+                          "convertedPrice": 3.1058,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 10000,
+                          "convertedPrice": 2.8406,
+                          "convertedCurrency": "USD"
+                        }
+                      ],
+                      "factoryLeadDays": null
+                    }
+                  ],
+                  "isAuthorized": false
+                },
+                {
+                  "company": {
+                    "name": "Fly-Wing Technology",
+                    "isVerified": false
+                  },
+                  "offers": [
+                    {
+                      "sku": "691381000005",
+                      "inventoryLevel": 6377,
+                      "moq": null,
+                      "prices": [
+                        {
+                          "quantity": 1,
+                          "convertedPrice": 4.05297,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 10,
+                          "convertedPrice": 3.82355,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 100,
+                          "convertedPrice": 3.60713,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 1000,
+                          "convertedPrice": 3.21033,
+                          "convertedCurrency": "USD"
+                        }
+                      ],
+                      "factoryLeadDays": null
+                    }
+                  ],
+                  "isAuthorized": false
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "multiQueryFull": {
+      "supMultiMatch": [
+        {
+          "hits": 1,
+          "parts": [
+            {
+              "mpn": "691381000005",
+              "manufacturer": {
+                "name": "Wurth Elektronik"
+              },
+              "shortDescription": "Terminal Block, Pluggable, 5Pos, 16Awg Rohs Compliant: Yes |Wurth Elektronik 691381000005",
+              "descriptions": [
+                {
+                  "text": "Terminal Block, Pluggable, 5Pos, 16Awg Rohs Compliant: Yes |Wurth Elektronik 691381000005",
+                  "creditString": "Newark"
+                },
+                {
+                  "text": "TERMINAL BLOCK, 2.50MM, VERTICAL CAB, PLUG SCREWLESS, 16-24 AWG, 5 PINS",
+                  "creditString": "RS (Formerly Allied Electronics)"
+                },
+                {
+                  "text": "WR-TBL Terminal block - Plug Screwless Push In",
+                  "creditString": "Wurth Elektronik"
+                },
+                {
+                  "text": "Socket Rating to EN: 12 A @ 300 VAC Temperature range: -40 ... 105 \u00b0C Colour: Green Connection direction: Straight Gender of contacts: Female Housing Material: Polyamide (PA 66) Pitch: 2.5 mm Series: WR-TBL / 382 Termination type: Spring Clamp Terminals Poles: 5 Rated current to EN: 12 A Rated voltage to EN: 300 VAC",
+                  "creditString": "Distrelec"
+                }
+              ],
+              "specs": [
+                {
+                  "attribute": {
+                    "name": "Color",
+                    "shortname": "color"
+                  },
+                  "displayValue": "Green"
+                },
+                {
+                  "attribute": {
+                    "name": "Contact Plating",
+                    "shortname": "contactplating"
+                  },
+                  "displayValue": "Tin"
+                },
+                {
+                  "attribute": {
+                    "name": "Current",
+                    "shortname": "current"
+                  },
+                  "displayValue": "12 A"
+                },
+                {
+                  "attribute": {
+                    "name": "Gender",
+                    "shortname": "gender"
+                  },
+                  "displayValue": "Female"
+                },
+                {
+                  "attribute": {
+                    "name": "Length",
+                    "shortname": "length"
+                  },
+                  "displayValue": "13.1 mm"
+                },
+                {
+                  "attribute": {
+                    "name": "Max Operating Temperature",
+                    "shortname": "maxoperatingtemperature"
+                  },
+                  "displayValue": "105 \u00b0C"
+                },
+                {
+                  "attribute": {
+                    "name": "Min Operating Temperature",
+                    "shortname": "minoperatingtemperature"
+                  },
+                  "displayValue": "-40 \u00b0C"
+                },
+                {
+                  "attribute": {
+                    "name": "Mount",
+                    "shortname": "mount"
+                  },
+                  "displayValue": "Cable"
+                },
+                {
+                  "attribute": {
+                    "name": "Number of Levels",
+                    "shortname": "numberoflevels"
+                  },
+                  "displayValue": "1"
+                },
+                {
+                  "attribute": {
+                    "name": "Number of Pins",
+                    "shortname": "numberofpins"
+                  },
+                  "displayValue": "5"
+                },
+                {
+                  "attribute": {
+                    "name": "Number of Positions",
+                    "shortname": "numberofpositions"
+                  },
+                  "displayValue": "5"
+                },
+                {
+                  "attribute": {
+                    "name": "Number of Positions Per Level",
+                    "shortname": "numberofpositionsperlevel"
+                  },
+                  "displayValue": "5"
+                },
+                {
+                  "attribute": {
+                    "name": "Packaging",
+                    "shortname": "packaging"
+                  },
+                  "displayValue": "Box"
+                },
+                {
+                  "attribute": {
+                    "name": "Pitch",
+                    "shortname": "pitch"
+                  },
+                  "displayValue": "2.5 mm"
+                },
+                {
+                  "attribute": {
+                    "name": "RoHS",
+                    "shortname": "rohs"
+                  },
+                  "displayValue": "Compliant"
+                },
+                {
+                  "attribute": {
+                    "name": "Termination",
+                    "shortname": "termination"
+                  },
+                  "displayValue": "Screwless"
+                },
+                {
+                  "attribute": {
+                    "name": "Voltage",
+                    "shortname": "voltage"
+                  },
+                  "displayValue": "300 V"
+                },
+                {
+                  "attribute": {
+                    "name": "Wire Gauge (Max)",
+                    "shortname": "wiregauge_max_"
+                  },
+                  "displayValue": "24 AWG"
+                },
+                {
+                  "attribute": {
+                    "name": "Wire Gauge (Min)",
+                    "shortname": "wiregauge_min_"
+                  },
+                  "displayValue": "16 AWG"
+                }
+              ],
+              "category": {
+                "parentId": "4364",
+                "id": "5267",
+                "name": "Terminal Blocks",
+                "path": "/electronic-parts/connectors/terminal-blocks"
+              },
+              "totalAvail": 55765,
+              "sellers": [
+                {
+                  "company": {
+                    "name": "Newark",
+                    "isVerified": false
+                  },
+                  "isAuthorized": true,
+                  "offers": [
+                    {
+                      "sku": "691381000005",
+                      "inventoryLevel": 126,
+                      "moq": 1,
+                      "prices": [
+                        {
+                          "quantity": 1,
+                          "convertedPrice": 5.39,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 10,
+                          "convertedPrice": 4.81,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 25,
+                          "convertedPrice": 4.52,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 50,
+                          "convertedPrice": 4.23,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 100,
+                          "convertedPrice": 3.72,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 500,
+                          "convertedPrice": 3.42,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 1000,
+                          "convertedPrice": 3.28,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 2500,
+                          "convertedPrice": 3.14,
+                          "convertedCurrency": "USD"
+                        }
+                      ],
+                      "factoryLeadDays": null
+                    }
+                  ]
+                },
+                {
+                  "company": {
+                    "name": "RS (Formerly Allied Electronics)",
+                    "isVerified": false
+                  },
+                  "isAuthorized": true,
+                  "offers": [
+                    {
+                      "sku": "74394829",
+                      "inventoryLevel": 9,
+                      "moq": 1,
+                      "prices": [
+                        {
+                          "quantity": 1,
+                          "convertedPrice": 1.57,
+                          "convertedCurrency": "USD"
+                        }
+                      ],
+                      "factoryLeadDays": null
+                    }
+                  ]
+                },
+                {
+                  "company": {
+                    "name": "Mouser",
+                    "isVerified": false
+                  },
+                  "isAuthorized": true,
+                  "offers": [
+                    {
+                      "sku": "710-691381000005",
+                      "inventoryLevel": 369,
+                      "moq": 1,
+                      "prices": [
+                        {
+                          "quantity": 1,
+                          "convertedPrice": 5.04,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 10,
+                          "convertedPrice": 4.46,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 50,
+                          "convertedPrice": 3.88,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 100,
+                          "convertedPrice": 3.37,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 1000,
+                          "convertedPrice": 3.07,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 10000,
+                          "convertedPrice": 2.79,
+                          "convertedCurrency": "USD"
+                        }
+                      ],
+                      "factoryLeadDays": null
+                    }
+                  ]
+                },
+                {
+                  "company": {
+                    "name": "DigiKey",
+                    "isVerified": false
+                  },
+                  "isAuthorized": true,
+                  "offers": [
+                    {
+                      "sku": "732-6034-ND",
+                      "inventoryLevel": 0,
+                      "moq": 1,
+                      "prices": [
+                        {
+                          "quantity": 1,
+                          "convertedPrice": 4.54,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 10,
+                          "convertedPrice": 4.019,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 50,
+                          "convertedPrice": 3.4956,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 100,
+                          "convertedPrice": 3.0393,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 430,
+                          "convertedPrice": 2.763,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 860,
+                          "convertedPrice": 2.51191,
+                          "convertedCurrency": "USD"
+                        }
+                      ],
+                      "factoryLeadDays": 49
+                    }
+                  ]
+                },
+                {
+                  "company": {
+                    "name": "Farnell",
+                    "isVerified": false
+                  },
+                  "isAuthorized": true,
+                  "offers": [
+                    {
+                      "sku": "3767010",
+                      "inventoryLevel": 126,
+                      "moq": 1,
+                      "prices": [
+                        {
+                          "quantity": 1,
+                          "convertedPrice": 5.201803291807827,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 10,
+                          "convertedPrice": 4.134766719129298,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 100,
+                          "convertedPrice": 3.134419932243178,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 250,
+                          "convertedPrice": 2.9877024034998807,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 500,
+                          "convertedPrice": 2.8409848747565825,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 1000,
+                          "convertedPrice": 2.587563688745432,
+                          "convertedCurrency": "USD"
+                        }
+                      ],
+                      "factoryLeadDays": null
+                    }
+                  ]
+                },
+                {
+                  "company": {
+                    "name": "element14 APAC",
+                    "isVerified": false
+                  },
+                  "isAuthorized": true,
+                  "offers": [
+                    {
+                      "sku": "3767010",
+                      "inventoryLevel": 126,
+                      "moq": 1,
+                      "prices": [
+                        {
+                          "quantity": 1,
+                          "convertedPrice": 5.087856236792998,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 10,
+                          "convertedPrice": 4.501092846813836,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 100,
+                          "convertedPrice": 3.404771776063296,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 250,
+                          "convertedPrice": 3.250360357647727,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 500,
+                          "convertedPrice": 3.0959489392321577,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 1000,
+                          "convertedPrice": 2.8102878151633557,
+                          "convertedCurrency": "USD"
+                        }
+                      ],
+                      "factoryLeadDays": null
+                    }
+                  ]
+                },
+                {
+                  "company": {
+                    "name": "Easev",
+                    "isVerified": false
+                  },
+                  "isAuthorized": false,
+                  "offers": [
+                    {
+                      "sku": "691381000005",
+                      "inventoryLevel": 2532,
+                      "moq": null,
+                      "prices": [
+                        {
+                          "quantity": 1,
+                          "convertedPrice": 1.73215,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 100,
+                          "convertedPrice": 1.64554,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 1000,
+                          "convertedPrice": 1.50697,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 10000,
+                          "convertedPrice": 1.24715,
+                          "convertedCurrency": "USD"
+                        }
+                      ],
+                      "factoryLeadDays": null
+                    }
+                  ]
+                },
+                {
+                  "company": {
+                    "name": "Fmall Co., Limited",
+                    "isVerified": false
+                  },
+                  "isAuthorized": false,
+                  "offers": [
+                    {
+                      "sku": "691381000005",
+                      "inventoryLevel": 45840,
+                      "moq": null,
+                      "prices": [
+                        {
+                          "quantity": 1,
+                          "convertedPrice": 3.5224,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 100,
+                          "convertedPrice": 3.2951,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 1000,
+                          "convertedPrice": 3.1058,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 10000,
+                          "convertedPrice": 2.8406,
+                          "convertedCurrency": "USD"
+                        }
+                      ],
+                      "factoryLeadDays": null
+                    }
+                  ]
+                },
+                {
+                  "company": {
+                    "name": "Fly-Wing Technology",
+                    "isVerified": false
+                  },
+                  "isAuthorized": false,
+                  "offers": [
+                    {
+                      "sku": "691381000005",
+                      "inventoryLevel": 6377,
+                      "moq": null,
+                      "prices": [
+                        {
+                          "quantity": 1,
+                          "convertedPrice": 4.05297,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 10,
+                          "convertedPrice": 3.82355,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 100,
+                          "convertedPrice": 3.60713,
+                          "convertedCurrency": "USD"
+                        },
+                        {
+                          "quantity": 1000,
+                          "convertedPrice": 3.21033,
+                          "convertedCurrency": "USD"
+                        }
+                      ],
+                      "factoryLeadDays": null
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "error": null
+        }
+      ]
+    }
+  }
+]
