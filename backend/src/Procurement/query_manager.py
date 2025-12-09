@@ -34,55 +34,144 @@ query ($mpn: String!) {
 }
 """
 
-# Simplified query for multiple MPNs - based on DEFAULT_QUERY structure
+# Full GraphQL query for multiple MPNs
+# (no self references eg. parents/children; no similar parts; no cad or sim models; no content vault details; no extras; no internal info)
 MULTI_QUERY_FULL = """
-query GetParts($queries: [SupPartMatchQuery!]!) {
-  supMultiMatch (queries: $queries) {
+query GetParts(
+  $queries: [SupPartMatchQuery!]!,
+  $country: String!,
+  $currency: String!
+) {
+  supMultiMatch (
+    queries: $queries,
+    country: $country,
+    currency: $currency
+  ) {
     hits
     parts {
+      id
+      name
       mpn
+      genericMpn
       manufacturer {
+        id
         name
+        aliases
+        displayFlag
+        homepageUrl
+        slug
+        isVerified
+        isDistributorApi
+        isOctocartSupported
+      }
+      manufacturerUrl
+      documentCollections {
+        name
+        documents {
+          name
+          url
+        }
       }
       shortDescription
       descriptions {
         text
-        creditString
+      }
+      images {
+        url
       }
       specs {
         attribute {
+          id
           name
-          shortname
+          group
         }
+        value
+        valueType
         displayValue
       }
+      octopartUrl
+      companionProducts {
+        url
+      }
       category {
-        parentId
         id
+        parentId
         name
         path
       }
+      series {
+        id
+        name
+        url
+      }
+      bestImage {
+        url
+      }
+      bestDatasheet {
+        name
+        url
+      }
+      referenceDesigns {
+        name
+        url
+      }
+      counts
+      medianPrice1000 {
+        quantity
+        price
+        currency
+        convertedPrice
+        convertedCurrency
+        conversionRate
+      }
       totalAvail
+      avgAvail
       sellers {
         company {
+          id
           name
+          aliases
+          displayFlag
+          homepageUrl
+          slug
           isVerified
+          isDistributorApi
+          isOctocartSupported
         }
-        isAuthorized
+        country
         offers {
+          id
           sku
+          eligibleRegion
           inventoryLevel
           moq
           prices {
             quantity
+            price
+            currency
             convertedPrice
             convertedCurrency
+            conversionRate
           }
+          clickUrl
+          updated
           factoryLeadDays
+          onOrderQuantity
+          factoryPackQuantity
+          orderMultiple
+          multipackQuantity
+        }
+        isAuthorized
+        isBroker
+        shipsToCountries {
+          name
+          countryCode
+          continentCode
         }
       }
+      estimatedFactoryLeadDays
+      akaMpns
     }
-    error
   }
 }
 """
