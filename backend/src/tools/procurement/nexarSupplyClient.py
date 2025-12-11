@@ -74,9 +74,6 @@ class NexarClient:
         self.secret = secret
         self.is_live = is_live
         self.enable_caching = enable_caching
-        self.cache_file = os.path.join(
-            os.path.dirname(__file__), "cached_responses.json"
-        )
         self.persistent_cache_file = os.path.join(
             os.path.dirname(__file__), "persistent_cache.json"
         )
