@@ -11,8 +11,8 @@ sys.path.append(project_root)
 # 2. Load Environment Variables
 load_dotenv(os.path.join(project_root, ".env"))
 
-# 3. Import BOTH the Tool Class and the Function
-from backend.src.tools.bom_extraction.bom_tool import RetrieveBOM, perform_bom_extraction
+# 3. Import the service-layer function
+from backend.src.tools.bom_extraction.bom_tool import perform_bom_extraction
 from backend.src.models import BillOfMaterials
 
 # --- CONFIGURATION ---
@@ -52,29 +52,6 @@ def run_test():
 
     except Exception as e:
         print(f"   ❌ Exception in Service Layer: {e}")
-
-    # ==========================================
-    # TEST 2: The Agent Tool Layer (RetrieveBOM)
-    # ==========================================
-    print("\n[Test 2/2] Testing 'RetrieveBOM' Tool (Agent JSON String)...")
-    
-    # Initialize the tool
-    bom_tool = RetrieveBOM()
-    
-    try:
-        # Run the tool (should return a JSON string)
-        result_json = bom_tool(TEST_FILENAME)
-        
-        # Verify it is a string (what the LLM expects)
-        if isinstance(result_json, str) and "{" in result_json:
-            print("   ✅ Success! Returned valid JSON String.")
-            print("\n--- 📄 FINAL OUTPUT (Snippet) ---")
-            print(result_json[:500] + "...") # Print first 500 chars to avoid spam
-        else:
-            print(f"   ❌ Failed. Expected JSON String, got: {type(result_json)}")
-            
-    except Exception as e:
-        print(f"   ❌ Exception in Tool Layer: {e}")
 
 if __name__ == "__main__":
     run_test()

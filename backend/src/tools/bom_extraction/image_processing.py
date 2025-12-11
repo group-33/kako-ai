@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import pytesseract
 import base64
-from pytesseract import Output
 
 # Konstanten
 BAD_WORDS = [
