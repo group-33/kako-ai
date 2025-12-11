@@ -184,42 +184,66 @@ def search_part_by_mpn(mpns: List[str], quantity: int = 1, part_limit: int = 1) 
     Search for electronic parts by their Manufacturer Part Numbers (MPNs).
     Returns detailed part information including pricing, availability, and seller options.
 
+    API QUOTA WARNING: Each MPN searched consumes API quota. Keep part_limit LOW (1-5).
+    Searching 10 MPNs with part_limit=5 uses 50 API calls.
+
     Use this when you need to look up specific parts by MPN to check pricing and availability.
     The quantity parameter helps understand which price breaks apply.
 
     Args:
         mpns: List of Manufacturer Part Numbers to search (e.g., ["STM32F407VGT6", "LM324N"])
         quantity: Quantity needed per part (default: 1)
-        part_limit: Number of parts to return per MPN (default: 1)
+        part_limit: Number of parts to return per MPN (default: 1). Use 1 unless you need
+                   multiple alternatives from the same MPN. Higher values consume more API quota.
 
     Returns:
         JSON string containing part details, specifications, pricing tiers, availability,
         and seller information from the Nexar supply API
 
     Example:
-        search_part_by_mpn(["STM32F407VGT6"], quantity=100)
+        search_part_by_mpn(["STM32F407VGT6"], quantity=100)  # Returns 1 part per MPN
+        search_part_by_mpn(["STM32F407VGT6"], quantity=100, part_limit=5)  # More expensive!
     """
     if not mpns or not isinstance(mpns, list):
         return json.dumps({"error": "Input must be a non-empty list of MPN strings."})
 
-    # Limit to 3 results per MPN to conserve API quota
-    variables = {
-        "country": "DE",
-        "currency": "EUR",
-        "queries": [{"mpnOrSku": mpn, "limit": part_limit, "start": 0} for mpn in mpns],
-    }
+    combined_results = {"supMultiMatch": []}
+    errors = []
 
-    try:
-        data = _nexar_client.get_query(MULTI_QUERY_FULL, variables)
-        return json.dumps(data)
-    except Exception as e:
-        return json.dumps({"error": str(e)})
+    for mpn in mpns:
+        # Clean MPN to ensure cache consistency
+        clean_mpn = mpn.strip()
+
+        variables = {
+            "country": "DE",
+            "currency": "EUR",
+            "queries": [{"mpnOrSku": clean_mpn, "limit": part_limit, "start": 0}],
+        }
+
+        try:
+            # Fetch individual result (hits cache if this specific MPN+limit was fetched before)
+            data = _nexar_client.get_query(MULTI_QUERY_FULL, variables)
+
+            # Merge into combined results
+            if "supMultiMatch" in data:
+                combined_results["supMultiMatch"].extend(data["supMultiMatch"])
+
+        except Exception as e:
+            errors.append(f"Error fetching {clean_mpn}: {str(e)}")
+
+    if errors and not combined_results["supMultiMatch"]:
+        return json.dumps({"error": "Failed to fetch parts", "details": errors})
+
+    return json.dumps(combined_results)
 
 
 def find_alternatives(mpn: str, description: str, quantity: int = 1) -> str:
     """
     Find alternative electronic parts that are compatible with the specified MPN.
     Searches for parts with similar specifications in the same category.
+
+    API QUOTA WARNING: Makes TWO API calls (original part lookup + alternatives search).
+    Use only when original part is unavailable or explicitly needed.
 
     Use this when the original part is unavailable, too expensive, or has insufficient stock.
     The alternatives returned will have the same category and similar specs for compatibility.
@@ -283,6 +307,9 @@ def optimize_order(parts_list: List[Dict]) -> str:
     Optimize procurement for an entire Bill of Materials (BOM). Searches all parts,
     finds alternatives for unavailable items, and selects the lowest-cost valid option
     for each part considering quantity requirements and MOQ constraints.
+
+    API QUOTA WARNING: EXPENSIVE - Makes one API call per part in parts_list.
+    For 10 parts, this uses ~10 API calls. Only use when doing complete BOM analysis.
 
     Use this for complete BOM procurement planning. It handles the full pipeline:
     searching parts, checking availability against required quantities, finding alternatives
