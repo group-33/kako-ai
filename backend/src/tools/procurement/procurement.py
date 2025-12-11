@@ -1,14 +1,16 @@
 import json
 import copy
-import os
 from typing import List, Dict, Optional
-from .nexarSupplyClient import NexarClient
-from ..config import (
+from src.tools.procurement.nexarSupplyClient import NexarClient
+from config import (
     NEXAR_CLIENT_ID,
     NEXAR_CLIENT_SECRET,
     PROCUREMENT_API_IS_LIVE,
 )
-from .query_manager import MULTI_QUERY_FULL, SEARCH_BY_CATEGORY_QUERY
+from src.tools.procurement.query_manager import (
+    MULTI_QUERY_FULL,
+    SEARCH_BY_CATEGORY_QUERY,
+)
 
 
 # Initialize shared client
