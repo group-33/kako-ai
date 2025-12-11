@@ -160,7 +160,8 @@ class NexarClient:
                     return self._swap_mpns_in_response(cached_data, requested_mpns)
                 return cached_data
 
-            return self._get_mock_response(variables)
+            print("Warning: No cached data found in persistent cache for this query.")
+            return {"supMultiMatch": []}
 
         try:
             self.check_exp()
@@ -189,37 +190,6 @@ class NexarClient:
             self._save_persistent_cache()
 
         return data
-
-    def _get_mock_response(self, variables: Dict) -> dict:
-        """Return a mock response from cached data."""
-        try:
-            with open(self.cache_file, "r") as f:
-                cached_responses = json.load(f)
-        except FileNotFoundError:
-            print(
-                f"Warning: Cache file not found at {self.cache_file}. Returning empty response."
-            )
-            return {"supMultiMatch": []}
-        except json.JSONDecodeError:
-            print(f"Warning: Invalid JSON in cache file. Returning empty response.")
-            return {"supMultiMatch": []}
-
-        if not cached_responses:
-            print("Warning: No cached responses available. Returning empty response.")
-            return {"supMultiMatch": []}
-
-        # Pick a random cached response
-        cached_entry = random.choice(cached_responses)
-        response = json.loads(json.dumps(cached_entry["response"]))  # Deep copy
-
-        # Swap MPNs if variables contain queries
-        if "queries" in variables:
-            requested_mpns = [
-                q.get("mpnOrSku") or q.get("mpn") for q in variables["queries"]
-            ]
-            response = self._swap_mpns_in_response(response, requested_mpns)
-
-        return response
 
     def _swap_mpns_in_response(self, response: dict, requested_mpns: list) -> dict:
         """Swap MPNs in the cached response with requested MPNs."""
