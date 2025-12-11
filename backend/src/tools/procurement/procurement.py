@@ -1,13 +1,13 @@
 import json
 import copy
 from typing import List, Dict, Optional
-from src.tools.procurement.nexarSupplyClient import NexarClient
-from config import (
+from .nexarSupplyClient import NexarClient
+from backend.src.config import (
     NEXAR_CLIENT_ID,
     NEXAR_CLIENT_SECRET,
     PROCUREMENT_API_IS_LIVE,
 )
-from src.tools.procurement.query_manager import (
+from .query_manager import (
     MULTI_QUERY_FULL,
     SEARCH_BY_CATEGORY_QUERY,
 )
@@ -15,8 +15,12 @@ from src.tools.procurement.query_manager import (
 
 # Initialize shared client
 _nexar_client = NexarClient(
-    NEXAR_CLIENT_ID, NEXAR_CLIENT_SECRET, is_live=PROCUREMENT_API_IS_LIVE
+    NEXAR_CLIENT_ID,
+    NEXAR_CLIENT_SECRET,
+    is_live=PROCUREMENT_API_IS_LIVE,
+    enable_caching=True,  # TODO: Note, caching should be disabled in production, since e.g. prices can change frequently. Or implement cache expiration.
 )
+print(f"Procurement API is_live={PROCUREMENT_API_IS_LIVE}")
 
 
 def filter_sellers_by_shipping(
