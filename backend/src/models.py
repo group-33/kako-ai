@@ -1,5 +1,7 @@
 """Shared, cross-feature Pydantic models."""
-from typing import List
+from datetime import datetime
+from typing import List, Literal, Union, Dict, Any
+
 from pydantic import BaseModel, Field
 
 
@@ -15,3 +17,50 @@ class BOMItem(BaseModel):
 
 class BillOfMaterials(BaseModel):
     items: List[BOMItem] = Field(description="All component line items that make up the BOM.")
+
+
+# --- API response models (backend -> frontend) --------------------------------
+
+
+class TextBlock(BaseModel):
+    """Standard text response block."""
+
+    type: Literal["text"] = "text"
+    content: str
+
+
+class BOMRow(BaseModel):
+    """Single row in a BOM table for frontend display."""
+
+    id: str
+    component: str
+    quantity: int
+    unit: str
+    description: str | None = None
+    confidence_score: float | None = None
+
+
+class BOMTableData(BaseModel):
+    """Payload for the BOM table tool."""
+
+    rows: List[BOMRow]
+    source_document: str | None = None
+
+
+class ToolUseBlock(BaseModel):
+    """Tool-use block that tells the frontend to render a specific component."""
+
+    type: Literal["tool_use"] = "tool_use"
+    tool_name: str
+    data: Dict[str, Any]
+
+
+ContentBlock = Union[TextBlock, ToolUseBlock]
+
+
+class AgentResponse(BaseModel):
+    """Top-level response object returned by backend endpoints to the frontend."""
+
+    response_id: str
+    created_at: datetime
+    blocks: List[ContentBlock]

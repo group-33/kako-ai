@@ -15,6 +15,17 @@ SSH_PASS = os.getenv("SSH_PASS")
 REMOTE_DIR = os.getenv("REMOTE_DIR")
 
 def fetch_file_via_ssh(filename: str) -> str:
+    """Fetch a file from a remote SSH host into a local temp file.
+
+    If SSH access is not configured via environment variables, a clear error
+    is raised instead of attempting to connect to localhost.
+    """
+    if not SSH_HOST or not SSH_USER or not REMOTE_DIR:
+        raise RuntimeError(
+            "SSH-based file lookup is not configured "
+            "(SSH_HOST, SSH_USER or REMOTE_DIR are missing)."
+        )
+
     print(f"--- 🔍 Fuzzy Search: Looking for '{filename}' in {REMOTE_DIR}... ---")
     
     ssh = paramiko.SSHClient()
