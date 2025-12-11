@@ -1,17 +1,23 @@
 """BOM-related API Tools"""
 from __future__ import annotations
-
 from typing import Any, Dict, List, Optional, Tuple
-
 import dspy
 import faiss
 import numpy as np
 import requests
 from sentence_transformers import SentenceTransformer
-
+import socket
+import psycopg2
+import json
 from backend.src.models import BillOfMaterials
-from backend.src.config import XENTRAL_API_KEY, XENTRAL_BASE_URL, XENTRAL_TIMEOUT_SECONDS
+from backend.src.config import XENTRAL_BEARER_TOKEN, XENTRAL_BASE_URL, XENTRAL_TIMEOUT_SECONDS, SUPABASE_PASSWORD
 
+DB_HOST = "aws-1-eu-north-1.pooler.supabase.com"
+DB_PORT = "5432"
+DB_USER = "postgres.lnnlghymsockmysbbour"
+DB_NAME = "postgres"
+
+SUPABASE_DSN = f"postgresql://{DB_USER}:{SUPABASE_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
 
 class BOMCheck(dspy.Signature):
     """Determine if the requested product is a Bill-of-Materials."""
@@ -63,38 +69,13 @@ def bom_check(product_identifier: str) -> str:
     )
 
 
-def get_all_products() -> List[Dict[str, Any]]:
-    products: List[Dict[str, Any]] = []
-    headers_auth = {"Authorization": f"Bearer {XENTRAL_API_KEY or ''}"}
-
-    # Go through all pages with size 1000
-    out = requests.get(
-        url=f"{XENTRAL_BASE_URL}/api/v1/artikel?items=1000",
-        headers=headers_auth,
-        timeout=XENTRAL_TIMEOUT_SECONDS,
-    ).json()
-
-    page_last = out["pagination"]["page_last"]
-
-    products.extend(out["data"])
-
-    for i in range(2, page_last + 1):
-        out = requests.get(
-            url=f"{XENTRAL_BASE_URL}/api/v1/artikel?items=1000&page={i}",
-            headers=headers_auth,
-            timeout=XENTRAL_TIMEOUT_SECONDS,
-        ).json()
-        products.extend(out["data"])
-    return products
-
-
 def _fetch_bom_parts(product_id: str) -> Tuple[Optional[List[Dict[str, Any]]], Optional[str]]:
     """
     Use the v1 endpoint to retrieve BOM parts for the product.
 
     Returns a tuple of (parts, error_message).
     """
-    headers = {"Authorization": f"Bearer {XENTRAL_API_KEY or ''}"}
+    headers = {"Authorization": f"Bearer {XENTRAL_BEARER_TOKEN or ''}"}
     url = f"{XENTRAL_BASE_URL}/api/v1/products/{product_id}/parts"
     try:
         resp = requests.get(url, headers=headers, timeout=XENTRAL_TIMEOUT_SECONDS)
@@ -118,13 +99,30 @@ def _fetch_bom_parts(product_id: str) -> Tuple[Optional[List[Dict[str, Any]]], O
 
 
 def perform_bom_matching(bom: BillOfMaterials) -> str:
+    """
+    Matches extracted BOM items against the internal Xentral ERP product database.
+    
+    This tool takes a raw Bill of Materials (BOM) and performs a hybrid search 
+    (Exact ID Match -> Text Substring -> Semantic Vector Search) for each item 
+    to find its corresponding Xentral SKU.
+
+    Args:
+        bom (BillOfMaterials): The structured BOM object extracted from a technical drawing.
+
+    Returns:
+        str: A JSON-formatted string containing a list of items. Each item includes:
+             - 'bom_part_id': The position number from the drawing.
+             - 'extracted_number': The raw order number found in the BOM.
+             - 'match_found': Boolean indicating if a database match was found.
+             - 'xentral_number': The matched ERP SKU (if found).
+             - 'xentral_name': The matched ERP Product Name.
+             - 'confidence_source': How the match was found (e.g., 'ID_MATCH', 'VECTOR_MATCH').
+    """
     store = ProductInfoStore()
-    store.ensure_initialized()
 
     items_list = bom.items if hasattr(bom, "items") else bom
 
-    report_lines: List[str] = []
-    report_lines.append("--- XENTRAL INTEGRATION PROPOSAL ---")
+    results = []
 
     for item in items_list:
         part_number = getattr(item, "part_number", None)
@@ -133,15 +131,27 @@ def perform_bom_matching(bom: BillOfMaterials) -> str:
 
         match = store.search(bom_number=o_number, bom_desc=desc)
 
-        if match is not None:
-            report_lines.append(
-                f"[MATCH] BOM '{part_number}' -> Nummer {match.get('nummer')} ({match.get('name_de')})"
-            )
-        else:
-            report_lines.append(f"[NO MATCH] BOM '{part_number}'")
-    report_lines.append("-------------------------------")
+        entry = {
+            "bom_part_id": part_number,         
+            "extracted_number": str(o_number) if o_number else None,
+            "extracted_description": desc,
+            "match_found": False,
+            "xentral_number": None,
+            "xentral_name": None,
+            "confidence_source": None
+        }
 
-    return "\n".join(report_lines)
+        if match:
+            entry.update({
+                "match_found": True,
+                "xentral_number": match.get('nummer'),
+                "xentral_name": match.get('name_de'),
+                "confidence_source": match.get('_source')
+            })
+        
+        results.append(entry)
+
+    return json.dumps(results, indent=2)
 
 
 class ProductInfoStore:
@@ -150,60 +160,72 @@ class ProductInfoStore:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(ProductInfoStore, cls).__new__(cls)
-            cls._instance.products = []
-            cls._instance.initialized = False
-            cls._instance.index = None
-            cls._instance.encoder = SentenceTransformer("all-MiniLM-L6-v2")
+            cls._instance.dsn = SUPABASE_DSN
+            cls._instance.encoder = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
         return cls._instance
 
-    def ensure_initialized(self):
-        if not self.initialized:
-            self.products = get_all_products()
-            searchable_docs = []
-            for p in self.products:
-                p_name = str(p.get("name_de") or "")
-                p_desc = str(p.get("beschreibung_de") or "")
-                p_short = str(p.get("kurztext_de") or "")
-                text = f"{p_name} {p_short} {p_desc}"
-                searchable_docs.append(text)
-
-            if searchable_docs:
-                embeddings = self.encoder.encode(searchable_docs)
-                dimension = embeddings.shape[1]
-                self.index = faiss.IndexFlatL2(dimension)
-                self.index.add(np.array(embeddings))
-            else:
-                self.index = None
-            self.initialized = True
+    def _get_conn(self):
+        return psycopg2.connect(self.dsn)
 
     def search(self, bom_number, bom_desc):
         q_num = str(bom_number).strip().lower()
         q_desc = str(bom_desc).strip().lower()
         has_specific_id = (len(q_num) > 0) and (q_num != "0")
 
+        conn = self._get_conn()
+        cursor = conn.cursor()
+
         if has_specific_id:
-            for p in self.products:
-                p_num = str(p.get('nummer')).lower()
-                p_name = str(p.get('name_de')).lower()
-                p_desc = str(p.get('beschreibung_de')).lower()
+            cursor.execute("""
+            SELECT xentral_id, nummer, name_de
+            FROM xentral_products
+            WHERE LOWER(nummer) = %s
+            LIMIT 1
+            """, (q_num,))
+            row = cursor.fetchone()
+            if row:
+                return {"id": row[0], "nummer": row[1], "name_de": row[2], "_source": "ID_MATCH"}
+            
+            cursor.execute("""
+            SELECT xentral_id, nummer, name_de
+            FROM xentral_products
+            WHERE LOWER(name_de) LIKE %s OR LOWER(beschreibung_de) LIKE %s
+            LIMIT 1
+            """, (f"%{q_num}%", f"%{q_num}%"))
+            row = cursor.fetchone()
+            if row:
+                cursor.close()
+                conn.close()
+                return {"id": row[0], "nummer": row[1], "name_de": row[2], "_source": "ID_FOUND_IN_TEXT"}
+            
+        if len(q_desc) > 3:
+                cursor.execute("""
+                    SELECT xentral_id, nummer, name_de 
+                    FROM xentral_products 
+                    WHERE LOWER(name_de) LIKE %s
+                    LIMIT 1
+                """, (f"%{q_desc}%",))
+                row = cursor.fetchone()
+                if row:
+                    cursor.close()
+                    conn.close()
+                    return {"id": row[0], "nummer": row[1], "name_de": row[2], "_source": "TEXT_MATCH"}
                 
-                if  q_num in p_num or q_num in p_name:
-                    match = p.copy()
-                    match["_source"] = "ID_MATCH"
-                    return match
-
-                if q_desc in p_name or q_desc in p_desc:
-                    match = p.copy()
-                    match["_source"] = "TEXT_MATCH"
-                    return match
-
-        if not has_specific_id and self.index is not None and self.products:
-            query_vector = self.encoder.encode([q_desc])
-            distances, indices = self.index.search(np.array(query_vector), k=1)
-            idx = indices[0][0]
-            if idx != -1 and idx < len(self.products):
-                match = self.products[idx].copy()
-                match["_source"] = "VECTOR_MATCH (Semantic)"
-                return match
-
+        if len(q_desc) > 3:
+                query_vector = self.encoder.encode(q_desc).tolist()
+                
+                cursor.execute("""
+                    SELECT xentral_id, nummer, name_de 
+                    FROM xentral_products 
+                    ORDER BY embedding <-> %s::vector
+                    LIMIT 1
+                """, (query_vector,))
+                
+                row = cursor.fetchone()
+                if row:
+                    cursor.close()
+                    conn.close()
+                    return {"id": row[0], "nummer": row[1], "name_de": row[2], "_source": "VECTOR_MATCH"}
+        cursor.close()
+        conn.close()
         return None
