@@ -17,18 +17,20 @@ _nexar_client = NexarClient(
 )
 
 
-def filter_sellers_by_shipping(data: str, target_country_codes: List[str] = ["DE"]) -> str:
+def filter_sellers_by_shipping(
+    data: str, target_country_codes: List[str] = ["DE"]
+) -> str:
     """
     Filters sellers based on their shipping capabilities.
-    
+
     1. Removes sellers that do not ship to any of the provided country codes.
-    2. For remaining sellers, filters their 'shipsToCountries' list to only 
+    2. For remaining sellers, filters their 'shipsToCountries' list to only
        contain the countries present in the target_country_codes.
-    
+
     Args:
         data (dict): The full JSON data dictionary.
         target_country_codes (list): A list of strings (e.g., ["DE", "US"]).
-        
+
     Returns:
         dict: The filtered data structure.
     """
@@ -43,9 +45,10 @@ def filter_sellers_by_shipping(data: str, target_country_codes: List[str] = ["DE
 
         for seller in original_sellers:
             ships_to = seller.get("shipsToCountries", [])
-            
+
             matching_countries = [
-                country for country in ships_to 
+                country
+                for country in ships_to
                 if country.get("countryCode") in target_codes
             ]
 
@@ -64,16 +67,18 @@ def filter_sellers_by_shipping(data: str, target_country_codes: List[str] = ["DE
     return filtered_data
 
 
-def sort_and_filter_by_best_price(data: str, quantity: int = 1, top_x: int = 3, ignore_inventory_level: bool = False) -> str:
+def sort_and_filter_by_best_price(
+    data: str, quantity: int = 1, top_x: int = 3, ignore_inventory_level: bool = False
+) -> str:
     """
     Filters the data to find the Top X cheapest solutions for a given quantity.
-    
+
     Args:
         data (dict): The full API JSON response.
         quantity (int): The required number of parts to purchase.
         top_x (int): The number of top results to keep.
         ignore_inventory_level (bool): If True, allows combining partial inventory from multiple sellers.
-        
+
     Returns:
         dict: A deep copy of the data containing only the best sellers/offers/prices.
     """
@@ -87,79 +92,82 @@ def sort_and_filter_by_best_price(data: str, quantity: int = 1, top_x: int = 3, 
         """
         if not prices:
             return None
-        
-        sorted_prices = sorted(prices, key=lambda x: x.get('quantity', 0), reverse=True)
-        
+
+        sorted_prices = sorted(prices, key=lambda x: x.get("quantity", 0), reverse=True)
+
         for price in sorted_prices:
-            if price.get('quantity', 0) <= target_qty:
+            if price.get("quantity", 0) <= target_qty:
                 return price
         return None
 
     # Helper function to process individual parts
     def process_part(part):
         candidates = []
-        
-        sellers = part.get('sellers', [])
+
+        sellers = part.get("sellers", [])
         for seller in sellers:
-            for offer in seller.get('offers', []):
-                inv = offer.get('inventoryLevel', 0) or 0 # Handle None as 0
-                
+            for offer in seller.get("offers", []):
+                inv = offer.get("inventoryLevel", 0) or 0  # Handle None as 0
+
                 # Check if offer can fulfill the entire order
                 if not ignore_inventory_level:
                     if inv < quantity:
                         continue
-                
-                price_entry = get_valid_price_tier(offer.get('prices', []), quantity)
-                
-                if price_entry and price_entry.get('convertedPrice') is not None:
-                    total_cost = price_entry['convertedPrice'] * quantity
-                    
-                    candidates.append({
-                        'total_cost': total_cost,
-                        'seller': seller,
-                        'offer': offer,
-                        'price_entry': price_entry
-                    })
-        
-        candidates.sort(key=lambda x: x['total_cost'])
+
+                price_entry = get_valid_price_tier(offer.get("prices", []), quantity)
+
+                if price_entry and price_entry.get("convertedPrice") is not None:
+                    total_cost = price_entry["convertedPrice"] * quantity
+
+                    candidates.append(
+                        {
+                            "total_cost": total_cost,
+                            "seller": seller,
+                            "offer": offer,
+                            "price_entry": price_entry,
+                        }
+                    )
+
+        candidates.sort(key=lambda x: x["total_cost"])
         top_candidates = candidates[:top_x]
 
-        keep_map = {} 
+        keep_map = {}
 
         for cand in top_candidates:
-            seller_id = cand['seller']['company']['id']
-            offer_id = cand['offer']['id']
-            price_qty = cand['price_entry']['quantity']
-            
+            seller_id = cand["seller"]["company"]["id"]
+            offer_id = cand["offer"]["id"]
+            price_qty = cand["price_entry"]["quantity"]
+
             if seller_id not in keep_map:
                 keep_map[seller_id] = {}
             keep_map[seller_id][offer_id] = price_qty
 
         new_sellers = []
-        for seller in part.get('sellers', []):
-            s_id = seller['company']['id']
+        for seller in part.get("sellers", []):
+            s_id = seller["company"]["id"]
             if s_id in keep_map:
-                
+
                 # Filter offers for this seller
                 new_offers = []
-                for offer in seller.get('offers', []):
-                    o_id = offer['id']
+                for offer in seller.get("offers", []):
+                    o_id = offer["id"]
                     if o_id in keep_map[s_id]:
-                        
+
                         # Filter prices for this offer
                         target_price_qty = keep_map[s_id][o_id]
                         filtered_prices = [
-                            p for p in offer.get('prices', []) 
-                            if p['quantity'] == target_price_qty
+                            p
+                            for p in offer.get("prices", [])
+                            if p["quantity"] == target_price_qty
                         ]
-                        
-                        offer['prices'] = filtered_prices
+
+                        offer["prices"] = filtered_prices
                         new_offers.append(offer)
-                
-                seller['offers'] = new_offers
+
+                seller["offers"] = new_offers
                 new_sellers.append(seller)
-        
-        part['sellers'] = new_sellers
+
+        part["sellers"] = new_sellers
         return part
 
     # Navigate JSON structure
@@ -193,32 +201,16 @@ def search_part_by_mpn(mpns: List[str], quantity: int = 1, part_limit: int = 1) 
     """
     if not mpns or not isinstance(mpns, list):
         return json.dumps({"error": "Input must be a non-empty list of MPN strings."})
-    
-    # Check for cached response
-    file = os.path.join(os.path.dirname(__file__), "latest_request.json")
-    with open(file, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    if set(mpns) == set([part["mpn"] for part in data.get("supMultiMatch", [])[0].get("parts", [])]):
-        return json.dumps(data)
 
     # Limit to 3 results per MPN to conserve API quota
     variables = {
         "country": "DE",
         "currency": "EUR",
-        "queries": [
-            {
-                "mpnOrSku": mpn,
-                "limit": part_limit,
-                "start": 0
-            }
-            for mpn in mpns
-        ]
+        "queries": [{"mpnOrSku": mpn, "limit": part_limit, "start": 0} for mpn in mpns],
     }
 
     try:
         data = _nexar_client.get_query(MULTI_QUERY_FULL, variables)
-        with open("latest_request.json", "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
         return json.dumps(data)
     except Exception as e:
         return json.dumps({"error": str(e)})
