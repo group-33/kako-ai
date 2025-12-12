@@ -14,6 +14,7 @@ from backend.src.tools.bom_extraction.image_processing import (
 )
 
 
+
 class BOMExtractionSignature(dspy.Signature):
     """Extract a structured BOM from the given technical drawing image."""
 
@@ -45,23 +46,7 @@ def _prepare_bom_image(file_path: str) -> str | None:
             print(f"🔄 Detected vertical image ({w}x{h}). Rotating 90° right...")
             cv2.imwrite(local_path, cv2.rotate(img_check, cv2.ROTATE_90_CLOCKWISE))
 
-    # 3. Detect and filter table crops
-    raw_tables = extract_bom_tight_crop(local_path)
-    safe_tables = filter_unsafe_tables(raw_tables)
-    if not safe_tables:
-        print("❌ No valid BOM tables found.")
-        return None
-
-    # 4. Merge all table crops into one tall image
-    merged_image = merge_images_vertically(safe_tables)
-    if merged_image is None:
-        return None
-
-    base_name = os.path.splitext(os.path.basename(local_path))[0]
-    merged_file_path = f"/tmp/{base_name}_MERGED_BOM.png"
-    cv2.imwrite(merged_file_path, merged_image)
-
-    return merged_file_path
+    return local_path
 
 
 def perform_bom_extraction(file_path: str) -> BillOfMaterials | str:
@@ -83,7 +68,7 @@ def perform_bom_extraction(file_path: str) -> BillOfMaterials | str:
             return BillOfMaterials(items=[])
 
         print(f"--- 🤖 Sending file path to Gemini: {merged_file_path} ---")
-        dspy_image = dspy.Image(merged_file_path)
+        dspy_image = dspy.Image(url=merged_file_path)
 
         # Use a BOM-optimised model while keeping the global default for other tools.
         with dspy.context(lm=GEMINI_2_5_FLASH):

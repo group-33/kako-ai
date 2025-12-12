@@ -14,7 +14,7 @@ load_dotenv(os.path.join(project_root, ".env"))
 # 3. Import the service-layer function
 from backend.src.tools.bom_extraction.bom_tool import perform_bom_extraction
 from backend.src.models import BillOfMaterials
-
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/jason-mann/Desktop/GenAI_projekt/kako-ai_auth.json"
 # --- CONFIGURATION ---
 TEST_FILENAME = "4000019-1210.00." 
 # ---------------------
@@ -28,7 +28,13 @@ def run_test():
         return
 
     # Initialize the model
-    lm = dspy.LM(model='gemini/gemini-2.5-flash', api_key=api_key)
+
+    vertex_model_name = 'vertex_ai/gemini-2.5-flash'
+    lm = dspy.LM(
+        model=vertex_model_name,
+        project="kako-ai",           # Your Project ID
+        vertex_location="europe-west3" # Frankfurt Location
+    )
     dspy.settings.configure(lm=lm)
     
     print(f"--- 🧪 Testing BOM Extraction with file: {TEST_FILENAME} ---")
