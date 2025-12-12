@@ -7,12 +7,6 @@ import dspy
 
 load_dotenv(override=True)
 
-import os
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
-
 # Nexar API Credentials
 NEXAR_CLIENT_ID = os.getenv("NEXAR_CLIENT_ID", "")
 NEXAR_CLIENT_SECRET = os.getenv("NEXAR_CLIENT_SECRET", "")
