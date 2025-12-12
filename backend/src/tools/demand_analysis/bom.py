@@ -1,16 +1,14 @@
-"""BOM-related API Tools"""
+"""BOM-related API tools (Xentral lookups and matching)."""
 from __future__ import annotations
-from typing import Any, Dict, List, Optional, Tuple
+
 import dspy
-import faiss
-import numpy as np
-import requests
-from sentence_transformers import SentenceTransformer
-import socket
-import psycopg2
 import json
+import psycopg2
+from sentence_transformers import SentenceTransformer
+
 from backend.src.models import BillOfMaterials
-from backend.src.config import XENTRAL_BEARER_TOKEN, XENTRAL_BASE_URL, XENTRAL_TIMEOUT_SECONDS, SUPABASE_PASSWORD
+from backend.src.config import SUPABASE_PASSWORD
+from backend.src.tools.demand_analysis.inventory import _fetch_bom_for_product
 
 DB_HOST = "aws-1-eu-north-1.pooler.supabase.com"
 DB_PORT = "5432"
@@ -36,8 +34,6 @@ def bom_check(product_identifier: str) -> str:
         return "No product identifier provided. Please pass an Artikelnummer or product name."
 
     store = ProductInfoStore()
-    store.ensure_initialized()
-
     match = store.search(bom_number=query, bom_desc=query)
     if not match:
         return f"Could not find any matching product for '{query}'."
@@ -49,14 +45,8 @@ def bom_check(product_identifier: str) -> str:
     if not product_id:
         return f"Matched '{product_num}' but no product ID is available to query its BOM."
 
-    bom_parts, error = _fetch_bom_parts(str(product_id))
-
-    if error and bom_parts is None:
-        return (
-            f"CASE1: Keine Stückliste für Artikel '{product_num}' ({product_name or 'kein Name'}) "
-            f"(Fehler: {error}). Sollen wir die Stückliste anlegen?"
-        )
-
+    # Use the shared Xentral helper from the inventory module to fetch BOM parts.
+    bom_parts = _fetch_bom_for_product(str(product_id))
     if bom_parts:
         return (
             f"CASE3: Artikel '{product_num}' ({product_name or 'kein Name'}) ist Stückliste "
@@ -67,35 +57,6 @@ def bom_check(product_identifier: str) -> str:
         f"CASE2: Artikel '{product_num}' ({product_name or 'kein Name'}) hat keine Stücklistenelemente. "
         f"Sollen wir die Stücklistenelemente zufügen?"
     )
-
-
-def _fetch_bom_parts(product_id: str) -> Tuple[Optional[List[Dict[str, Any]]], Optional[str]]:
-    """
-    Use the v1 endpoint to retrieve BOM parts for the product.
-
-    Returns a tuple of (parts, error_message).
-    """
-    headers = {"Authorization": f"Bearer {XENTRAL_BEARER_TOKEN or ''}"}
-    url = f"{XENTRAL_BASE_URL}/api/v1/products/{product_id}/parts"
-    try:
-        resp = requests.get(url, headers=headers, timeout=XENTRAL_TIMEOUT_SECONDS)
-        resp.raise_for_status()
-
-        if not resp.content:
-            return [], None
-
-        data = resp.json()
-        if isinstance(data, dict):
-            if "data" in data:
-                return data.get("data") or [], None
-            if "parts" in data and isinstance(data.get("parts"), list):
-                return data.get("parts"), None
-        if isinstance(data, list):
-            return data, None
-
-        return [], None
-    except Exception as exc:
-        return None, str(exc)
 
 
 def perform_bom_matching(bom: BillOfMaterials) -> str:

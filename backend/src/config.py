@@ -24,6 +24,10 @@ if not NEXAR_CLIENT_ID or not NEXAR_CLIENT_SECRET:
 XENTRAL_API_KEY = os.getenv("XENTRAL_API_KEY")
 XENTRAL_BASE_URL = os.getenv("XENTRAL_BASE_URL", "https://kako.xentral.biz/api/v1")
 XENTRAL_TIMEOUT_SECONDS = 10
+XENTRAL_BEARER_TOKEN = os.getenv("XENTRAL_BEARER_TOKEN", XENTRAL_API_KEY or "")
+
+# --- Supabase / Postgres configuration ---
+SUPABASE_PASSWORD = os.getenv("SUPABASE_PASSWORD")
 
 # --- Gemini model handles ---
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
