@@ -87,11 +87,10 @@ const BOMTable = ({ initialData }: { initialData: BOMRow[] }) => {
 
         <button
           onClick={handleSave}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-medium transition-all ${
-            isSaved
+          className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-medium transition-all ${isSaved
               ? "bg-green-100 text-green-700 border border-green-200"
               : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
-          }`}
+            }`}
         >
           {isSaved ? "Gespeichert!" : "Bestätigen"}
           {!isSaved && <Save size={12} />}
@@ -104,6 +103,6 @@ const BOMTable = ({ initialData }: { initialData: BOMRow[] }) => {
 export const BOMTableTool = makeAssistantToolUI({
   toolName: "display_bom_table",
   render: ({ args }) => {
-    return <BOMTable initialData={args.data as BOMRow[]} />;
+    return <BOMTable initialData={args.rows as BOMRow[]} />;
   },
 });
