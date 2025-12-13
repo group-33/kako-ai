@@ -33,6 +33,9 @@ class KakoAgentSignature(dspy.Signature):
     user_query: str = dspy.InputField(
         desc="Natural-language task or question to solve; include any specifics such as file paths or part numbers."
     )
+    history: dspy.History = dspy.InputField(
+        desc="Conversation history for this thread; use it to maintain context across turns."
+    )
     process_result: str = dspy.OutputField(
         desc="Natural-language summary of the reasoning steps and tool results."
     )
@@ -64,6 +67,10 @@ class KakoAgent:
     def __init__(self) -> None:
         self.agent = dspy.ReAct(KakoAgentSignature, tools=TOOLBOX)
 
-    def __call__(self, user_query: str) -> dspy.Prediction:
+    def __call__(
+        self, user_query: str, history: dspy.History | None = None
+    ) -> dspy.Prediction:
         """Invoke the agent with a natural-language request and return the ReAct prediction."""
-        return self.agent(user_query=user_query)
+        if history is None:
+            history = dspy.History(messages=[])
+        return self.agent(user_query=user_query, history=history)

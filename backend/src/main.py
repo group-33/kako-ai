@@ -2,22 +2,28 @@
 from __future__ import annotations
 
 import uuid
+import re
 from datetime import datetime, timezone
 
 import dspy
-from fastapi import FastAPI, Depends, Form, Request
+from fastapi import FastAPI, Depends, Form, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 
 from backend.src.config import GEMINI_2_5_PRO
 from backend.src.agent import KakoAgent
 from backend.src.models import (
+    AgentRequest,
     AgentResponse,
     TextBlock,
     ToolUseBlock,
-    BOMRow,
-    BOMTableData,
     BillOfMaterials,
+)
+from backend.src.utils import (
+    extract_tool_calls_from_trajectory,
+    build_bom_tool_block,
+    append_to_history,
+    compute_bom_id,
+    apply_bom_update,
 )
 from backend.src.tools.bom_extraction.bom_tool import perform_bom_extraction
 
@@ -40,6 +46,8 @@ app.add_middleware(
 
 # Instantiate the unified agent once and store on app state for DI access
 app.state.agent = KakoAgent()
+app.state.histories = {}
+app.state.boms = {}
 
 
 def get_agent(request: Request) -> KakoAgent:
@@ -51,78 +59,133 @@ def get_agent(request: Request) -> KakoAgent:
     return agent
 
 
-class BOMRequest(BaseModel):
-    """Request payload for triggering BOM extraction."""
+def _get_history_for_thread(thread_id: str | None) -> dspy.History:
+    """Return a per-thread DSPy History (in-memory)."""
+    # For MVP: in-memory, single-process storage. If thread_id is missing, use a shared default.
+    # For production, use explicit thread IDs + an external store (Redis/DB).
+    tid = thread_id or "default"
+    histories = app.state.histories
+    history = histories.get(tid)
+    if history is None:
+        history = dspy.History(messages=[])
+        histories[tid] = history
+    return history
 
-    filename: str
 
-
-@app.post("/agent")
+@app.post("/agent", response_model=AgentResponse)
 async def run_agent(
-    user_query: str = Form(..., description="Natural language request to complete."),
-    agent: KakoAgent = Depends(get_agent),
-):
-    return agent(user_query=user_query)
+        request: Request,
+        user_query: str | None = Form(
+            default=None, description="Natural language request to complete."
+        ),
+        agent: KakoAgent = Depends(get_agent),
+) -> AgentResponse:
+    """Unified agent endpoint returning blocks the frontend can render.
 
+    Accepts either form-encoded `user_query` or a JSON body: `{ "user_query": "..." }`.
+    """
+    thread_id: str | None = None
+    bom_update = None
+    if user_query is None:
+        try:
+            payload = AgentRequest.model_validate(await request.json())
+            user_query = payload.user_query
+            thread_id = payload.thread_id
+            bom_update = payload.bom_update
+        except Exception as exc:
+            raise HTTPException(
+                status_code=400,
+                detail="Missing `user_query` (expected form field or JSON body).",
+            ) from exc
 
-@app.post("/bom", response_model=AgentResponse)
-async def extract_bom(payload: BOMRequest) -> AgentResponse:
-    """Run BOM extraction and return a component-based response for the frontend."""
+    thread_key = thread_id or "default"
+    history = _get_history_for_thread(thread_id)
 
-    result = perform_bom_extraction(payload.filename)
+    # Apply user-confirmed BOM edits (if provided) before running the agent.
+    if bom_update is not None:
+        stored = app.state.boms.get(thread_key)
+        if not stored or stored.get("bom_id") != bom_update.bom_id:
+            raise HTTPException(
+                status_code=409,
+                detail="BOM revision mismatch; please refresh and confirm again.",
+            )
+        merged = apply_bom_update(stored["bom"], bom_update)
+        app.state.boms[thread_key] = {
+            "bom_id": stored["bom_id"],
+            "bom": merged,
+            "source_document": stored.get("source_document"),
+        }
+        append_to_history(
+            history,
+            user_query="__BOM_CONFIRMED__",
+            process_result=merged.model_dump_json(),
+        )
+        if user_query.strip() == "__BOM_CONFIRM__":
+            return AgentResponse(
+                response_id=f"msg_{uuid.uuid4()}",
+                created_at=datetime.now(timezone.utc),
+                blocks=[TextBlock(content="BOM saved.")],
+            )
 
-    response_id = f"msg_{uuid.uuid4()}"
-    created_at = datetime.now(timezone.utc)
+    # Detect file path tokens so we can fall back to BOM extraction if the agent doesn't call the tool.
+    file_match = None
+    # Accept absolute/relative paths and plain filenames with supported extensions.
+    m = re.search(r"(?P<path>\S+?\.(?:png|jpg|jpeg|pdf))", user_query, flags=re.IGNORECASE)
+    if m:
+        file_match = m.group("path")
+
+    prediction = agent(user_query=user_query, history=history)
+    content = getattr(prediction, "process_result", None) or str(prediction)
+
     blocks: list[TextBlock | ToolUseBlock] = []
+    if content:
+        blocks.append(TextBlock(content=content))
 
-    if isinstance(result, BillOfMaterials):
-        # 1) Text explanation block
+    # Convert tool outputs into UI blocks (lightweight adapter) using DSPy's recorded trajectory.
+    saw_bom = False
+    trajectory = getattr(prediction, "trajectory", None)
+    for tool_name, tool_args, observation in extract_tool_calls_from_trajectory(trajectory):
+        if tool_name != "perform_bom_extraction":
+            continue
+        bom: BillOfMaterials | None = None
+        if isinstance(observation, BillOfMaterials):
+            bom = observation
+        elif isinstance(observation, dict):
+            try:
+                bom = BillOfMaterials.model_validate(observation)
+            except Exception:
+                bom = None
+        if bom is None:
+            continue
+
+        saw_bom = True
+        source = tool_args.get("file_path") or tool_args.get("filename")
+        bom_id = compute_bom_id(bom, source_document=source)
+        app.state.boms[thread_key] = {"bom_id": bom_id, "bom": bom, "source_document": source}
+        append_to_history(history, user_query="__BOM_EXTRACTED__", process_result=bom.model_dump_json())
         blocks.append(
-            TextBlock(
-                content=(
-                    "Ich habe die Zeichnung erfolgreich verarbeitet. "
-                    "Bitte prüfen Sie die automatisch erkannte Stückliste."
-                )
-            )
+            build_bom_tool_block(bom, source_document=source, bom_id=bom_id, thread_id=thread_key)
         )
 
-        # 2) BOM table tool-use block
-        rows: list[BOMRow] = []
-        for idx, item in enumerate(result.items):
-            row_id = item.part_number or f"item_{idx+1}"
-            component = item.description_of_part or f"Part {item.part_number}"
-            description_bits = []
-            if item.measurements_in_description:
-                description_bits.append(item.measurements_in_description)
-            if item.no_of_poles:
-                description_bits.append(f"{item.no_of_poles} poles")
-            if item.hdm_no:
-                description_bits.append(f"HDM {item.hdm_no}")
-            description = " | ".join(description_bits) if description_bits else None
-
-            rows.append(
-                BOMRow(
-                    id=row_id,
-                    component=component,
-                    quantity=item.quantity,
-                    unit="Stk",
-                    description=description,
-                    confidence_score=None,
-                )
+    # Fallback: if query included a file path, but the agent didn't call the BOM tool.
+    if file_match and not saw_bom:
+        result = perform_bom_extraction(file_match)
+        if isinstance(result, BillOfMaterials):
+            bom_id = compute_bom_id(result, source_document=file_match)
+            app.state.boms[thread_key] = {"bom_id": bom_id, "bom": result, "source_document": file_match}
+            append_to_history(history, user_query="__BOM_EXTRACTED__", process_result=result.model_dump_json())
+            blocks.append(
+                build_bom_tool_block(result, source_document=file_match, bom_id=bom_id, thread_id=thread_key)
             )
+        else:
+            blocks.append(TextBlock(content=str(result)))
 
-        bom_data = BOMTableData(rows=rows, source_document=payload.filename)
-        blocks.append(
-            ToolUseBlock(
-                tool_name="display_bom_table",
-                data=bom_data.model_dump(),
-            )
-        )
-    else:
-        # Error branch: just surface the message as text.
-        blocks.append(TextBlock(content=str(result)))
-
-    return AgentResponse(response_id=response_id, created_at=created_at, blocks=blocks)
+    append_to_history(history, user_query=user_query, process_result=content)
+    return AgentResponse(
+        response_id=f"msg_{uuid.uuid4()}",
+        created_at=datetime.now(timezone.utc),
+        blocks=blocks,
+    )
 
 
 @app.get("/health")

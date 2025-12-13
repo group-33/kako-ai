@@ -58,6 +58,30 @@ class ToolUseBlock(BaseModel):
 ContentBlock = Union[TextBlock, ToolUseBlock]
 
 
+class BOMOverride(BaseModel):
+    """Editable overrides for a single BOM row (keyed by a stable item id)."""
+
+    item_id: str
+    quantity: int
+    component: str | None = None
+    unit: str | None = None
+
+
+class BOMUpdate(BaseModel):
+    """Set of overrides to apply to the latest extracted BOM."""
+
+    bom_id: str
+    overrides: List[BOMOverride]
+
+
+class AgentRequest(BaseModel):
+    """Request payload for the unified agent endpoint."""
+
+    user_query: str
+    thread_id: str | None = None
+    bom_update: BOMUpdate | None = None
+
+
 class AgentResponse(BaseModel):
     """Top-level response object returned by backend endpoints to the frontend."""
 

@@ -3,6 +3,7 @@ import { AssistantRuntimeProvider, useLocalRuntime } from "@assistant-ui/react";
 import { BOMTableTool } from "./tools/BOMTableTool";
 import { ProcurementOptionsTool } from "./tools/ProcurementOptionsTool";
 import type { ReadonlyJSONObject } from "assistant-stream/utils";
+import { useRef } from "react";
 
 const BACKEND_BASE_URL =
   (import.meta as ImportMeta & { env: { VITE_BACKEND_URL?: string } }).env
@@ -26,177 +27,71 @@ type AgentResponse = {
 };
 
 export function Chat() {
+  const threadIdRef = useRef<string>(
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `thread_${Date.now()}`,
+  );
+
   const runtime = useLocalRuntime({
     run: async function* ({ messages, abortSignal }) {
       const lastMessage = messages[messages.length - 1];
       if (!lastMessage || lastMessage.content[0]?.type !== "text") return;
 
       const userTextRaw = lastMessage.content[0].text;
-      const userText = userTextRaw.toLowerCase();
-
       // Simuliere Nachdenken
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       if (abortSignal.aborted) return;
 
-      // TRIGGER: Reagiert nur auf das Wort "stückliste"
-      if (userText.includes("stückliste")) {
-        const text =
-          "Verstanden. Ich habe die technischen Daten analysiert. Hier ist die vorläufige Stückliste sowie passende Beschaffungsoptionen für die kritischen Komponenten:";
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/agent`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_query: userTextRaw,
+            thread_id: threadIdRef.current,
+          }),
+        });
 
-        // Text streamen wie zuvor
-        for (let i = 0; i < text.length; i += 5) {
-          if (abortSignal.aborted) return;
-          yield { content: [{ type: "text", text: text.slice(0, i + 5) }] };
-          await new Promise((resolve) => setTimeout(resolve, 20));
+        if (abortSignal.aborted) return;
+        if (!res.ok) {
+          const msg = `Backend error (${res.status}): ${await res.text()}`;
+          yield { content: [{ type: "text", text: msg }] };
+          return;
         }
 
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        if (abortSignal.aborted) return;
-
-        // NEU: Versuche echte BOM-Extraktion über das Backend, falls ein Pfad erkennbar ist
-        const pathMatch = userTextRaw.match(
-          /(?:\/[^\s]+)+\.(?:png|jpg|jpeg|pdf)/i,
-        );
-        const filenameForBackend = pathMatch?.[0];
-
-        if (filenameForBackend) {
-          try {
-            const res = await fetch(`${BACKEND_BASE_URL}/bom`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ filename: filenameForBackend }),
-            });
-
-            if (!abortSignal.aborted && res.ok) {
-              const data = (await res.json()) as AgentResponse;
-              const bomBlock = data.blocks.find(
-                (b): b is ToolUseBlock =>
-                  b.type === "tool_use" &&
-                  b.tool_name === "display_bom_table",
-              );
-
-              if (bomBlock) {
-                const toolCallId = `call_bom_${Date.now()}`;
-
-                // Backend sends { rows: [...], source_document?: string }.
-                // The BOMTableTool expects args.data to be an array of rows.
-                const rows = Array.isArray(
-                  (bomBlock.data as { rows?: ReadonlyJSONObject[] }).rows,
-                )
-                  ? ((bomBlock.data as { rows: ReadonlyJSONObject[] }).rows ??
-                    [])
-                  : [];
-
-                const args: ReadonlyJSONObject = { data: rows };
-
-                yield {
-                  content: [
-                    {
-                      type: "tool-call",
-                      toolName: "display_bom_table",
-                      toolCallId,
-                      args,
-                      argsText: JSON.stringify(args),
-                    },
-                  ],
-                };
-                return;
-              }
+        const data = (await res.json()) as AgentResponse;
+        const content: Array<
+          | { type: "text"; text: string }
+          | {
+              type: "tool-call";
+              toolName: string;
+              toolCallId: string;
+              args: ReadonlyJSONObject;
+              argsText: string;
             }
-          } catch {
-            // Bei Fehler einfach auf Mock-Daten zurückfallen
+        > = [];
+
+        for (const block of data.blocks) {
+          if (block.type === "text") {
+            content.push({ type: "text", text: block.content });
+          } else if (block.type === "tool_use") {
+            const args = block.data as ReadonlyJSONObject;
+            content.push({
+              type: "tool-call",
+              toolName: block.tool_name,
+              toolCallId: `call_${block.tool_name}_${Date.now()}`,
+              args,
+              argsText: JSON.stringify(args),
+            });
           }
         }
 
-        // MOCK DATEN FÜR STÜCKLISTE (Updated Schema: 'rows')
-        const bomData = {
-          rows: [
-            { component: "Gehäuseoberschale (ALU)", quantity: 1, unit: "Stk" },
-            { component: "Platine Mainboard v2.4", quantity: 1, unit: "Stk" },
-            { component: "Schrauben M4x10", quantity: 12, unit: "Stk" },
-            { component: "Wärmeleitpaste", quantity: 2, unit: "g" },
-            { component: "Verbindungskabel Molex", quantity: 3, unit: "Stk" },
-          ],
-        };
-
-        // MOCK DATEN FÜR BESCHAFFUNG (New Schema)
-        const procurementData = {
-          items_to_procure: [
-            {
-              component_name: "Schrauben M4x10",
-              options: [
-                {
-                  supplier: "Würth",
-                  part_number: "ISO-4762-M4x10",
-                  price_per_unit: 0.12,
-                  currency: "EUR",
-                  min_order_quantity: 100,
-                  delivery_time_days: 2,
-                  in_stock: true,
-                  link: "https://eshop.wuerth.de",
-                },
-                {
-                  supplier: "Schrauben24",
-                  part_number: "S-M4-10-VA",
-                  price_per_unit: 0.09,
-                  currency: "EUR",
-                  min_order_quantity: 500,
-                  delivery_time_days: 5,
-                  in_stock: true,
-                  link: "https://example.com/screws",
-                },
-              ],
-            },
-            {
-              component_name: "Wärmeleitpaste",
-              options: [
-                {
-                  supplier: "Conrad",
-                  part_number: "MX-4-2019",
-                  price_per_unit: 8.99,
-                  currency: "EUR",
-                  min_order_quantity: 1,
-                  delivery_time_days: 1,
-                  in_stock: true,
-                  link: "https://conrad.de",
-                },
-              ],
-            },
-          ],
-        };
-
-        // Tool Calls senden (Sequentiell oder Parallel möglich, hier als ein Block)
-        yield {
-          content: [
-            {
-              type: "tool-call",
-              toolName: "display_bom_table",
-              toolCallId: "call_bom_123",
-              args: bomData,
-              argsText: JSON.stringify(bomData),
-            },
-            {
-              type: "tool-call",
-              toolName: "display_procurement_options",
-              toolCallId: "call_proc_456",
-              args: procurementData,
-              argsText: JSON.stringify(procurementData),
-            },
-          ],
-        };
-      } else {
-        // FALLBACK: Wenn NICHT "stückliste" vorkommt – alter Mock-Text
-        const response =
-          "Ich bin bereit. Bitte fordere eine 'Stückliste' an, um die Komponenten und Beschaffungsoptionen zu sehen.";
-        for (let i = 0; i < response.length; i += 3) {
-          if (abortSignal.aborted) return;
-          yield {
-            content: [{ type: "text", text: response.slice(0, i + 3) }],
-          };
-          await new Promise((resolve) => setTimeout(resolve, 30));
-        }
+        yield { content };
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Unknown error calling backend.";
+        yield { content: [{ type: "text", text: `Network error: ${message}` }] };
       }
     },
   });

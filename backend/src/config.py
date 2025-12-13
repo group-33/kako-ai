@@ -10,14 +10,10 @@ load_dotenv(override=True)
 # Nexar API Credentials
 NEXAR_CLIENT_ID = os.getenv("NEXAR_CLIENT_ID", "")
 NEXAR_CLIENT_SECRET = os.getenv("NEXAR_CLIENT_SECRET", "")
-PROCUREMENT_API_IS_LIVE = (
-    os.getenv("PROCUREMENT_API_IS_LIVE", "false").lower() == "true"
-)
-
-if not NEXAR_CLIENT_ID or not NEXAR_CLIENT_SECRET:
-    raise ValueError(
-        "NEXAR_CLIENT_ID and NEXAR_CLIENT_SECRET must be set in environment variables (create .env file)."
-    )
+_procurement_api_is_live_env = os.getenv("PROCUREMENT_API_IS_LIVE", "false").lower() == "true"
+# Only enable "live" calls when credentials are present; otherwise the procurement
+# tooling falls back to cached/mock behavior without preventing the API from booting.
+PROCUREMENT_API_IS_LIVE = bool(_procurement_api_is_live_env and NEXAR_CLIENT_ID and NEXAR_CLIENT_SECRET)
 
 # --- Xentral API Configuration ---
 # Loaded from .env (gitignored) so secrets stay out of git.

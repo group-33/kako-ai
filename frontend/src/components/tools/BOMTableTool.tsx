@@ -2,13 +2,23 @@ import { makeAssistantToolUI } from "@assistant-ui/react";
 import { Box, Save } from "lucide-react";
 import { useState } from "react";
 
-// Wir definieren den Typ für eine Zeile
-type BOMRow = { component: string; quantity: number; unit: string };
+const BACKEND_BASE_URL =
+  (import.meta as ImportMeta & { env: { VITE_BACKEND_URL?: string } }).env
+    .VITE_BACKEND_URL ?? "http://127.0.0.1:8000";
 
-const BOMTable = ({ initialData }: { initialData: BOMRow[] }) => {
+type BOMRow = { id: string; component: string; quantity: number; unit: string };
+type BOMTableArgs = {
+  bom_id: string;
+  thread_id: string;
+  source_document?: string;
+  rows: BOMRow[];
+};
+
+const BOMTable = ({ args }: { args: BOMTableArgs }) => {
   // Lokaler State macht die Tabelle editierbar!
-  const [data, setData] = useState(initialData);
+  const [data, setData] = useState(args.rows);
   const [isSaved, setIsSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Funktion zum Ändern der Menge
   const handleQuantityChange = (index: number, newVal: string) => {
@@ -20,11 +30,35 @@ const BOMTable = ({ initialData }: { initialData: BOMRow[] }) => {
     }
   };
 
-  // Funktion zum Simulieren des Speicherns
-  const handleSave = () => {
-    setIsSaved(true);
-    // Hier würde man später die Daten ans Backend zurückschicken
-    console.log("Neue Stückliste gespeichert:", data);
+  const handleSave = async () => {
+    setSaveError(null);
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/agent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_query: "__BOM_CONFIRM__",
+          thread_id: args.thread_id,
+          bom_update: {
+            bom_id: args.bom_id,
+            overrides: data.map((row) => ({
+              item_id: row.id,
+              quantity: row.quantity,
+            })),
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        setSaveError(await res.text());
+        setIsSaved(false);
+        return;
+      }
+      setIsSaved(true);
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : "Unknown error");
+      setIsSaved(false);
+    }
   };
 
   return (
@@ -81,8 +115,8 @@ const BOMTable = ({ initialData }: { initialData: BOMRow[] }) => {
       {/* FOOTER MIT AKTION */}
       <div className="p-3 bg-slate-50 border-t flex items-center justify-between">
         <span className="text-xs text-slate-400">
-          {/* Dein gewünschter Text */}
-          Automatisch aus Zeichnung "Name Zeichnung" extrahiert
+          Automatisch aus Zeichnung{" "}
+          {args.source_document ? `"${args.source_document}"` : "extrahiert"}
         </span>
 
         <button
@@ -96,6 +130,12 @@ const BOMTable = ({ initialData }: { initialData: BOMRow[] }) => {
           {!isSaved && <Save size={12} />}
         </button>
       </div>
+
+      {saveError && (
+        <div className="px-4 py-2 text-xs text-red-700 bg-red-50 border-t">
+          Speichern fehlgeschlagen: {saveError}
+        </div>
+      )}
     </div>
   );
 };
@@ -103,6 +143,6 @@ const BOMTable = ({ initialData }: { initialData: BOMRow[] }) => {
 export const BOMTableTool = makeAssistantToolUI({
   toolName: "display_bom_table",
   render: ({ args }) => {
-    return <BOMTable initialData={args.rows as BOMRow[]} />;
+    return <BOMTable args={args as unknown as BOMTableArgs} />;
   },
 });
