@@ -1,10 +1,13 @@
 """Unified KakoAI ReAct agent wiring available tools."""
+
 from __future__ import annotations
 
 import dspy
 
 from backend.src.tools.bom_extraction.bom_tool import perform_bom_extraction
-from backend.src.tools.demand_analysis.feasibility import run_structured_feasibility_check
+from backend.src.tools.demand_analysis.feasibility import (
+    run_structured_feasibility_check,
+)
 from backend.src.tools.demand_analysis.inventory import (
     run_full_feasibility_analysis,
     list_deliveries_in_range,
@@ -15,6 +18,13 @@ from backend.src.tools.demand_analysis.inventory import (
     get_sales_orders,
     get_future_boms,
 )
+from backend.src.tools.procurement.procurement import (
+    filter_sellers_by_shipping,
+    sort_and_filter_by_best_price,
+    search_part_by_mpn,
+    find_alternatives,
+    optimize_order,
+)
 
 
 class KakoAgentSignature(dspy.Signature):
@@ -22,6 +32,9 @@ class KakoAgentSignature(dspy.Signature):
 
     user_query: str = dspy.InputField(
         desc="Natural-language task or question to solve; include any specifics such as file paths or part numbers."
+    )
+    history: dspy.History = dspy.InputField(
+        desc="Conversation history for this thread; use it to maintain context across turns."
     )
     process_result: str = dspy.OutputField(
         desc="Natural-language summary of the reasoning steps and tool results."
@@ -38,7 +51,13 @@ TOOLBOX = [
     get_existing_customer_orders,
     get_sales_orders,
     get_future_boms,
-    run_structured_feasibility_check
+    run_structured_feasibility_check,
+    # procurement tools
+    filter_sellers_by_shipping,
+    sort_and_filter_by_best_price,
+    search_part_by_mpn,
+    find_alternatives,
+    optimize_order,
 ]
 
 
@@ -48,6 +67,10 @@ class KakoAgent:
     def __init__(self) -> None:
         self.agent = dspy.ReAct(KakoAgentSignature, tools=TOOLBOX)
 
-    def __call__(self, user_query: str) -> dspy.Prediction:
+    def __call__(
+        self, user_query: str, history: dspy.History | None = None
+    ) -> dspy.Prediction:
         """Invoke the agent with a natural-language request and return the ReAct prediction."""
-        return self.agent(user_query=user_query)
+        if history is None:
+            history = dspy.History(messages=[])
+        return self.agent(user_query=user_query, history=history)

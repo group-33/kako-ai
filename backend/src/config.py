@@ -1,4 +1,5 @@
 """Application configuration and shared settings."""
+
 import os
 from dotenv import load_dotenv
 

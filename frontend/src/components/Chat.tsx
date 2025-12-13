@@ -1,67 +1,97 @@
 import { Thread } from "@/components/assistant-ui/thread";
 import { AssistantRuntimeProvider, useLocalRuntime } from "@assistant-ui/react";
-// WICHTIG: Importiere das neue Tool (achte auf den Dateinamen!)
 import { BOMTableTool } from "./tools/BOMTableTool";
+import { ProcurementOptionsTool } from "./tools/ProcurementOptionsTool";
+import type { ReadonlyJSONObject } from "assistant-stream/utils";
+import { useRef } from "react";
+
+const BACKEND_BASE_URL =
+  (import.meta as ImportMeta & { env: { VITE_BACKEND_URL?: string } }).env
+    .VITE_BACKEND_URL ?? "http://127.0.0.1:8000";
+
+type TextBlock = {
+  type: "text";
+  content: string;
+};
+
+type ToolUseBlock = {
+  type: "tool_use";
+  tool_name: string;
+  data: ReadonlyJSONObject;
+};
+
+type AgentResponse = {
+  response_id: string;
+  created_at: string;
+  blocks: Array<TextBlock | ToolUseBlock>;
+};
 
 export function Chat() {
+  const threadIdRef = useRef<string>(
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `thread_${Date.now()}`,
+  );
+
   const runtime = useLocalRuntime({
     run: async function* ({ messages, abortSignal }) {
       const lastMessage = messages[messages.length - 1];
       if (!lastMessage || lastMessage.content[0]?.type !== "text") return;
 
-      // Alles in Kleinbuchstaben umwandeln für den Vergleich
-      const userText = lastMessage.content[0].text.toLowerCase();
-
+      const userTextRaw = lastMessage.content[0].text;
       // Simuliere Nachdenken
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       if (abortSignal.aborted) return;
 
-      // --- LOGIK WEICHE ---
+      try {
+        const res = await fetch(`${BACKEND_BASE_URL}/agent`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_query: userTextRaw,
+            thread_id: threadIdRef.current,
+          }),
+        });
 
-      // TRIGGER: Reagiert nur auf das Wort "stückliste"
-      if (userText.includes("stückliste")) {
-        const text =
-          "Verstanden. Ich habe die technischen Daten analysiert. Hier ist die vorläufige Stückliste für die Fertigung:";
-
-        // Text streamen
-        for (let i = 0; i < text.length; i += 5) {
-          yield { content: [{ type: "text", text: text.slice(0, i + 5) }] };
-          await new Promise((resolve) => setTimeout(resolve, 20));
+        if (abortSignal.aborted) return;
+        if (!res.ok) {
+          const msg = `Backend error (${res.status}): ${await res.text()}`;
+          yield { content: [{ type: "text", text: msg }] };
+          return;
         }
 
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        const data = (await res.json()) as AgentResponse;
+        const content: Array<
+          | { type: "text"; text: string }
+          | {
+              type: "tool-call";
+              toolName: string;
+              toolCallId: string;
+              args: ReadonlyJSONObject;
+              argsText: string;
+            }
+        > = [];
 
-        // MOCK DATEN FÜR STÜCKLISTE
-        const bomData = {
-          data: [
-            { component: "Gehäuseoberschale (ALU)", quantity: 1, unit: "Stk" },
-            { component: "Platine Mainboard v2.4", quantity: 1, unit: "Stk" },
-            { component: "Schrauben M4x10", quantity: 12, unit: "Stk" },
-            { component: "Wärmeleitpaste", quantity: 2, unit: "g" },
-            { component: "Verbindungskabel Molex", quantity: 3, unit: "Stk" },
-          ],
-        };
-
-        // Tool Call senden
-        yield {
-          content: [
-            {
+        for (const block of data.blocks) {
+          if (block.type === "text") {
+            content.push({ type: "text", text: block.content });
+          } else if (block.type === "tool_use") {
+            const args = block.data as ReadonlyJSONObject;
+            content.push({
               type: "tool-call",
-              toolName: "display_bom_table", // Muss mit BOMTableTool übereinstimmen
-              toolCallId: "call_bom_123",
-              args: bomData,
-              argsText: JSON.stringify(bomData),
-            },
-          ],
-        };
-      } else {
-        // FALLBACK: Wenn NICHT "stückliste" vorkommt
-        const response =
-          "Ich bin bereit. Bitte fordere eine 'Stückliste' an, um die Komponenten zu sehen.";
-        for (let i = 0; i < response.length; i += 3) {
-          yield { content: [{ type: "text", text: response.slice(0, i + 3) }] };
-          await new Promise((resolve) => setTimeout(resolve, 30));
+              toolName: block.tool_name,
+              toolCallId: `call_${block.tool_name}_${Date.now()}`,
+              args,
+              argsText: JSON.stringify(args),
+            });
+          }
         }
+
+        yield { content };
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Unknown error calling backend.";
+        yield { content: [{ type: "text", text: `Network error: ${message}` }] };
       }
     },
   });
@@ -69,8 +99,9 @@ export function Chat() {
   return (
     <AssistantRuntimeProvider runtime={runtime}>
       <div className="flex h-full flex-col overflow-hidden bg-white rounded-xl border shadow-sm relative">
-        {/* Hier das neue Tool registrieren */}
+        {/* Tools registrieren */}
         <BOMTableTool />
+        <ProcurementOptionsTool />
 
         {/* Standard Thread Komponente */}
         <Thread />
