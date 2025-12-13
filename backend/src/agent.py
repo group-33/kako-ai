@@ -1,10 +1,13 @@
 """Unified KakoAI ReAct agent wiring available tools."""
+
 from __future__ import annotations
 
 import dspy
 
 from backend.src.tools.bom_extraction.bom_tool import perform_bom_extraction
-from backend.src.tools.demand_analysis.feasibility import run_structured_feasibility_check
+from backend.src.tools.demand_analysis.feasibility import (
+    run_structured_feasibility_check,
+)
 from backend.src.tools.demand_analysis.inventory import (
     run_full_feasibility_analysis,
     list_deliveries_in_range,
@@ -14,6 +17,13 @@ from backend.src.tools.demand_analysis.inventory import (
     get_existing_customer_orders,
     get_sales_orders,
     get_future_boms,
+)
+from backend.src.tools.procurement.procurement import (
+    filter_sellers_by_shipping,
+    sort_and_filter_by_best_price,
+    search_part_by_mpn,
+    find_alternatives,
+    optimize_order,
 )
 
 
@@ -38,7 +48,13 @@ TOOLBOX = [
     get_existing_customer_orders,
     get_sales_orders,
     get_future_boms,
-    run_structured_feasibility_check
+    run_structured_feasibility_check,
+    # procurement tools
+    filter_sellers_by_shipping,
+    sort_and_filter_by_best_price,
+    search_part_by_mpn,
+    find_alternatives,
+    optimize_order,
 ]
 
 
