@@ -1,10 +1,10 @@
 """Shared, cross-feature Pydantic models."""
 from datetime import datetime
-from typing import List, Literal, Union, Dict, Any
+from typing import List, Literal, Union, Dict, Any, Optional
 
 from pydantic import BaseModel, Field
 
-
+"""
 class BOMItem(BaseModel):
     part_number: str = Field(description="Position/part number as referenced in the drawing or ERP.")
     quantity: int = Field(description="Units of this component needed for one finished product.")
@@ -17,8 +17,44 @@ class BOMItem(BaseModel):
 
 class BillOfMaterials(BaseModel):
     items: List[BOMItem] = Field(description="All component line items that make up the BOM.")
+"""
+class BOMItem(BaseModel):
+    part_number: int = Field(
+        "1",
+        description=(
+            "The entry number of the item."
+            "INSTRUCTION: If the drawing has explicit position numbers (e.g., 'Pos 10', '1.1'), extract them."
+            "If the drawing has NO position numbers, you MUST generate them yourself sequentially (1, 2, 3...) " 
+            "based on the order of the rows."
+            )
+        )
+    quantity: Optional[float] = Field(
+        None, 
+        description=(
+            "The numeric quantity required. Extract only the number. "
+            "Example: if '1.5 m' is listed, extract 1.5."
+        )
+    )
+    item_nr: Optional[str] = Field(
+        None,
+        description=(
+            "The unique identifier, part number, or order code for the item."
+        )
+    )
+    description: Optional[str] = Field(
+        None, 
+        description="The full human-readable description text of the component."
+    )
+    unit: str = Field(
+        "pcs", 
+        description=(
+            "The unit of measurement (e.g., 'm', 'mm', 'kg', 'pcs'). "
+            "If no unit is explicitly written, default to 'pcs'."
+        )
+    )
 
-
+class BillOfMaterials(BaseModel):
+    items: List[BOMItem] = Field(description="All component line items that make up the BOM.")
 # --- API response models (backend -> frontend) --------------------------------
 
 
@@ -34,7 +70,7 @@ class BOMRow(BaseModel):
 
     id: str
     component: str
-    quantity: int
+    quantity: float
     unit: str
     description: str | None = None
     confidence_score: float | None = None

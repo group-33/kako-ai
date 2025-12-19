@@ -62,14 +62,14 @@ def build_bom_tool_block(
     rows: list[BOMRow] = []
     for idx, item in enumerate(bom.items):
         row_id = _bom_item_key(item, idx)
-        component = item.description_of_part or f"Part {item.part_number}"
+        component = item.description or f"Part {item.part_number}"
         description_bits = []
-        if item.measurements_in_description:
-            description_bits.append(item.measurements_in_description)
-        if item.no_of_poles:
-            description_bits.append(f"{item.no_of_poles} poles")
-        if item.hdm_no:
-            description_bits.append(f"HDM {item.hdm_no}")
+        if item.unit:
+            description_bits.append(item.unit)
+        #if item.no_of_poles:
+        #    description_bits.append(f"{item.no_of_poles} poles")
+        #if item.hdm_no:
+        #    description_bits.append(f"HDM {item.hdm_no}")
         description = " | ".join(description_bits) if description_bits else None
 
         rows.append(

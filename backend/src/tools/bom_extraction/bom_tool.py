@@ -48,7 +48,6 @@ def _prepare_bom_image(file_path: str) -> str | None:
 
     return local_path
 
-
 def perform_bom_extraction(file_path: str) -> BillOfMaterials | str:
     """High-level BOM extraction tool used by the agent and tests.
 
@@ -63,11 +62,11 @@ def perform_bom_extraction(file_path: str) -> BillOfMaterials | str:
     print(f"🛠️ BOM extraction triggered for: {file_path}")
     try:
         merged_file_path = _prepare_bom_image(file_path)
-        if not merged_file_path:
+        #if not merged_file_path:
             # No tables found – return an empty BOM rather than raising.
-            return BillOfMaterials(items=[])
+        #    return BillOfMaterials(items=[])
 
-        print(f"--- 🤖 Sending file path to Gemini: {merged_file_path} ---")
+        #print(f"--- 🤖 Sending file path to Gemini: {merged_file_path} ---")
         dspy_image = dspy.Image(url=merged_file_path)
 
         # Use a BOM-optimised model while keeping the global default for other tools.

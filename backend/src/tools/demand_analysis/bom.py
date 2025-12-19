@@ -87,15 +87,19 @@ def perform_bom_matching(bom: BillOfMaterials) -> str:
 
     for item in items_list:
         part_number = getattr(item, "part_number", None)
-        o_number = getattr(item, "order_number", None)
-        desc = getattr(item, "description_of_part", None)
+        number = getattr(item, "item_nr", None)
+        desc = getattr(item, "description", None)
+        unit = getattr(item, "unit", None)
+        quantity = getattr(item, "quantity", None)
 
-        match = store.search(bom_number=o_number, bom_desc=desc)
+        match = store.search(bom_number=number, bom_desc=desc)
 
         entry = {
             "bom_part_id": part_number,         
-            "extracted_number": str(o_number) if o_number else None,
+            "extracted_number": str(number) if number else None,
             "extracted_description": desc,
+            "unit": unit,
+            "quantity": quantity,
             "match_found": False,
             "xentral_number": None,
             "xentral_name": None,
@@ -127,9 +131,17 @@ class ProductInfoStore:
 
     def _get_conn(self):
         return psycopg2.connect(self.dsn)
+    
+    def _normalize(self, text):
+        if not text:
+            return ""
+        return str(text).replace(" ", "").lower()
 
     def search(self, bom_number, bom_desc):
-        q_num = str(bom_number).strip().lower()
+        num_raw = str(bom_number).strip()
+        q_num = self._normalize(num_raw)
+        input_len = len(q_num)
+
         q_desc = str(bom_desc).strip().lower()
         has_specific_id = (len(q_num) > 0) and (q_num != "0")
 
@@ -140,9 +152,17 @@ class ProductInfoStore:
             cursor.execute("""
             SELECT xentral_id, nummer, name_de
             FROM xentral_products
-            WHERE LOWER(nummer) = %s
+            WHERE
+                (
+                (LENGTH(nummer) > 0 AND STRPOS(%s, REPLACE(LOWER(nummer), ' ', '')) > 0)
+                AND (LENGTH(REPLACE(nummer, ' ', ''))::float / %s::float) > 0.5
+                OR
+                (LENGTH(name_de) > 0 AND STRPOS(%s, REPLACE(LOWER(name_de), ' ', '')) > 0)
+                AND (LENGTH(REPLACE(nummer, ' ', ''))::float / %s::float) > 0.5
+                )
+            ORDER BY LENGTH(nummer) DESC
             LIMIT 1
-            """, (q_num,))
+            """, (q_num, input_len, q_num, input_len))
             row = cursor.fetchone()
             if row:
                 return {"id": row[0], "nummer": row[1], "name_de": row[2], "_source": "ID_MATCH"}
@@ -152,7 +172,7 @@ class ProductInfoStore:
             FROM xentral_products
             WHERE LOWER(name_de) LIKE %s OR LOWER(beschreibung_de) LIKE %s
             LIMIT 1
-            """, (f"%{q_num}%", f"%{q_num}%"))
+            """, (f"%{num_raw}%", f"%{num_raw}%"))
             row = cursor.fetchone()
             if row:
                 cursor.close()

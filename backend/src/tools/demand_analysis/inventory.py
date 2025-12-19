@@ -6,13 +6,13 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 from dateutil.relativedelta import relativedelta
 
-from backend.src.config import XENTRAL_API_KEY, XENTRAL_BASE_URL, XENTRAL_TIMEOUT_SECONDS
+from backend.src.config import XENTRAL_BEARER_TOKEN, XENTRAL_BASE_URL, XENTRAL_TIMEOUT_SECONDS
 from backend.src.models import BillOfMaterials
 
 def _build_headers() -> Dict[str, str]:
     """Build authorization headers for Xentral API calls."""
     return {
-        "Authorization": f"Bearer {XENTRAL_API_KEY or 'missing'}",
+        "Authorization": f"Bearer {XENTRAL_BEARER_TOKEN or 'missing'}",
         "Content-Type": "application/json",
         "Accept": "application/json",
     }
@@ -98,8 +98,6 @@ def get_existing_customer_orders() -> List[Dict[str, Any]]:
 
 def get_sales_orders(time_quantity: str, time_unit: str) -> Any:
     """Return sales orders for the given future time window. Real call if creds present, else mock."""
-    if not XENTRAL_API_KEY or not XENTRAL_BASE_URL:
-        return {"message": f"Mock orders for next {time_quantity} {time_unit}", "orders": []}
     from_date, to_date = _calculate_dates(time_quantity, time_unit)
     url = f"{XENTRAL_BASE_URL}/api/v1/belege/auftraege"
     params = {
@@ -115,6 +113,8 @@ def get_sales_orders(time_quantity: str, time_unit: str) -> Any:
     resp = requests.get(url, params=params, headers=_build_headers(), timeout=XENTRAL_TIMEOUT_SECONDS)
     resp.raise_for_status()
     data = resp.json() if resp.content else []
+    print(data["data"][0])
+    return None
     if isinstance(data, dict) and "data" in data:
         return data["data"]
     return data
@@ -122,7 +122,7 @@ def get_sales_orders(time_quantity: str, time_unit: str) -> Any:
 
 def get_future_boms(time_quantity: str, time_unit: str) -> Dict[str, Any]:
     """Aggregate BOMs for products in upcoming sales orders for a future window."""
-    if not XENTRAL_API_KEY or not XENTRAL_BASE_URL:
+    if not XENTRAL_BEARER_TOKEN or not XENTRAL_BASE_URL:
         return {
             "summary": f"[MOCK] No credentials; returning empty BOM list for next {time_quantity} {time_unit}",
             "details": [],

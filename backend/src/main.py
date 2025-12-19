@@ -9,7 +9,7 @@ import dspy
 from fastapi import FastAPI, Depends, Form, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.src.config import GEMINI_2_5_PRO
+from backend.src.config import GEMINI_2_5_FLASH
 from backend.src.agent import KakoAgent
 from backend.src.models import (
     AgentRequest,
@@ -28,7 +28,7 @@ from backend.src.utils import (
 from backend.src.tools.bom_extraction.bom_tool import perform_bom_extraction
 
 # --- Configure LLM globally ---
-dspy.configure(lm=GEMINI_2_5_PRO)
+dspy.configure(lm=GEMINI_2_5_FLASH)
 
 app = FastAPI(title="KakoAI")
 

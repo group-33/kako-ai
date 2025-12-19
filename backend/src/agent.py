@@ -18,6 +18,10 @@ from backend.src.tools.demand_analysis.inventory import (
     get_sales_orders,
     get_future_boms,
 )
+from backend.src.tools.demand_analysis.bom import (
+    bom_check,
+    perform_bom_matching
+)
 from backend.src.tools.procurement.procurement import (
     filter_sellers_by_shipping,
     sort_and_filter_by_best_price,
@@ -43,6 +47,9 @@ class KakoAgentSignature(dspy.Signature):
 
 TOOLBOX = [
     perform_bom_extraction,
+    #Demand analysis
+    bom_check,
+    perform_bom_matching,
     run_full_feasibility_analysis,
     list_deliveries_in_range,
     get_inventory_for_part,
