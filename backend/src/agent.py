@@ -17,6 +17,8 @@ from backend.src.tools.demand_analysis.inventory import (
     get_existing_customer_orders,
     get_sales_orders,
     get_future_boms,
+    get_orders_by_customer,
+    get_boms_for_orders,
 )
 from backend.src.tools.demand_analysis.bom import (
     bom_check,
@@ -58,6 +60,8 @@ TOOLBOX = [
     get_existing_customer_orders,
     get_sales_orders,
     get_future_boms,
+    get_orders_by_customer,
+    get_boms_for_orders,
     run_structured_feasibility_check,
     # procurement tools
     filter_sellers_by_shipping,

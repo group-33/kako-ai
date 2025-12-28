@@ -112,9 +112,7 @@ def get_sales_orders(time_quantity: str, time_unit: str) -> Any:
     }
     resp = requests.get(url, params=params, headers=_build_headers(), timeout=XENTRAL_TIMEOUT_SECONDS)
     resp.raise_for_status()
-    data = resp.json() if resp.content else []
-    print(data["data"][0])
-    return None
+    data = resp.json() if resp.content else {}
     if isinstance(data, dict) and "data" in data:
         return data["data"]
     return data
@@ -168,6 +166,107 @@ def get_future_boms(time_quantity: str, time_unit: str) -> Dict[str, Any]:
         "summary": f"Found {len(results)} products with BOMs for orders between {from_date} and {to_date}",
         "details": results,
     }
+
+
+def get_orders_by_customer(customer_id: str, start_date: str = None, end_date: str = None) -> List[Dict[str, Any]]:
+    """
+    Fetch orders for a specific customer within a date range.
+    
+    Args:
+        customer_id: The customer number (Kundennummer) or customer ID.
+        start_date: Start date (YYYY-MM-DD), defaults to 1 month ago.
+        end_date: End date (YYYY-MM-DD), defaults to today.
+    """
+    if not start_date:
+        start_date = (datetime.now() - relativedelta(months=1)).strftime("%Y-%m-%d")
+    if not end_date:
+        end_date = datetime.now().strftime("%Y-%m-%d")
+
+    url = f"{XENTRAL_BASE_URL}/api/v1/belege/auftraege"
+    params = {
+        "filter[0][property]": "kundennummer",
+        "filter[0][expression]": "eq",
+        "filter[0][value]": customer_id,
+        "filter[1][property]": "tatsaechlichesLieferdatum",
+        "filter[1][expression]": "gte",
+        "filter[1][value]": start_date,
+        "filter[2][property]": "tatsaechlichesLieferdatum",
+        "filter[2][expression]": "lte",
+        "filter[2][value]": end_date,
+        "include": "positionen",
+        "items": 100,
+    }
+    
+    try:
+        resp = requests.get(url, params=params, headers=_build_headers(), timeout=XENTRAL_TIMEOUT_SECONDS)
+        if resp.status_code == 404:
+            return []
+        resp.raise_for_status()
+        data = resp.json()
+        return data.get("data", [])
+    except Exception as e:
+        return [{"error": f"Failed to fetch orders for customer {customer_id}: {str(e)}"}]
+
+
+def get_boms_for_orders(order_numbers: List[str]) -> Dict[str, Any]:
+    """
+    Retrieve BOMs for all products contained in the specified orders.
+    
+    Args:
+        order_numbers: List of order numbers (Belegnummer, e.g., 'AT-2024-059561').
+    """
+    results = {}
+    
+    for order_nr in order_numbers:
+        # Fetch order to get positions
+        url = f"{XENTRAL_BASE_URL}/api/v1/belege/auftraege"
+        params = {
+            "filter[0][property]": "belegnr",
+            "filter[0][expression]": "eq",
+            "filter[0][value]": order_nr,
+            "include": "positionen",
+            "items": 1
+        }
+        
+        try:
+            resp = requests.get(url, params=params, headers=_build_headers(), timeout=XENTRAL_TIMEOUT_SECONDS)
+            if resp.status_code == 404:
+                results[order_nr] = {"error": "Order not found (404)"}
+                continue
+            resp.raise_for_status()
+            data = resp.json()
+            orders = data.get("data", [])
+            
+            if not orders:
+                results[order_nr] = {"error": "Order not found"}
+                continue
+                
+            order = orders[0]
+            positions = order.get("positionen", [])
+            order_boms = []
+            
+            for pos in positions:
+                article_id = pos.get("artikel")
+                article_num = pos.get("nummer")
+                
+                if article_id:
+                    bom = _fetch_bom_for_product(str(article_id))
+                    if bom:
+                        order_boms.append({
+                            "product_number": article_num,
+                            "product_id": article_id,
+                            "bom": bom
+                        })
+            
+            results[order_nr] = {
+                "order_id": order.get("id"),
+                "found_boms": order_boms
+            }
+            
+        except Exception as e:
+            results[order_nr] = {"error": f"Failed to process order: {str(e)}"}
+            
+    return results
 
 
 # --- HTTP helper -------------------------------------------------------------
