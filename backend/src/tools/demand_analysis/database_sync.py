@@ -1,11 +1,11 @@
 import psycopg2
-from sentence_transformers import SentenceTransformer
 import urllib.parse
 import requests
 from typing import Any, Dict, List, Optional, Tuple
 from backend.src.config import SUPABASE_PASSWORD, XENTRAL_BASE_URL, XENTRAL_BEARER_TOKEN, XENTRAL_TIMEOUT_SECONDS
 import socket
 
+from backend.src.tools.demand_analysis.embeddings import get_vertex_embedding
 
 SUPABASE_DSN = f"postgresql://postgres.lnnlghymsockmysbbour:{SUPABASE_PASSWORD}@aws-1-eu-north-1.pooler.supabase.com:5432/postgres"
 #Gets all products from Xentral API
@@ -39,7 +39,6 @@ def db_sync():
     conn = psycopg2.connect(SUPABASE_DSN)
     print("Connected!")
     cursor = conn.cursor()
-    encoder = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
 
     prods = get_all_products()
 
@@ -55,7 +54,7 @@ def db_sync():
         x_bom_flag = p.get('stueckliste')
 
         semantic_text = x_desc.strip() 
-        embedding = encoder.encode(semantic_text).tolist()
+        embedding = get_vertex_embedding(semantic_text)
         if x_num == "KAKO-0001996":
             print(x_name)
 

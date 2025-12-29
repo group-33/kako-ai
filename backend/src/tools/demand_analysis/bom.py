@@ -4,10 +4,10 @@ from __future__ import annotations
 import dspy
 import json
 import psycopg2
-from sentence_transformers import SentenceTransformer
 
 from backend.src.models import BillOfMaterials
 from backend.src.config import SUPABASE_PASSWORD
+from backend.src.tools.demand_analysis.embeddings import get_vertex_embedding
 from backend.src.tools.demand_analysis.inventory import _fetch_bom_for_product
 
 DB_HOST = "aws-1-eu-north-1.pooler.supabase.com"
@@ -126,7 +126,6 @@ class ProductInfoStore:
         if cls._instance is None:
             cls._instance = super(ProductInfoStore, cls).__new__(cls)
             cls._instance.dsn = SUPABASE_DSN
-            cls._instance.encoder = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
         return cls._instance
 
     def _get_conn(self):
@@ -193,7 +192,7 @@ class ProductInfoStore:
                     return {"id": row[0], "nummer": row[1], "name_de": row[2], "_source": "TEXT_MATCH"}
                 
         if len(q_desc) > 3:
-                query_vector = self.encoder.encode(q_desc).tolist()
+                query_vector = get_vertex_embedding(q_desc)
                 
                 cursor.execute("""
                     SELECT xentral_id, nummer, name_de 
