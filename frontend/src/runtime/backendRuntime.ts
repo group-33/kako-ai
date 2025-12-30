@@ -31,6 +31,7 @@ export const useBackendRuntime = () => {
           body: JSON.stringify({
             user_query: userText,
             thread_id: threadId,
+            model_id: useChatStore.getState().modelId,
           }),
           signal: abortSignal,
         });

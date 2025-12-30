@@ -99,10 +99,16 @@ export function Layout() {
 
                 <div className="mt-auto pt-4 border-t border-slate-800/50 space-y-4">
                     <div className="space-y-1">
-                        <button className="flex items-center gap-3 w-full px-3 py-2 hover:bg-slate-800 rounded-md text-sm transition-colors group">
+                        <NavLink
+                            to="/config"
+                            className={({ isActive }) => cn(
+                                "flex items-center gap-3 w-full px-3 py-2 hover:bg-slate-800 rounded-md text-sm transition-colors group",
+                                isActive ? "bg-slate-800 text-slate-200" : "text-slate-300"
+                            )}
+                        >
                             <Settings size={16} className="text-slate-500 group-hover:text-slate-300" />
                             <span>{t('layout.configuration')}</span>
-                        </button>
+                        </NavLink>
                         <button className="flex items-center gap-3 w-full px-3 py-2 hover:bg-slate-800 rounded-md text-sm transition-colors group">
                             <User size={16} className="text-slate-500 group-hover:text-slate-300" />
                             <span>{t('layout.profile')}</span>

@@ -115,6 +115,7 @@ class AgentRequest(BaseModel):
 
     user_query: str
     thread_id: str | None = None
+    model_id: str | None = None
     bom_update: BOMUpdate | None = None
 
 

@@ -34,5 +34,21 @@ SUPABASE_PASSWORD = os.getenv("SUPABASE_PASSWORD")
 GEMINI_3_PRO = dspy.LM("vertex_ai/gemini-3-pro-preview", **VERTEX_ARGS)
 GEMINI_2_5_PRO = dspy.LM("vertex_ai/gemini-2.5-pro", **VERTEX_ARGS)
 GEMINI_2_5_FLASH = dspy.LM("vertex_ai/gemini-2.5-flash", **VERTEX_ARGS)
-GEMINI_2_5_FLASH_LITE = dspy.LM("gemini-2.5-flash-lite", **VERTEX_ARGS)
+GEMINI_2_5_FLASH_LITE = dspy.LM("vertex_ai/gemini-2.5-flash-lite", **VERTEX_ARGS)
 GEMINI_1_5_PRO = dspy.LM("vertex_ai/gemini-1.5-pro", **VERTEX_ARGS)
+
+AVAILABLE_MODELS = {
+    "gemini-2.5-flash": GEMINI_2_5_FLASH,
+    "gemini-2.5-flash-lite": GEMINI_2_5_FLASH_LITE,
+    "gemini-2.5-pro": GEMINI_2_5_PRO,
+    "gemini-3-pro": GEMINI_3_PRO,
+    "gemini-1.5-pro": GEMINI_1_5_PRO,
+}
+
+MODEL_OPTIONS = [
+    {"id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash", "provider": "Google"},
+    {"id": "gemini-2.5-flash-lite", "name": "Gemini 2.5 Flash Lite", "provider": "Google"},
+    {"id": "gemini-2.5-pro", "name": "Gemini 2.5 Pro", "provider": "Google"},
+    {"id": "gemini-3-pro", "name": "Gemini 3 Pro (Preview)", "provider": "Google"},
+    {"id": "gemini-1.5-pro", "name": "Gemini 1.5 Pro", "provider": "Google"},
+]

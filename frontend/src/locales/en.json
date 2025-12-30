@@ -44,6 +44,12 @@
     "chatPage": {
         "selectPlaceholder": "Select a chat or start a new one."
     },
+    "config": {
+        "title": "Configuration",
+        "modelSelection": "AI Model Selection",
+        "modelDesc": "Choose the AI model that powers the agent. Newer models may be smarter but slower.",
+        "save": "Settings are saved automatically."
+    },
     "thread": {
         "welcome": {
             "title": "Hello!",

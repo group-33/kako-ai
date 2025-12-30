@@ -44,6 +44,12 @@
     "chatPage": {
         "selectPlaceholder": "Wähle einen Chat aus oder starte einen neuen."
     },
+    "config": {
+        "title": "Einstellungen",
+        "modelSelection": "KI-Modell Auswahl",
+        "modelDesc": "Wähle das KI-Modell, das den Agenten antreibt. Neuere Modelle sind oft intelligenter, aber langsamer.",
+        "save": "Einstellungen werden automatisch gespeichert."
+    },
     "thread": {
         "welcome": {
             "title": "Hallo!",

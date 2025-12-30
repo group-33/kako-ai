@@ -9,7 +9,7 @@ import dspy
 from fastapi import FastAPI, Depends, Form, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.src.config import GEMINI_2_5_FLASH
+from backend.src.config import GEMINI_2_5_FLASH, AVAILABLE_MODELS, MODEL_OPTIONS
 from backend.src.agent import KakoAgent
 from backend.src.models import (
     AgentRequest,
@@ -88,6 +88,7 @@ async def run_agent(
     """
     thread_id: str | None = None
     bom_update = None
+    payload = None
     if user_query is None:
         try:
             payload = AgentRequest.model_validate(await request.json())
@@ -137,7 +138,15 @@ async def run_agent(
         file_match = m.group("path")
 
 
-    prediction = agent(user_query=user_query, history=history)
+    # Select LM based on request or default
+    selected_lm = GEMINI_2_5_FLASH  # Default
+    if payload and payload.model_id:
+        selected_lm = AVAILABLE_MODELS.get(payload.model_id, GEMINI_2_5_FLASH)
+    
+    # Run the agent with the selected LM context
+    with dspy.context(lm=selected_lm):
+        prediction = agent(user_query=user_query, history=history)
+    
     content = getattr(prediction, "process_result", None) or str(prediction)
 
     blocks: list[TextBlock | ToolUseBlock] = []
@@ -203,6 +212,11 @@ async def run_agent(
         blocks=blocks,
     )
 
+
+@app.get("/config/models")
+def get_available_models() -> dict:
+    """Return list of available LLMs for configuration."""
+    return {"models": MODEL_OPTIONS}
 
 @app.get("/health")
 def service_health() -> dict:

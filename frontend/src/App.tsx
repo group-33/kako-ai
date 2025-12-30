@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import Dashboard from "@/pages/Dashboard";
 import ChatPage from "@/pages/ChatPage";
+import Configuration from "@/pages/Configuration";
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="chat" element={<ChatPage />} />
           <Route path="chat/:threadId" element={<ChatPage />} />
+          <Route path="config" element={<Configuration />} />
         </Route>
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
