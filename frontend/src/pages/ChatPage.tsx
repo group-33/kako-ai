@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Chat } from "@/components/Chat";
 import { useChatStore } from "@/store/useChatStore";
 
@@ -7,6 +8,7 @@ export default function ChatPage() {
     const { threadId } = useParams();
     const { threads, setActiveThread, activeThreadId } = useChatStore();
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     useEffect(() => {
         if (threadId) {
@@ -23,7 +25,7 @@ export default function ChatPage() {
     const effectiveId = threadId || activeThreadId;
 
     if (!effectiveId) {
-        return <div className="flex bg-white items-center justify-center h-full text-slate-400">Select a chat or start a new one.</div>;
+        return <div className="flex bg-white items-center justify-center h-full text-slate-400">{t('chatPage.selectPlaceholder')}</div>;
     }
 
     return (

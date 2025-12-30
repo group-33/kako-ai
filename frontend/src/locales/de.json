@@ -1,0 +1,80 @@
+{
+    "layout": {
+        "dashboard": "Dashboard",
+        "chats": "Chats",
+        "newChat": "Neuer Chat",
+        "configuration": "Einstellungen",
+        "profile": "Profil"
+    },
+    "dashboard": {
+        "welcome": "Willkommen zurück, Ingenieur.",
+        "subheading": "Dein Beschaffungs-Copilot ist online und bereit.",
+        "systemOperational": "SYSTEM BEREIT",
+        "quickActions": {
+            "extractBom": {
+                "title": "BOM aus Zeichnung extrahieren",
+                "description": "Lade eine technische Zeichnung (PDF/Bild) hoch. Die KI extrahiert Komponenten, identifiziert Teile und Mengen für die sofortige Beschaffungsanalyse.",
+                "action": "Extraktion starten"
+            },
+            "searchParts": {
+                "title": "Teile & Inventar suchen",
+                "description": "Prüfe globale Lagerbestände, finde Alternativen für obsolete Komponenten und optimiere BOM-Kosten über verschiedene Lieferanten hinweg.",
+                "action": "Beschaffungstool öffnen"
+            }
+        },
+        "stats": {
+            "activeProjects": "Aktive Projekte",
+            "bomsProcessed": "Verarbeitete Stücklisten",
+            "totalSavings": "Gesamtersparnis",
+            "compliance": "Compliance",
+            "weekTrend": "+2 diese Woche",
+            "successRate": "98% Erfolgsquote",
+            "viaOptimization": "durch Optimierung",
+            "rohsVerified": "RoHS verifiziert"
+        },
+        "recentProjects": {
+            "title": "Aktuelle Projekte",
+            "viewAll": "Alle Projekte anzeigen",
+            "lastUpdated": "Zuletzt aktualisiert",
+            "continue": "Fortsetzen",
+            "noActivity": "Keine aktuellen Aktivitäten.",
+            "startFirst": "Starte dein erstes Projekt"
+        }
+    },
+    "chatPage": {
+        "selectPlaceholder": "Wähle einen Chat aus oder starte einen neuen."
+    },
+    "thread": {
+        "welcome": {
+            "title": "Hallo!",
+            "message": "Wie kann ich dir heute helfen?"
+        },
+        "suggestions": {
+            "createBom": {
+                "title": "Stückliste erstellen",
+                "label": "für das aktuelle Projekt",
+                "action": "Erstelle eine Stückliste für das aktuelle Projekt"
+            },
+            "checkInventory": {
+                "title": "Lagerbestand prüfen",
+                "label": "aller kritischen Teile",
+                "action": "Prüfe den Lagerbestand aller kritischen Teile"
+            },
+            "optimizeProcurement": {
+                "title": "Beschaffung optimieren",
+                "label": "nach Kosten und Lieferzeit",
+                "action": "Optimiere die Beschaffung nach Kosten und Lieferzeit"
+            },
+            "compareSuppliers": {
+                "title": "Lieferanten vergleichen",
+                "label": "für elektronische Bauteile",
+                "action": "Vergleiche Lieferanten für elektronische Bauteile"
+            }
+        },
+        "composer": {
+            "placeholder": "Nachricht senden...",
+            "cancel": "Abbrechen",
+            "update": "Aktualisieren"
+        }
+    }
+}

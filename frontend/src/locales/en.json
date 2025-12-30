@@ -1,0 +1,80 @@
+{
+    "layout": {
+        "dashboard": "Dashboard",
+        "chats": "Chats",
+        "newChat": "New Chat",
+        "configuration": "Configuration",
+        "profile": "Profile"
+    },
+    "dashboard": {
+        "welcome": "Welcome back, Engineer.",
+        "subheading": "Your procurement copilot is online and ready.",
+        "systemOperational": "SYSTEM OPERATIONAL",
+        "quickActions": {
+            "extractBom": {
+                "title": "Extract BOM from Drawing",
+                "description": "Upload a PDF or Image technical drawing. AI will extract components, identifying parts and quantities for immediate procurement analysis.",
+                "action": "Start Extraction"
+            },
+            "searchParts": {
+                "title": "Search Parts & Inventory",
+                "description": "Check global stock levels, find alternatives for obsolete components, and optimize BOM costs across suppliers.",
+                "action": "Open Procurement Tool"
+            }
+        },
+        "stats": {
+            "activeProjects": "Active Projects",
+            "bomsProcessed": "BOMs Processed",
+            "totalSavings": "Total Savings",
+            "compliance": "Compliance",
+            "weekTrend": "+2 this week",
+            "successRate": "98% success rate",
+            "viaOptimization": "via Optimization",
+            "rohsVerified": "RoHS Verified"
+        },
+        "recentProjects": {
+            "title": "Recent Projects",
+            "viewAll": "View All Projects",
+            "lastUpdated": "Last updated",
+            "continue": "Continue",
+            "noActivity": "No recent activity.",
+            "startFirst": "Start your first project"
+        }
+    },
+    "chatPage": {
+        "selectPlaceholder": "Select a chat or start a new one."
+    },
+    "thread": {
+        "welcome": {
+            "title": "Hello!",
+            "message": "How can I help you today?"
+        },
+        "suggestions": {
+            "createBom": {
+                "title": "Create BOM",
+                "label": "for current project",
+                "action": "Create a BOM for the current project"
+            },
+            "checkInventory": {
+                "title": "Check Inventory",
+                "label": "of critical parts",
+                "action": "Check inventory of all critical parts"
+            },
+            "optimizeProcurement": {
+                "title": "Optimize Procurement",
+                "label": "by cost and lead time",
+                "action": "Optimize procurement by cost and lead time"
+            },
+            "compareSuppliers": {
+                "title": "Compare Suppliers",
+                "label": "for electronic components",
+                "action": "Compare suppliers for electronic components"
+            }
+        },
+        "composer": {
+            "placeholder": "Send a message...",
+            "cancel": "Cancel",
+            "update": "Update"
+        }
+    }
+}

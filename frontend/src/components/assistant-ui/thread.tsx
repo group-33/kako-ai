@@ -33,6 +33,8 @@ import {
 
 import { cn } from "@/lib/utils";
 
+import { useTranslation } from "react-i18next";
+
 export const Thread: FC = () => {
   return (
     <ThreadPrimitive.Root
@@ -81,15 +83,16 @@ const ThreadScrollToBottom: FC = () => {
 };
 
 const ThreadWelcome: FC = () => {
+  const { t } = useTranslation();
   return (
     <div className="aui-thread-welcome-root mx-auto my-auto flex w-full max-w-(--thread-max-width) grow flex-col">
       <div className="aui-thread-welcome-center flex w-full grow flex-col items-center justify-center">
         <div className="aui-thread-welcome-message flex size-full flex-col justify-center px-8">
           <div className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-2 animate-in font-semibold text-2xl duration-300 ease-out">
-            Hallo!
+            {t('thread.welcome.title')}
           </div>
           <div className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-2 animate-in text-2xl text-muted-foreground/65 delay-100 duration-300 ease-out">
-            Wie kann ich dir heute helfen?
+            {t('thread.welcome.message')}
           </div>
         </div>
       </div>
@@ -99,32 +102,33 @@ const ThreadWelcome: FC = () => {
 };
 
 const ThreadSuggestions: FC = () => {
+  const { t } = useTranslation();
   return (
     <div className="aui-thread-welcome-suggestions grid w-full @md:grid-cols-2 gap-2 pb-4">
       {[
         {
-          title: "Stückliste erstellen",
-          label: "für das aktuelle Projekt",
-          action: "Erstelle eine Stückliste für das aktuelle Projekt",
+          title: t('thread.suggestions.createBom.title'),
+          label: t('thread.suggestions.createBom.label'),
+          action: t('thread.suggestions.createBom.action'),
         },
         {
-          title: "Lagerbestand prüfen",
-          label: "aller kritischen Teile",
-          action: "Prüfe den Lagerbestand aller kritischen Teile",
+          title: t('thread.suggestions.checkInventory.title'),
+          label: t('thread.suggestions.checkInventory.label'),
+          action: t('thread.suggestions.checkInventory.action'),
         },
         {
-          title: "Beschaffung optimieren",
-          label: "nach Kosten und Lieferzeit",
-          action: "Optimiere die Beschaffung nach Kosten und Lieferzeit",
+          title: t('thread.suggestions.optimizeProcurement.title'),
+          label: t('thread.suggestions.optimizeProcurement.label'),
+          action: t('thread.suggestions.optimizeProcurement.action'),
         },
         {
-          title: "Lieferanten vergleichen",
-          label: "für elektronische Bauteile",
-          action: "Vergleiche Lieferanten für elektronische Bauteile",
+          title: t('thread.suggestions.compareSuppliers.title'),
+          label: t('thread.suggestions.compareSuppliers.label'),
+          action: t('thread.suggestions.compareSuppliers.action'),
         },
       ].map((suggestedAction, index) => (
         <div
-          key={`suggested-action-${suggestedAction.title}-${index}`}
+          key={`suggested-action-${index}`}
           className="aui-thread-welcome-suggestion-display fade-in slide-in-from-bottom-4 @md:nth-[n+3]:block nth-[n+3]:hidden animate-in fill-mode-both duration-300 ease-out"
           style={{ animationDelay: `${index * 50}ms` }}
         >
@@ -153,12 +157,13 @@ const ThreadSuggestions: FC = () => {
 };
 
 const Composer: FC = () => {
+  const { t } = useTranslation();
   return (
     <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
       <ComposerPrimitive.AttachmentDropzone className="aui-composer-attachment-dropzone flex w-full flex-col rounded-3xl border border-input bg-background px-1 pt-2 shadow-xs outline-none transition-[color,box-shadow] has-[textarea:focus-visible]:border-ring has-[textarea:focus-visible]:ring-[3px] has-[textarea:focus-visible]:ring-ring/50 data-[dragging=true]:border-ring data-[dragging=true]:border-dashed data-[dragging=true]:bg-accent/50 dark:bg-background">
         <ComposerAttachments />
         <ComposerPrimitive.Input
-          placeholder="Nachricht senden..."
+          placeholder={t('thread.composer.placeholder')}
           className="aui-composer-input mb-1 max-h-32 min-h-16 w-full resize-none bg-transparent px-3.5 pt-1.5 pb-3 text-base outline-none placeholder:text-muted-foreground focus-visible:ring-0"
           rows={1}
           autoFocus
@@ -308,6 +313,7 @@ const UserActionBar: FC = () => {
 };
 
 const EditComposer: FC = () => {
+  const { t } = useTranslation();
   return (
     <MessagePrimitive.Root className="aui-edit-composer-wrapper mx-auto flex w-full max-w-(--thread-max-width) flex-col gap-4 px-2">
       <ComposerPrimitive.Root className="aui-edit-composer-root ml-auto flex w-full max-w-7/8 flex-col rounded-xl bg-muted">
@@ -319,12 +325,12 @@ const EditComposer: FC = () => {
         <div className="aui-edit-composer-footer mx-3 mb-3 flex items-center justify-center gap-2 self-end">
           <ComposerPrimitive.Cancel asChild>
             <Button variant="ghost" size="sm" aria-label="Cancel edit">
-              Cancel
+              {t('thread.composer.cancel')}
             </Button>
           </ComposerPrimitive.Cancel>
           <ComposerPrimitive.Send asChild>
             <Button size="sm" aria-label="Update message">
-              Update
+              {t('thread.composer.update')}
             </Button>
           </ComposerPrimitive.Send>
         </div>
