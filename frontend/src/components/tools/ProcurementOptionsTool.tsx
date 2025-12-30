@@ -1,5 +1,5 @@
 import { makeAssistantToolUI } from "@assistant-ui/react";
-import { ShoppingCart, Package, ArrowUpDown, Check, Trophy, Timer } from "lucide-react";
+import { ShoppingCart, Package, Check, Trophy, Timer } from "lucide-react";
 import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 
@@ -37,11 +37,15 @@ const ProcurementTable = ({ data }: { data: ProcurementData }) => {
 
 const ItemCard = ({ item }: { item: ProcurementItem }) => {
     const [sortBy, setSortBy] = useState<SortKey>("price");
-    const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+    const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
     // Find best values for badges
-    const bestPrice = Math.min(...item.options.map((o) => o.price_per_unit));
-    const bestDelivery = Math.min(...item.options.map((o) => o.delivery_time_days));
+    const bestPrice = item.options.length
+        ? Math.min(...item.options.map((o) => o.price_per_unit))
+        : 0;
+    const bestDelivery = item.options.length
+        ? Math.min(...item.options.map((o) => o.delivery_time_days))
+        : 0;
 
     // Sort options
     const sortedOptions = useMemo(() => {
@@ -53,6 +57,31 @@ const ItemCard = ({ item }: { item: ProcurementItem }) => {
             }
         });
     }, [item.options, sortBy]);
+
+    const selectedOption =
+        selectedKey !== null
+            ? item.options.find((option) =>
+                  buildOptionKey(option) === selectedKey,
+              )
+            : undefined;
+
+    if (!item.options.length) {
+        return (
+            <div className="border rounded-xl overflow-hidden bg-white shadow-sm font-sans ring-1 ring-slate-200">
+                <div className="bg-slate-50 px-4 py-3 border-b flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Package size={18} className="text-purple-600" />
+                        <h3 className="font-semibold text-slate-800 text-sm">
+                            {item.component_name}
+                        </h3>
+                    </div>
+                </div>
+                <div className="p-4 text-sm text-slate-500">
+                    No supplier options available.
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="border rounded-xl overflow-hidden bg-white shadow-sm font-sans ring-1 ring-slate-200">
@@ -91,15 +120,16 @@ const ItemCard = ({ item }: { item: ProcurementItem }) => {
             {/* Options Grid */}
             <div className="divide-y relative">
                 {sortedOptions.map((option, idx) => {
+                    const optionKey = buildOptionKey(option);
                     // Determine badges
                     const isBestPrice = option.price_per_unit === bestPrice;
                     const isFastest = option.delivery_time_days === bestDelivery;
-                    const isSelected = selectedIdx === idx;
+                    const isSelected = selectedKey === optionKey;
 
                     return (
                         <div
                             key={idx}
-                            onClick={() => setSelectedIdx(idx)}
+                            onClick={() => setSelectedKey(optionKey)}
                             className={cn(
                                 "p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer transition-all border-l-4",
                                 isSelected
@@ -160,13 +190,13 @@ const ItemCard = ({ item }: { item: ProcurementItem }) => {
             </div>
 
             {/* Footer / Selection Action */}
-            {selectedIdx !== null && (
+            {selectedOption && (
                 <div className="bg-purple-50 px-4 py-2 border-t border-purple-100 flex justify-between items-center animate-in slide-in-from-bottom-2 fade-in">
                     <span className="text-xs text-purple-800 font-medium">
-                        Selected: {sortedOptions[selectedIdx].supplier}
+                        Selected: {selectedOption.supplier}
                     </span>
                     <a
-                        href={sortedOptions[selectedIdx].link}
+                        href={selectedOption.link}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all shadow-sm"
@@ -186,3 +216,6 @@ export const ProcurementOptionsTool = makeAssistantToolUI({
         return <ProcurementTable data={args as ProcurementData} />;
     },
 });
+
+const buildOptionKey = (option: SupplierOption) =>
+    `${option.supplier}::${option.part_number}::${option.price_per_unit}`;

@@ -3,10 +3,10 @@ import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { BOMTableTool } from "./tools/BOMTableTool";
 import { ProcurementOptionsTool } from "./tools/ProcurementOptionsTool";
 import { CostAnalysisTool } from "./tools/CostAnalysisTool";
-import { useMockRuntime } from "@/mocks/mockRuntime";
+import { useBackendRuntime } from "@/runtime/backendRuntime";
 
 export function Chat() {
-  const runtime = useMockRuntime();
+  const runtime = useBackendRuntime();
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>

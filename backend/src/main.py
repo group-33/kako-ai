@@ -21,6 +21,8 @@ from backend.src.models import (
 from backend.src.utils import (
     extract_tool_calls_from_trajectory,
     build_bom_tool_block,
+    build_procurement_tool_block,
+    build_cost_analysis_tool_block,
     append_to_history,
     compute_bom_id,
     apply_bom_update,
@@ -134,6 +136,7 @@ async def run_agent(
     if m:
         file_match = m.group("path")
 
+
     prediction = agent(user_query=user_query, history=history)
     content = getattr(prediction, "process_result", None) or str(prediction)
 
@@ -146,6 +149,19 @@ async def run_agent(
     trajectory = getattr(prediction, "trajectory", None)
     for tool_name, tool_args, observation in extract_tool_calls_from_trajectory(trajectory):
         if tool_name != "perform_bom_extraction":
+            if tool_name in {
+                "filter_sellers_by_shipping",
+                "sort_and_filter_by_best_price",
+                "search_part_by_mpn",
+                "find_alternatives",
+                "optimize_order",
+            }:
+                procurement_block = build_procurement_tool_block(observation)
+                if procurement_block is not None:
+                    blocks.append(procurement_block)
+                cost_block = build_cost_analysis_tool_block(observation)
+                if cost_block is not None:
+                    blocks.append(cost_block)
             continue
         bom: BillOfMaterials | None = None
         if isinstance(observation, BillOfMaterials):

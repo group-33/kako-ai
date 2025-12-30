@@ -46,7 +46,7 @@ def apply_bom_update(base: BillOfMaterials, update: BOMUpdate) -> BillOfMaterial
         new_item = item.model_copy(deep=True)
         new_item.quantity = int(override.quantity)
         if override.component is not None:
-            new_item.description_of_part = override.component
+            new_item.description = override.component
         items.append(new_item)
 
     return BillOfMaterials(items=items)
@@ -91,6 +91,153 @@ def build_bom_tool_block(
     if thread_id is not None:
         data["thread_id"] = thread_id
     return ToolUseBlock(tool_name="display_bom_table", data=data)
+
+
+def _parse_json_payload(payload: object) -> dict | None:
+    if isinstance(payload, dict):
+        return payload
+    if isinstance(payload, str):
+        try:
+            return json.loads(payload)
+        except json.JSONDecodeError:
+            return None
+    return None
+
+
+def _select_best_price(prices: list[dict]) -> dict | None:
+    if not prices:
+        return None
+    priced = [p for p in prices if p.get("convertedPrice") is not None or p.get("price") is not None]
+    if not priced:
+        return None
+    return min(
+        priced,
+        key=lambda p: p.get("convertedPrice")
+        if p.get("convertedPrice") is not None
+        else p.get("price", float("inf")),
+    )
+
+
+def _build_procurement_items_from_sup_multi_match(data: dict) -> list[dict]:
+    items: list[dict] = []
+    for match in data.get("supMultiMatch", []) or []:
+        for part in match.get("parts", []) or []:
+            component_name = (
+                part.get("shortDescription")
+                or part.get("name")
+                or part.get("mpn")
+                or "Unknown component"
+            )
+            options: list[dict] = []
+            for seller in part.get("sellers", []) or []:
+                company = seller.get("company", {}) or {}
+                supplier_name = company.get("name") or "Unknown supplier"
+                for offer in seller.get("offers", []) or []:
+                    price_entry = _select_best_price(offer.get("prices", []) or [])
+                    if not price_entry:
+                        continue
+                    price_per_unit = price_entry.get("convertedPrice", price_entry.get("price"))
+                    if price_per_unit is None:
+                        continue
+                    options.append(
+                        {
+                            "supplier": supplier_name,
+                            "part_number": offer.get("sku") or part.get("mpn") or "",
+                            "price_per_unit": float(price_per_unit),
+                            "currency": price_entry.get("convertedCurrency")
+                            or price_entry.get("currency")
+                            or "EUR",
+                            "min_order_quantity": int(
+                                offer.get("moq")
+                                or price_entry.get("quantity")
+                                or 1
+                            ),
+                            "delivery_time_days": int(offer.get("factoryLeadDays") or 0),
+                            "in_stock": bool((offer.get("inventoryLevel") or 0) > 0),
+                            "link": offer.get("clickUrl")
+                            or company.get("homepageUrl")
+                            or "",
+                        }
+                    )
+            if options:
+                items.append({"component_name": component_name, "options": options})
+    return items
+
+
+def _build_procurement_items_from_optimized(data: dict) -> list[dict]:
+    items: list[dict] = []
+    for part in data.get("parts", []) or []:
+        seller = part.get("seller", {}) or {}
+        component_name = part.get("selected_mpn") or part.get("original_mpn") or "Unknown component"
+        unit_price = part.get("unit_price")
+        if unit_price is None:
+            continue
+        options = [
+            {
+                "supplier": seller.get("name") or "Unknown supplier",
+                "part_number": seller.get("sku") or part.get("selected_mpn") or "",
+                "price_per_unit": float(unit_price),
+                "currency": part.get("currency") or "EUR",
+                "min_order_quantity": int(seller.get("moq") or 1),
+                "delivery_time_days": int(seller.get("lead_time_days") or 0),
+                "in_stock": bool((seller.get("inventory_level") or 0) > 0),
+                "link": "",
+            }
+        ]
+        items.append({"component_name": component_name, "options": options})
+    return items
+
+
+def _extract_procurement_items(payload: object) -> list[dict] | None:
+    data = _parse_json_payload(payload)
+    if not data or data.get("error"):
+        return None
+
+    if data.get("supMultiMatch"):
+        return _build_procurement_items_from_sup_multi_match(data)
+    if data.get("parts") and data.get("summary"):
+        return _build_procurement_items_from_optimized(data)
+    return None
+
+
+def build_procurement_tool_block(payload: object) -> ToolUseBlock | None:
+    items = _extract_procurement_items(payload)
+    if not items:
+        return None
+
+    return ToolUseBlock(
+        tool_name="display_procurement_options",
+        data={"items_to_procure": items},
+    )
+
+
+def build_cost_analysis_tool_block(payload: object) -> ToolUseBlock | None:
+    items = _extract_procurement_items(payload)
+    if not items:
+        return None
+
+    cost_items: list[dict] = []
+    total_cost = 0.0
+    for item in items:
+        options = item.get("options") or []
+        if not options:
+            continue
+        best_option = min(options, key=lambda opt: opt.get("price_per_unit", float("inf")))
+        amount = best_option.get("price_per_unit")
+        if amount is None:
+            continue
+        min_order_quantity = best_option.get("min_order_quantity") or 1
+        amount = float(amount) * float(min_order_quantity)
+        total_cost += amount
+        cost_items.append({"category": item.get("component_name") or "Unknown", "amount": amount})
+
+    if not cost_items:
+        return None
+
+    return ToolUseBlock(
+        tool_name="display_cost_analysis",
+        data={"total_cost": total_cost, "items": cost_items},
+    )
 
 
 def append_to_history(history: dspy.History, user_query: str, process_result: str) -> None:
