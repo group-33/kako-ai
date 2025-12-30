@@ -11,11 +11,13 @@ import {
     ShieldCheck
 } from "lucide-react";
 import { useChatStore } from "@/store/useChatStore";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useTranslation } from "react-i18next";
 
 export default function Dashboard() {
     const navigate = useNavigate();
     const { threads, addThread } = useChatStore();
+    const { user } = useAuthStore();
     const { t } = useTranslation();
 
     const handleCreateProject = () => {
@@ -32,7 +34,7 @@ export default function Dashboard() {
                 {/* Header Section */}
                 <div className="flex items-end justify-between">
                     <div>
-                        <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">{t('dashboard.welcome')}</h1>
+                        <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">{t('dashboard.welcome', { name: user?.name || 'Engineer' })}</h1>
                         <p className="text-lg text-slate-500 mt-2 font-medium">{t('dashboard.subheading')}</p>
                     </div>
                     <div className="flex gap-3">

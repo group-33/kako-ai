@@ -7,74 +7,105 @@
         "profile": "Profile"
     },
     "dashboard": {
-        "welcome": "Welcome back, Engineer.",
-        "subheading": "Your procurement copilot is online and ready.",
-        "systemOperational": "SYSTEM OPERATIONAL",
+        "welcome": "Welcome back, {{name}}.",
+        "subheading": "Automating workflows for feasibility projections and optimal procurement.",
+        "systemOperational": "KAKO SYSTEM ONLINE",
         "quickActions": {
             "extractBom": {
                 "title": "Extract BOM from Drawing",
-                "description": "Upload a PDF or Image technical drawing. AI will extract components, identifying parts and quantities for immediate procurement analysis.",
+                "description": "Extract BOMs from customer specifications to serve as the basis for feasibility projections.",
                 "action": "Start Extraction"
             },
             "searchParts": {
                 "title": "Search Parts & Inventory",
-                "description": "Check global stock levels, find alternatives for obsolete components, and optimize BOM costs across suppliers.",
+                "description": "Interface with Octopart to find optimal sourcing options and check against Xentral ERP inventory.",
                 "action": "Open Procurement Tool"
             }
         },
         "stats": {
-            "activeProjects": "Active Projects",
-            "bomsProcessed": "BOMs Processed",
-            "totalSavings": "Total Savings",
+            "activeProjects": "Active Feasibility Checks",
+            "bomsProcessed": "BOMs Extracted",
+            "totalSavings": "Procurement Savings",
             "compliance": "Compliance",
             "weekTrend": "+2 this week",
-            "successRate": "98% success rate",
-            "viaOptimization": "via Optimization",
-            "rohsVerified": "RoHS Verified"
+            "successRate": "98% accuracy",
+            "viaOptimization": "via optimization",
+            "rohsVerified": "RoHS verified"
         },
         "recentProjects": {
-            "title": "Recent Projects",
-            "viewAll": "View All Projects",
+            "title": "Recent Feasibility Analyses",
+            "viewAll": "View All",
             "lastUpdated": "Last updated",
             "continue": "Continue",
-            "noActivity": "No recent activity.",
-            "startFirst": "Start your first project"
+            "noActivity": "No recent analyses.",
+            "startFirst": "Start your first analysis"
         }
     },
     "chatPage": {
-        "selectPlaceholder": "Select a chat or start a new one."
+        "selectPlaceholder": "Select a workflow or start a new one."
     },
     "config": {
         "title": "Configuration",
         "modelSelection": "AI Model Selection",
-        "modelDesc": "Choose the AI model that powers the agent. Newer models may be smarter but slower.",
+        "modelDesc": "Choose the LLM that powers the Kako AI agent.",
         "save": "Settings are saved automatically."
+    },
+    "login": {
+        "subtitle": "Generative AI-Powered Copilot for Feasibility & Procurement",
+        "email": "Email",
+        "emailPlaceholder": "name@kako.com",
+        "password": "Password",
+        "passwordPlaceholder": "••••••••",
+        "signIn": "Sign In",
+        "signUp": "Sign Up",
+        "createAccount": "Create Account",
+        "name": "Full Name",
+        "namePlaceholder": "John Doe",
+        "noAccount": "Don't have an account?",
+        "hasAccount": "Already have an account?",
+        "loading": "Signing in...",
+        "loadingSignUp": "Creating account...",
+        "terms": "By continuing, you agree to our Terms of Service and Privacy Policy.",
+        "errorMissing": "Please fill in all fields.",
+        "errorEmail": "Please enter a valid email address."
+    },
+    "profile": {
+        "title": "Profile",
+        "subtitle": "Manage your account settings and preferences.",
+        "displayName": "Display Name",
+        "email": "Email Address",
+        "edit": "Edit Profile",
+        "cancel": "Cancel",
+        "save": "Save Changes",
+        "dangerZone": "Danger Zone",
+        "logoutDesc": "Sign out of your session. You will be redirected to the login page.",
+        "logout": "Log Out"
     },
     "thread": {
         "welcome": {
             "title": "Hello!",
-            "message": "How can I help you today?"
+            "message": "I can help with BOM extraction, feasibility projections, and procurement."
         },
         "suggestions": {
             "createBom": {
-                "title": "Create BOM",
-                "label": "for current project",
-                "action": "Create a BOM for the current project"
+                "title": "Feasibility Check",
+                "label": "for 500 units",
+                "action": "Can we fulfill a new order for 500 units of X?"
             },
             "checkInventory": {
-                "title": "Check Inventory",
-                "label": "of critical parts",
-                "action": "Check inventory of all critical parts"
+                "title": "Show BOMs",
+                "label": "due in next 2 months",
+                "action": "Show me all BOMs belonging to orders due in the next 2 months and provide purchase recommendations."
             },
             "optimizeProcurement": {
-                "title": "Optimize Procurement",
-                "label": "by cost and lead time",
-                "action": "Optimize procurement by cost and lead time"
+                "title": "Material Requirements",
+                "label": "for next 3 weeks",
+                "action": "What amount of which materials do we need to satisfy all orders for the next 3 weeks?"
             },
             "compareSuppliers": {
-                "title": "Compare Suppliers",
-                "label": "for electronic components",
-                "action": "Compare suppliers for electronic components"
+                "title": "Extract BOM",
+                "label": "from customer drawing",
+                "action": "Extract BOM from this customer specification drawing."
             }
         },
         "composer": {

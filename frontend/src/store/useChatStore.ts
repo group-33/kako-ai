@@ -68,7 +68,7 @@ export const useChatStore = create<ChatStore>()(
         }),
         {
             name: "kako-chat-storage",
-            partialize: (state) => ({ threads: state.threads, modelId: state.modelId }), // Don't persist activeThreadId necessarily, or do? Let's just persist threads and config.
+            partialize: (state) => ({ threads: state.threads, modelId: state.modelId }),
         }
     )
 );
