@@ -1,61 +1,79 @@
 # Kako AI - Frontend (MVP)
 
-Dies ist das Frontend-Repository für **Kako AI**. Es handelt sich um eine moderne Chat-Schnittstelle, die "Generative UI" unterstützt – das bedeutet, die KI kann nicht nur Text antworten, sondern interaktive React-Komponenten (wie Tabellen) rendern.
+This is the frontend repository for **Kako AI**, a modern chat interface supporting "Generative UI"—allowing the AI to render interactive React components (like tables) alongside text.
 
 ## 🚀 Tech Stack
 
-Das Projekt basiert auf modernsten Web-Technologien:
+Built with modern web technologies:
 
-- **Core:** [React 18](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
-- **Build Tool:** [Vite](https://vitejs.dev/) (Blitzschneller Dev-Server)
+- **Core:** [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- **Build Tool:** [Vite](https://vitejs.dev/)
 - **Styling:** [Tailwind CSS v4](https://tailwindcss.com/)
 - **UI Library:** [Shadcn UI](https://ui.shadcn.com/) (Radix Primitives)
-- **AI UI:** [Assistant UI](https://www.assistant-ui.com/) (Chat Threads, Streaming)
+- **AI UI:** [Assistant UI](https://www.assistant-ui.com/)
+- **State Management:** [Zustand](https://github.com/pmndrs/zustand) (with persistence)
+- **Internationalization:** [i18next](https://www.i18next.com/) (English/German)
 - **Icons:** [Lucide React](https://lucide.dev/)
 
-## ✨ Aktuelle Features
+## ✨ Key Features
 
-- **Modernes Chat-Interface:** Responsives Layout mit Sidebar und Chat-Bereich.
-- **Generative UI / Tool Use:** Der Agent kann entscheiden, strukturierte Daten zu senden, die als Frontend-Komponenten gerendert werden (Beispiel: `PriceTableTool`).
-- **Mock Runtime:** Aktuell läuft das Frontend mit einer lokalen Simulation (`useLocalRuntime`), um Streaming-Antworten und UI-Tools zu testen, ohne dass das Backend laufen muss.
-- **Tailwind v4 Setup:** Optimiertes CSS-Loading ohne große Config-Dateien.
+### 🔐 Authentication & User Profile
+- **Client-Side Auth:** Secure-feel login system (mocked for MVP) with persistent session.
+- **Login Page:** Includes "Sign Up" toggle and immediate language switching.
+- **Profile Management:** Edit display name/email and log out via the Profile page.
+- **Protected Routes:** Automatic redirection to `/login` for unauthenticated access.
+
+### 💬 Advanced Chat Capabilities
+- **Generative UI:** Renders structured data (BOM Tables, Cost Analysis) as interactive components.
+- **Chat Persistence:** History is automatically saved to `localStorage` and restored on reload.
+- **Dynamic Naming:** New chats are automatically renamed based on the context of the first message (using the selected LLM).
+- **Thread Isolation:** Robust state management ensures messages don't bleed between threads.
+- **Localized Chat Config:** Supports localized naming sequences (e.g., "New Chat" vs "Neuer Chat").
+
+### ⚙️ Configuration & Personalization
+- **Model Selection:** Dynamic configuration page to switch between available LLMs (Gemini 2.5 Flash, Pro, etc.).
+- **Dashboard:** Personalized greeting and localized statistics.
+- **Localization:** Full English and German support across the entire app.
 
 ## 🛠️ Installation & Start
 
-Stelle sicher, dass du [Node.js](https://nodejs.org/) installiert hast.
+Ensure [Node.js](https://nodejs.org/) is installed.
 
-1. **In den Frontend-Ordner wechseln:**
+1. **Navigate to frontend directory:**
+   ```bash
    cd frontend
+   ```
 
-2. **Abhängigkeiten installieren:**
+2. **Install dependencies:**
+   ```bash
    npm install
+   ```
 
-3. **Entwicklungsserver starten:**
+3. **Start development server:**
+   ```bash
    npm run dev
+   ```
 
-4. **Im Browser öffnen:**
-   Gehe auf http://localhost:5173
+4. **Open in Browser:**
+   Go to http://localhost:5173
 
-📂 Projektstruktur
-Ein kurzer Überblick über die wichtigsten Ordner:
+## 📂 Project Structure
 
+```
 frontend/
 ├── src/
 │ ├── components/
-│ │ ├── assistant-ui/ # Chat-spezifische UI (Bubbles, Composer, etc.)
-│ │ ├── tools/ # Generative UI Komponenten (z.B. PriceTableTool)
-│ │ ├── ui/ # Shadcn Standard-Komponenten (Buttons, Cards)
-│ │ └── Chat.tsx # Haupt-Chat-Logik & Mock Runtime
-│ ├── lib/ # Hilfsfunktionen (utils.ts)
-│ ├── App.tsx # Hauptlayout (Sidebar + Main Area)
-│ ├── index.css # Tailwind Imports
-│ └── main.tsx # Entry Point
-├── package.json # Dependencies & Scripts
-└── vite.config.ts # Vite Konfiguration (mit Path Alias @)
-
-📝 Nächste Schritte
-[ ] Verbindung zum Python (FastAPI) Backend herstellen.
-
-[ ] useLocalRuntime durch echte API-Calls ersetzen.
-
-[ ] Weitere Generative UI Tools hinzufügen.
+│ │ ├── assistant-ui/   # Chat-specific UI (Bubbles, Composer)
+│ │ ├── tools/          # Generative UI Components (BOMTable, CostAnalysis)
+│ │ ├── ui/             # Shadcn Standard Components
+│ │ └── Chat.tsx        # Main Chat Logic & Runtime Configuration
+│ ├── lib/              # Utilities
+│ ├── pages/            # Page Views (Login, Profile, Config, ChatPage)
+│ ├── runtime/          # Backend Runtime (API connection + tool rendering)
+│ ├── store/            # Zustand Stores (Auth, Chat)
+│ ├── i18n.ts           # i18next bootstrap
+│ ├── locales/          # Localization strings
+│ ├── App.tsx           # Router & Layout
+│ └── main.tsx          # Entry Point
+└── vite.config.ts      # Vite Config
+```
