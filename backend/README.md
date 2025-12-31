@@ -60,6 +60,12 @@ backend/
 ### System
 - `GET /health`: Simple health check.
 
+## 💾 History & State
+
+- **Chat history** is stored in-memory per thread (`app.state.histories`) using DSPy `History`. This resets on server restart and is not shared across processes.
+- The history window is capped at the last 25 turns to bound prompt size.
+- **BOM state** is stored in-memory per thread (`app.state.boms`) and is used to apply `bom_update` confirmations.
+
 ## ⚙️ Configuration
 
 The app relies on environment variables and a service account file.
