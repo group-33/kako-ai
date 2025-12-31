@@ -18,7 +18,7 @@ export function Layout() {
     const { t } = useTranslation();
 
     const handleNewChat = () => {
-        addThread();
+        addThread(t('layout.newChat'));
         navigate("/chat");
     };
 

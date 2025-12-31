@@ -213,6 +213,30 @@ async def run_agent(
     )
 
 
+@app.post("/chat/title")
+async def generate_chat_title(request: AgentRequest):
+    """Generates a concise title for a chat thread based on the first user message."""
+    try:
+        class GenerateTitle(dspy.Signature):
+            """Summarize the user message into a short, concise chat title (max 5 words). Language should match the user's message."""
+            message = dspy.InputField()
+            title = dspy.OutputField()
+
+        title_generator = dspy.Predict(GenerateTitle)
+        
+        # dynamic model selection (default GEMINI_2_5_FLASH)
+        selected_lm = AVAILABLE_MODELS.get(request.model_id, GEMINI_2_5_FLASH)
+
+        with dspy.context(lm=selected_lm):
+            prediction = title_generator(message=request.user_query)
+            title = prediction.title
+            
+        return {"title": title}
+    except Exception as e:
+        print(f"Title generation error: {e}")
+        return {"title": request.user_query[:30] + "..."}
+
+
 @app.get("/config/models")
 def get_available_models() -> dict:
     """Return list of available LLMs for configuration."""

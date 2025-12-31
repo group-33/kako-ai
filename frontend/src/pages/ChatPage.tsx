@@ -31,7 +31,7 @@ export default function ChatPage() {
     return (
         <div className="h-full p-2 md:p-6">
             <div className="mx-auto max-w-5xl h-full flex flex-col">
-                <Chat key={effectiveId} />
+                <Chat key={effectiveId} threadId={effectiveId} />
             </div>
         </div>
     );

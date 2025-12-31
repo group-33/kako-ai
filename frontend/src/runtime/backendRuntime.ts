@@ -11,17 +11,46 @@ const BACKEND_BASE_URL =
   (import.meta as ImportMeta & { env: { VITE_BACKEND_URL?: string } }).env
     .VITE_BACKEND_URL ?? "http://127.0.0.1:8000";
 
-export const useBackendRuntime = () => {
-  const threadId = useChatStore((state) => state.activeThreadId) ?? "default";
+export const useBackendRuntime = (threadIdParam?: string) => {
+  const { activeThreadId, threads, renameThread, modelId } = useChatStore();
+  const threadId = threadIdParam ?? activeThreadId ?? "default";
 
-  return useLocalRuntime({
+  // Get initial messages from store
+  const activeThread = threads.find((t) => t.id === threadId);
+  const initialMessages = activeThread?.messages || [];
+
+  const runtime = useLocalRuntime({
     run: async function* ({ messages, abortSignal }) {
       const lastMessage = messages[messages.length - 1];
       const textPart = lastMessage?.content.find((part) => part.type === "text");
-      const userText =
-        textPart && "text" in textPart ? textPart.text.trim() : "";
+      const userText = textPart && "text" in textPart ? textPart.text.trim() : "";
 
       if (!userText) return;
+
+
+
+      const userMessages = messages.filter(m => m.role === 'user');
+      if (userMessages.length === 1 && activeThread) {
+        const isDefaultTitle = activeThread.title.startsWith("New Chat") || activeThread.title.startsWith("Neuer Chat");
+        if (isDefaultTitle) {
+          fetch(`${BACKEND_BASE_URL}/chat/title`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              user_query: userText,
+              model_id: modelId
+            })
+          })
+            .then(res => res.json())
+            .then(data => {
+              if (data.title && threadId) {
+                renameThread(threadId, data.title);
+              }
+            })
+            .catch(e => console.error("Title gen failed", e));
+        }
+      }
+
 
       let response: Response;
       try {
@@ -31,7 +60,7 @@ export const useBackendRuntime = () => {
           body: JSON.stringify({
             user_query: userText,
             thread_id: threadId,
-            model_id: useChatStore.getState().modelId,
+            model_id: modelId,
           }),
           signal: abortSignal,
         });
@@ -89,5 +118,8 @@ export const useBackendRuntime = () => {
         yield { content };
       }
     },
-  });
+  }, { initialMessages }
+  );
+
+  return runtime;
 };
