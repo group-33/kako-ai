@@ -28,7 +28,7 @@ export function Chat({ threadId }: { threadId: string }) {
   return (
     <AssistantRuntimeProvider runtime={runtime}>
       <PersistenceObserver threadId={threadId} />
-      <div className="flex h-full flex-col overflow-hidden bg-white rounded-xl border shadow-sm relative">
+      <div className="flex h-full flex-col overflow-hidden bg-slate-900/50 backdrop-blur-sm rounded-xl border border-slate-800 shadow-2xl relative">
         <BOMTableTool />
         <ProcurementOptionsTool />
         <CostAnalysisTool />

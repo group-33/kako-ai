@@ -69,10 +69,12 @@ class BOMRow(BaseModel):
     """Single row in a BOM table for frontend display."""
 
     id: str
-    component: str
+    pos: str | int | None = None
+    item_nr: str | None = None
+    component: str  # Kept for backward compat (will map to description usually)
+    description: str | None = None
     quantity: float
     unit: str
-    description: str | None = None
     confidence_score: float | None = None
 
 
@@ -98,9 +100,11 @@ class BOMOverride(BaseModel):
     """Editable overrides for a single BOM row (keyed by a stable item id)."""
 
     item_id: str
-    quantity: int
-    component: str | None = None
+    quantity: float
+    item_nr: str | None = None
+    description: str | None = None
     unit: str | None = None
+    component: str | None = None # Deprecated but kept for safety
 
 
 class BOMUpdate(BaseModel):

@@ -44,9 +44,19 @@ def apply_bom_update(base: BillOfMaterials, update: BOMUpdate) -> BillOfMaterial
             continue
 
         new_item = item.model_copy(deep=True)
-        new_item.quantity = int(override.quantity)
-        if override.component is not None:
+        # Apply overrides
+        new_item.quantity = override.quantity
+        if override.item_nr is not None:
+             new_item.item_nr = override.item_nr
+        if override.description is not None:
+            new_item.description = override.description
+        if override.unit is not None:
+             new_item.unit = override.unit
+        
+        # Backward compatibility for component -> description
+        if override.component is not None and override.description is None:
             new_item.description = override.component
+
         items.append(new_item)
 
     return BillOfMaterials(items=items)
@@ -62,23 +72,25 @@ def build_bom_tool_block(
     rows: list[BOMRow] = []
     for idx, item in enumerate(bom.items):
         row_id = _bom_item_key(item, idx)
-        component = item.description or f"Part {item.part_number}"
-        description_bits = []
-        if item.unit:
-            description_bits.append(item.unit)
-        #if item.no_of_poles:
-        #    description_bits.append(f"{item.no_of_poles} poles")
-        #if item.hdm_no:
-        #    description_bits.append(f"HDM {item.hdm_no}")
-        description = " | ".join(description_bits) if description_bits else None
+        
+        # Mapping logic
+        pos = item.part_number # "Pos" from drawing usually lands here
+        item_nr = item.item_nr
+        description = item.description or ""
+        unit = item.unit or "Stk" # Default only if missing
+        
+        # "Component" is a legacy field for the UI, usually same as description or combined
+        component_display = description if description else f"Item {idx+1}"
 
         rows.append(
             BOMRow(
                 id=row_id,
-                component=component,
-                quantity=item.quantity,
-                unit="Stk",
+                pos=pos,
+                item_nr=item_nr,
+                component=component_display, # Kept for safety
                 description=description,
+                quantity=float(item.quantity) if item.quantity is not None else 0.0,
+                unit=unit,
                 confidence_score=None,
             )
         )

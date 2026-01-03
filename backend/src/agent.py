@@ -43,7 +43,7 @@ class KakoAgentSignature(dspy.Signature):
         desc="Conversation history for this thread; use it to maintain context across turns."
     )
     process_result: str = dspy.OutputField(
-        desc="Natural-language summary of the reasoning steps and tool results."
+        desc="Natural-language summary. REQUIRED: If you extracted a BOM, just say 'I have extracted the BOM information.' Do NOT list the items in the text response."
     )
 
 
