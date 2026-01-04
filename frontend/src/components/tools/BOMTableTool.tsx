@@ -26,6 +26,7 @@ type BOMTableArgs = {
 const BOMTable = ({ args }: { args: BOMTableArgs }) => {
   const [data, setData] = useState(args.rows);
   const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   // Generic change handler
@@ -41,6 +42,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
 
   const handleSave = async () => {
     setSaveError(null);
+    setIsSaving(true);
     try {
       const payload = {
         user_query: "__BOM_CONFIRM__",
@@ -57,7 +59,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
         },
       };
 
-      console.log("Saving BOM Update Payload:", payload); // <-- Check Console for this!
+      console.log("Saving BOM Update Payload:", payload);
 
       const res = await fetch(`${BACKEND_BASE_URL}/agent`, {
         method: "POST",
@@ -68,6 +70,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
       if (!res.ok) {
         setSaveError(await res.text());
         setIsSaved(false);
+        setIsSaving(false);
         return;
       }
       setIsSaved(true);
@@ -76,6 +79,8 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
       console.error("Save failed", e);
       setSaveError(e instanceof Error ? e.message : "Unknown error");
       setIsSaved(false);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -168,13 +173,15 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
 
         <button
           onClick={handleSave}
+          disabled={isSaving}
           className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-medium transition-all shadow-lg ${isSaved
-            ? "bg-green-500/10 text-green-400 border border-green-500/20"
-            : "bg-indigo-600 text-white hover:bg-indigo-500 shadow-indigo-900/20"
+              ? "bg-green-500/10 text-green-400 border border-green-500/20"
+              : "bg-indigo-600 text-white hover:bg-indigo-500 shadow-indigo-900/20 disabled:opacity-50 disabled:cursor-wait"
             }`}
         >
-          {isSaved ? "Gespeichert!" : "Änderungen übernehmen"}
-          {!isSaved && <Save size={12} />}
+          {isSaving ? "Speichert..." : isSaved ? "Gespeichert!" : "Änderungen übernehmen"}
+          {!isSaved && !isSaving && <Save size={12} />}
+          {isSaving && <div className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
         </button>
       </div>
 

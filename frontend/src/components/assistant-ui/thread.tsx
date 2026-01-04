@@ -17,11 +17,14 @@ import {
   ErrorPrimitive,
   MessagePrimitive,
   ThreadPrimitive,
+  useMessage,
+  useThread,
 } from "@assistant-ui/react";
 
 import type { FC } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MarkdownText } from "@/components/assistant-ui/markdown-text";
 import { ToolFallback } from "@/components/assistant-ui/tool-fallback";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
@@ -213,6 +216,7 @@ const ComposerAction: FC = () => {
   );
 };
 
+
 const MessageError: FC = () => {
   return (
     <MessagePrimitive.Error>
@@ -224,18 +228,35 @@ const MessageError: FC = () => {
 };
 
 const AssistantMessage: FC = () => {
+  const message = useMessage();
+  const { isRunning, messages } = useThread();
+
+  const isLast = messages[messages.length - 1]?.id === message.id;
+  const hasContent = message.content && message.content.length > 0;
+  const showThinking = isRunning && isLast && !hasContent;
+
   return (
     <MessagePrimitive.Root
       className="aui-assistant-message-root fade-in slide-in-from-bottom-1 relative mx-auto w-full max-w-(--thread-max-width) animate-in py-4 duration-150 ease-out"
       data-role="assistant"
     >
       <div className="aui-assistant-message-content wrap-break-word mx-2 text-foreground leading-7">
-        <MessagePrimitive.Parts
-          components={{
-            Text: MarkdownText,
-            tools: { Fallback: ToolFallback },
-          }}
-        />
+        <div className="flex flex-col gap-4">
+          <MessagePrimitive.Parts
+            components={{
+              Text: MarkdownText,
+              tools: { Fallback: ToolFallback },
+            }}
+          />
+        </div>
+
+        {/* Loading State - only show if running, is last message, and no content yet */}
+        {showThinking && (
+          <div className="flex flex-col gap-2 mt-2">
+            <ThinkingMessage />
+          </div>
+        )}
+
         <MessageError />
       </div>
 
@@ -246,6 +267,23 @@ const AssistantMessage: FC = () => {
     </MessagePrimitive.Root>
   );
 };
+
+const ThinkingMessage = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-col gap-2 animate-pulse w-full max-w-md">
+      <div className="flex items-center gap-2 mb-1">
+        <div className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: "0ms" }} />
+        <div className="w-2 h-2 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: "150ms" }} />
+        <div className="w-2 h-2 rounded-full bg-pink-500 animate-bounce" style={{ animationDelay: "300ms" }} />
+        <span className="text-xs font-medium text-slate-500 ml-2">{t('thread.message.thinking')}</span>
+      </div>
+      <Skeleton className="h-4 w-3/4 rounded-lg bg-slate-800/30" />
+      <Skeleton className="h-4 w-1/2 rounded-lg bg-slate-800/30" />
+    </div>
+  )
+}
+
 
 const AssistantActionBar: FC = () => {
   return (

@@ -112,6 +112,9 @@
             "placeholder": "Send a message...",
             "cancel": "Cancel",
             "update": "Update"
+        },
+        "message": {
+            "thinking": "Thinking..."
         }
     }
 }

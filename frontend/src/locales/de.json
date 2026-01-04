@@ -112,6 +112,9 @@
             "placeholder": "Nachricht senden...",
             "cancel": "Abbrechen",
             "update": "Aktualisieren"
+        },
+        "message": {
+            "thinking": "Denkt nach..."
         }
     }
 }
