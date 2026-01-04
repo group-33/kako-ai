@@ -6,6 +6,7 @@ from backend.src.config import (
     NEXAR_CLIENT_ID,
     NEXAR_CLIENT_SECRET,
     PROCUREMENT_API_IS_LIVE,
+    PROCUREMENT_API_CACHE_TTL_MINUTES,
 )
 from .query_manager import (
     MULTI_QUERY_FULL,
@@ -18,7 +19,8 @@ _nexar_client = NexarClient(
     NEXAR_CLIENT_ID,
     NEXAR_CLIENT_SECRET,
     is_live=PROCUREMENT_API_IS_LIVE,
-    enable_caching=True,  # TODO: Note, caching should be disabled in production, since e.g. prices can change frequently. Or implement cache expiration.
+    enable_caching=True,
+    cache_ttl_minutes=PROCUREMENT_API_CACHE_TTL_MINUTES,
 )
 print(f"Procurement API is_live={PROCUREMENT_API_IS_LIVE}")
 

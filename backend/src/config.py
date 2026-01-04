@@ -21,6 +21,7 @@ _procurement_api_is_live_env = os.getenv("PROCUREMENT_API_IS_LIVE", "false").low
 # Only enable "live" calls when credentials are present; otherwise the procurement
 # tooling falls back to cached/mock behavior without preventing the API from booting.
 PROCUREMENT_API_IS_LIVE = bool(_procurement_api_is_live_env and NEXAR_CLIENT_ID and NEXAR_CLIENT_SECRET)
+PROCUREMENT_API_CACHE_TTL_MINUTES = 60  # Cache TTL in minutes for procurement API calls
 
 # --- Xentral API Configuration ---
 # Loaded from .env (gitignored) so secrets stay out of git.

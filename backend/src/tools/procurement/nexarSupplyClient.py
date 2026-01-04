@@ -33,6 +33,7 @@ import random
 import hashlib
 import copy
 from typing import Dict
+from datetime import datetime
 
 NEXAR_URL = "https://api.nexar.com/graphql"
 PROD_TOKEN_URL = "https://identity.nexar.com/connect/token"
@@ -69,11 +70,12 @@ def decodeJWT(token):
 
 
 class NexarClient:
-    def __init__(self, id, secret, is_live=True, enable_caching=True) -> None:
+    def __init__(self, id, secret, is_live=True, enable_caching=True, cache_ttl_minutes=5256000) -> None:
         self.id = id
         self.secret = secret
         self.is_live = is_live
         self.enable_caching = enable_caching
+        self.cache_ttl_minutes = cache_ttl_minutes
         self.persistent_cache_file = os.path.join(
             os.path.dirname(__file__), "persistent_cache.json"
         )
@@ -132,7 +134,28 @@ class NexarClient:
         if self.enable_caching:
             if query_hash in self.persistent_cache:
                 if variables_hash in self.persistent_cache[query_hash]:
-                    return self.persistent_cache[query_hash][variables_hash]
+                    cached_entry = self.persistent_cache[query_hash][variables_hash]
+
+                    if self.is_live:
+                        is_outdated = True
+                        # Check if entry follows new format with timestamp
+                        if "timestamp" in cached_entry and "data" in cached_entry:
+                            try:
+                                stored_time = datetime.fromisoformat(cached_entry["timestamp"])
+                                age_minutes = (datetime.now() - stored_time).total_seconds() / 60
+                                if age_minutes < self.cache_ttl_minutes:
+                                    is_outdated = False
+                            except ValueError:
+                                pass # invalid date format, treat as outdated
+                        
+                        # If not outdated, return cached data
+                        if not is_outdated:
+                            return cached_entry["data"]
+                        # If outdated, fall through to the API request below
+                    
+                    else:
+                        # Return data immediately, ignoring timestamp
+                        return cached_entry["data"]
 
         # 2. If not in cache and not live, use mock fallback
         if not self.is_live:
@@ -146,7 +169,7 @@ class NexarClient:
                     list(self.persistent_cache[query_hash].keys())
                 )
                 cached_data = copy.deepcopy(
-                    self.persistent_cache[query_hash][random_var_hash]
+                    self.persistent_cache[query_hash][random_var_hash]["data"]
                 )
 
                 # Swap MPNs to make it "realistic"
@@ -183,7 +206,12 @@ class NexarClient:
             if query_hash not in self.persistent_cache:
                 self.persistent_cache[query_hash] = {}
 
-            self.persistent_cache[query_hash][variables_hash] = data
+            cache_entry = {
+                "timestamp": datetime.now().isoformat(),
+                "data": data
+            }
+
+            self.persistent_cache[query_hash][variables_hash] = cache_entry
             self._save_persistent_cache()
 
         return data
