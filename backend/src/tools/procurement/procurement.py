@@ -187,7 +187,12 @@ def sort_and_filter_by_best_price(
     return result_data
 
 
-def search_part_by_mpn(mpns: List[str], quantity: int = 1, part_limit: int = 1) -> str:
+def search_part_by_mpn(
+    mpns: List[str],
+    quantity: int = 1,
+    part_limit: int = 1,
+    apply_country_filter: bool = True,
+) -> str:
     """
     Search for electronic parts by their Manufacturer Part Numbers (MPNs).
     Returns detailed part information including pricing, availability, and seller options.
@@ -201,8 +206,8 @@ def search_part_by_mpn(mpns: List[str], quantity: int = 1, part_limit: int = 1) 
     Args:
         mpns: List of Manufacturer Part Numbers to search (e.g., ["STM32F407VGT6", "LM324N"])
         quantity: Quantity needed per part (default: 1)
-        part_limit: Number of parts to return per MPN (default: 1). Use 1 unless you need
-                   multiple alternatives from the same MPN. Higher values consume more API quota.
+        part_limit: Number of parts to return per MPN (default: 1). Use 1 unless you need multiple alternatives from the same MPN. Higher values consume more API quota.
+        apply_country_filter: Filters results to only show sellers shipping to Germany (DE). KEEP AS True (default). Only set to False if international shipping information is required, which is basically never the case.
 
     Returns:
         JSON string containing part details, specifications, pricing tiers, availability,
@@ -232,6 +237,10 @@ def search_part_by_mpn(mpns: List[str], quantity: int = 1, part_limit: int = 1) 
             # Fetch individual result (hits cache if this specific MPN+limit was fetched before)
             data = _nexar_client.get_query(MULTI_QUERY_FULL, variables)
 
+            # Filter sellers by country immediately to reduce token usage
+            if apply_country_filter:
+                data = filter_sellers_by_shipping(data, target_country_codes=["DE"])
+
             # Merge into combined results
             if "supMultiMatch" in data:
                 combined_results["supMultiMatch"].extend(data["supMultiMatch"])
@@ -245,7 +254,9 @@ def search_part_by_mpn(mpns: List[str], quantity: int = 1, part_limit: int = 1) 
     return json.dumps(combined_results)
 
 
-def find_alternatives(mpn: str, description: str, quantity: int = 1) -> str:
+def find_alternatives(
+    mpn: str, description: str, quantity: int = 1, apply_country_filter: bool = True
+) -> str:
     """
     Find alternative electronic parts that are compatible with the specified MPN.
     Searches for parts with similar specifications in the same category.
@@ -260,6 +271,7 @@ def find_alternatives(mpn: str, description: str, quantity: int = 1) -> str:
         mpn: Original Manufacturer Part Number to find alternatives for
         description: Part description to help match similar components
         quantity: Quantity needed (default: 1)
+        apply_country_filter: Filters results to only show sellers shipping to Germany (DE). KEEP AS True (default). Only set to False if international shipping information is required, which is basically never the case.
 
     Returns:
         JSON string with original part info and up to 3 alternative parts with full specs,
@@ -270,7 +282,9 @@ def find_alternatives(mpn: str, description: str, quantity: int = 1) -> str:
     """
     # First, get the original part to extract category and specs
     try:
-        original_search = search_part_by_mpn([mpn], quantity=quantity)
+        original_search = search_part_by_mpn(
+            [mpn], quantity=quantity, apply_country_filter=apply_country_filter
+        )
         original_data = json.loads(original_search)
 
         if "error" in original_data:
@@ -295,6 +309,12 @@ def find_alternatives(mpn: str, description: str, quantity: int = 1) -> str:
         variables = {"description": description}  # , "categoryId": category_id
 
         alternatives_data = _nexar_client.get_query(SEARCH_BY_CATEGORY_QUERY, variables)
+
+        # Filter alternatives by country to reduce token usage
+        if apply_country_filter:
+            alternatives_data = filter_sellers_by_shipping(
+                alternatives_data, target_country_codes=["DE"]
+            )
 
         # Combine original and alternatives for comparison
         result = {
@@ -429,6 +449,9 @@ def _select_best_offer(part_data: Dict, quantity_needed: int) -> Optional[Dict]:
         for offer in seller.get("offers", []):
             inventory = offer.get("inventoryLevel", 0)
             moq = offer.get("moq", 1)
+            if moq is None:
+                # if the dict has the key but value is None
+                moq = 1
 
             # Check if this offer can fulfill our needs
             if inventory < quantity_needed:
