@@ -3,41 +3,74 @@
 AI-powered copilot that automates critical workflows, enables detailed feasibility projections, 
 and assists in finding optimal procurement options.
 
-## Repository Guidelines
+## Key Features
 
-### Project Layout
+- **ReAct Agent**: Powered by DSPy + Gemini (Vertex AI).
+- **Generative UI**: Renders interactive BOM tables and analysis tools.
+- **Full Persistence**: Chat history and user sessions are persisted locally.
+- **Authentication**: Client-side auth with user profiles.
+- **Internationalization**: Full English/German support.
+- **Dynamic Configuration**: Switch models on the fly.
+
+## Layout
 
 ```
 .
 ├── backend/
 │   └── src/
-│       ├── main.py                 # FastAPI entrypoint (uvicorn backend.src.main:app --reload)
-│       ├── config.py               # Env-driven config (LLM keys, Xentral settings)
-│       ├── models.py               # Shared data shapes
-│       ├── bom_extraction/         # BOM extraction feature module
-│       ├── demand_analysis/        # Demand analysis feature module
-│       └── routers/                # FastAPI routers by domain
-│           ├── bom.py              # /bom/extract
-│           └── demand.py           # /demand/analysis
-├── .env                            # Local environment variables (gitignored)
-└── requirements.txt                # Runtime dependencies (FastAPI, uvicorn, DSPy, etc.)
+│       ├── main.py        # FastAPI entrypoint (Agent + Title + Config APIs)
+│       ├── agent.py       # DSPy ReAct agent wiring + tool registry
+│       ├── config.py      # App configuration & Model definitions
+│       ├── models.py      # Pydantic request/response models
+│       ├── utils.py       # Tool adapters + BOM/procurement helpers
+│       └── tools/         # Agent tools (BOM extraction, demand analysis, procurement)
+└── frontend/
+    └── src/
+        ├── components/    # UI Components & Generative Tools
+        ├── pages/         # Login, Profile, Chat, Config Pages
+        ├── runtime/       # Backend connection & Persistence logic
+        ├── store/         # State Management (Zustand)
+        ├── i18n.ts        # Localization bootstrapping
+        └── locales/       # Localization strings
 ```
 
-### Develop & Run
+## Run Locally
 
-- Install dependencies into your virtualenv: `pip install -r requirements.txt`.
-- From the repo root, start the API: `uvicorn backend.src.main:app --reload`.
-- Visit Swagger UI at `http://127.0.0.1:8000/docs`.
-- Add new endpoints by creating routers under `backend/src/routers/` and including them in `backend/src/main.py`.
+**Backend:**
+```bash
+pip install -r requirements.txt
+uvicorn backend.src.main:app --reload
+```
 
-### Conventions
+**Frontend:**
+```bash
+cd frontend && npm install
+npm run dev
+```
 
-- Create a subfolder under `backend/src/` for each KakoAI functionality.
-- Define shared configuration nuggets (e.g., LLM names) in `backend/src/config.py`; load secrets via `.env`.
-- Use feature-local models in their packages (`bom_extraction/models.py`, `demand_analysis/models.py`); keep any shared shapes in `backend/src/models.py`.
+## API Overview
 
-### API Surface (current)
+### Agent & Chat
+- `POST /agent`: Unified agent endpoint.
+  - Payload: `{ "user_query": "...", "thread_id": "...", "model_id": "..." }`
+  - Returns: Streamable/Block-based agent response.
+- `POST /chat/title`: Generates a concise title for a new thread.
+  - Payload: `{ "user_query": "...", "model_id": "..." }`
 
-- `GET /health` – service health.
-- `POST /bom/extract` – multipart file upload (`file`) for a drawing; returns `BOMExtractionResponse` with an extracted BOM.
-- `POST /demand/analysis` – demand analyst agent; body `DemandAnalysisRequest` with optional BOM, returns natural-language `process_result`.
+### Configuration
+- `GET /config/models`: Returns list of available LLMs.
+
+### System
+- `GET /health`: Health check.
+
+## Configuration
+
+- Create a `.env` (gitignored) with your Vertex credentials (see below).
+- Optional integrations:
+  - SSH file lookup for drawings: `SSH_HOST`, `SSH_PORT`, `SSH_USER`, `SSH_PASS`, `REMOTE_DIR`
+  - Procurement (Nexar): `NEXAR_CLIENT_ID`, `NEXAR_CLIENT_SECRET`
+  - ERP/DB tooling (Xentral/Supabase): `XENTRAL_API_KEY`, `SUPABASE_PASSWORD`
+
+### Vertex / Gemini Setup
+- Place your service account JSON at `backend/src/kako-ai_auth.json`, or update `GOOGLE_APPLICATION_CREDENTIALS`.
+- Project/region are defined in `backend/src/config.py` (`project: kako-ai-480517`, `vertex_location: europe-west1`).

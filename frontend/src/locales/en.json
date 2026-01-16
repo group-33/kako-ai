@@ -1,0 +1,120 @@
+{
+    "layout": {
+        "dashboard": "Dashboard",
+        "chats": "Chats",
+        "newChat": "New Chat",
+        "configuration": "Configuration",
+        "profile": "Profile"
+    },
+    "dashboard": {
+        "welcome": "Welcome back, {{name}}.",
+        "subheading": "Automating workflows for feasibility projections and optimal procurement.",
+        "systemOperational": "KAKO SYSTEM ONLINE",
+        "quickActions": {
+            "extractBom": {
+                "title": "Extract BOM from Drawing",
+                "description": "Extract BOMs from customer specifications to serve as the basis for feasibility projections.",
+                "action": "Start Extraction"
+            },
+            "searchParts": {
+                "title": "Search Parts & Inventory",
+                "description": "Interface with Octopart to find optimal sourcing options and check against Xentral ERP inventory.",
+                "action": "Open Procurement Tool"
+            }
+        },
+        "stats": {
+            "activeProjects": "Active Feasibility Checks",
+            "bomsProcessed": "BOMs Extracted",
+            "totalSavings": "Procurement Savings",
+            "compliance": "Compliance",
+            "weekTrend": "+2 this week",
+            "successRate": "98% accuracy",
+            "viaOptimization": "via optimization",
+            "rohsVerified": "RoHS verified"
+        },
+        "recentProjects": {
+            "title": "Recent Feasibility Analyses",
+            "viewAll": "View All",
+            "lastUpdated": "Last updated",
+            "continue": "Continue",
+            "noActivity": "No recent analyses.",
+            "startFirst": "Start your first analysis"
+        }
+    },
+    "chatPage": {
+        "selectPlaceholder": "Select a workflow or start a new one."
+    },
+    "config": {
+        "title": "Configuration",
+        "modelSelection": "AI Model Selection",
+        "modelDesc": "Choose the LLM that powers the Kako AI agent.",
+        "save": "Settings are saved automatically."
+    },
+    "login": {
+        "subtitle": "Generative AI-Powered Copilot for Feasibility & Procurement",
+        "email": "Email",
+        "emailPlaceholder": "name@kako.com",
+        "password": "Password",
+        "passwordPlaceholder": "••••••••",
+        "signIn": "Sign In",
+        "signUp": "Sign Up",
+        "createAccount": "Create Account",
+        "name": "Full Name",
+        "namePlaceholder": "John Doe",
+        "noAccount": "Don't have an account?",
+        "hasAccount": "Already have an account?",
+        "loading": "Signing in...",
+        "loadingSignUp": "Creating account...",
+        "terms": "By continuing, you agree to our Terms of Service and Privacy Policy.",
+        "errorMissing": "Please fill in all fields.",
+        "errorEmail": "Please enter a valid email address."
+    },
+    "profile": {
+        "title": "Profile",
+        "subtitle": "Manage your account settings and preferences.",
+        "displayName": "Display Name",
+        "email": "Email Address",
+        "edit": "Edit Profile",
+        "cancel": "Cancel",
+        "save": "Save Changes",
+        "dangerZone": "Danger Zone",
+        "logoutDesc": "Sign out of your session. You will be redirected to the login page.",
+        "logout": "Log Out"
+    },
+    "thread": {
+        "welcome": {
+            "title": "Hello!",
+            "message": "I can help with BOM extraction, feasibility projections, and procurement."
+        },
+        "suggestions": {
+            "createBom": {
+                "title": "Feasibility Check",
+                "label": "for 500 units",
+                "action": "Can we fulfill a new order for 500 units of X?"
+            },
+            "checkInventory": {
+                "title": "Show BOMs",
+                "label": "due in next 2 months",
+                "action": "Show me all BOMs belonging to orders due in the next 2 months and provide purchase recommendations."
+            },
+            "optimizeProcurement": {
+                "title": "Material Requirements",
+                "label": "for next 3 weeks",
+                "action": "What amount of which materials do we need to satisfy all orders for the next 3 weeks?"
+            },
+            "compareSuppliers": {
+                "title": "Extract BOM",
+                "label": "from customer drawing",
+                "action": "Extract BOM from this customer specification drawing."
+            }
+        },
+        "composer": {
+            "placeholder": "Send a message...",
+            "cancel": "Cancel",
+            "update": "Update"
+        },
+        "message": {
+            "thinking": "Thinking..."
+        }
+    }
+}

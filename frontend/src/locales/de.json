@@ -1,0 +1,120 @@
+{
+    "layout": {
+        "dashboard": "Dashboard",
+        "chats": "Chats",
+        "newChat": "Neuer Chat",
+        "configuration": "Einstellungen",
+        "profile": "Profil"
+    },
+    "dashboard": {
+        "welcome": "Willkommen zurück, {{name}}.",
+        "subheading": "Automatisierung von Workflows für Machbarkeitsprognosen und optimale Beschaffung.",
+        "systemOperational": "KAKO SYSTEM ONLINE",
+        "quickActions": {
+            "extractBom": {
+                "title": "Stückliste aus Zeichnung",
+                "description": "Extrahiere Stücklisten aus Kundenzeichnungen durch KI als Basis für die Machbarkeitsprognose.",
+                "action": "Extraktion starten"
+            },
+            "searchParts": {
+                "title": "Teile & Inventar",
+                "description": "Verbinde mit Octopart für optimale Beschaffungsoptionen und prüfe Bestand im Xentral ERP.",
+                "action": "Beschaffungstool"
+            }
+        },
+        "stats": {
+            "activeProjects": "Aktive Machbarkeitsprüfungen",
+            "bomsProcessed": "Stücklisten Extrahiert",
+            "totalSavings": "Beschaffungseinsparung",
+            "compliance": "Compliance",
+            "weekTrend": "+2 diese Woche",
+            "successRate": "98% Genauigkeit",
+            "viaOptimization": "durch Optimierung",
+            "rohsVerified": "RoHS verifiziert"
+        },
+        "recentProjects": {
+            "title": "Letzte Analysen",
+            "viewAll": "Alle anzeigen",
+            "lastUpdated": "Zuletzt aktualisiert",
+            "continue": "Öffnen",
+            "noActivity": "Keine aktuellen Analysen.",
+            "startFirst": "Starten Sie Ihre erste Analyse"
+        }
+    },
+    "chatPage": {
+        "selectPlaceholder": "Wähle einen Workflow oder starte einen neuen."
+    },
+    "config": {
+        "title": "Einstellungen",
+        "modelSelection": "KI-Modell Auswahl",
+        "modelDesc": "Wähle das LLM, das den Kako AI Agenten antreibt.",
+        "save": "Einstellungen werden automatisch gespeichert."
+    },
+    "login": {
+        "subtitle": "Generativer KI-Copilot für Machbarkeit & Beschaffung",
+        "email": "E-Mail",
+        "emailPlaceholder": "name@kako.de",
+        "password": "Passwort",
+        "passwordPlaceholder": "••••••••",
+        "signIn": "Anmelden",
+        "signUp": "Registrieren",
+        "createAccount": "Konto erstellen",
+        "name": "Vollständiger Name",
+        "namePlaceholder": "Max Mustermann",
+        "noAccount": "Noch kein Konto?",
+        "hasAccount": "Bereits ein Konto?",
+        "loading": "Anmelden...",
+        "loadingSignUp": "Konto wird erstellt...",
+        "terms": "Durch das Fortfahren stimmst du unseren Nutzungsbedingungen und der Datenschutzerklärung zu.",
+        "errorMissing": "Bitte fülle alle Felder aus.",
+        "errorEmail": "Bitte gib eine gültige E-Mail-Adresse ein."
+    },
+    "profile": {
+        "title": "Profil",
+        "subtitle": "Verwalte deine Kontoeinstellungen und Präferenzen.",
+        "displayName": "Anzeigename",
+        "email": "E-Mail-Adresse",
+        "edit": "Profil bearbeiten",
+        "cancel": "Abbrechen",
+        "save": "Änderungen speichern",
+        "dangerZone": "Gefahrenzone",
+        "logoutDesc": "Melde dich von deiner Sitzung ab.",
+        "logout": "Abmelden"
+    },
+    "thread": {
+        "welcome": {
+            "title": "Hallo!",
+            "message": "Ich kann bei Stücklisten, Machbarkeit und Beschaffung helfen."
+        },
+        "suggestions": {
+            "createBom": {
+                "title": "Machbarkeitsprüfung",
+                "label": "für 500 Einheiten",
+                "action": "Können wir einen neuen Auftrag über 500 Einheiten von X erfüllen?"
+            },
+            "checkInventory": {
+                "title": "Zeige Stücklisten",
+                "label": "fällig in 2 Monaten",
+                "action": "Zeige alle Stücklisten für Aufträge der nächsten 2 Monate mit Beschaffungsempfehlungen."
+            },
+            "optimizeProcurement": {
+                "title": "Materialbedarf",
+                "label": "nächste 3 Wochen",
+                "action": "Welche Menge welcher Materialien benötigen wir für alle Aufträge der nächsten 3 Wochen?"
+            },
+            "compareSuppliers": {
+                "title": "Stückliste extrahieren",
+                "label": "aus Kundenzeichnung",
+                "action": "Extrahiere Stückliste aus dieser Kundenzeichnung."
+            }
+        },
+        "composer": {
+            "placeholder": "Nachricht senden...",
+            "cancel": "Abbrechen",
+            "update": "Aktualisieren"
+        },
+        "message": {
+            "thinking": "Denkt nach..."
+        }
+    }
+}

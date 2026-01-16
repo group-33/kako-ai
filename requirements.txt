@@ -8,3 +8,12 @@ uvicorn~=0.38.0
 requests~=2.32.5
 python-dotenv~=1.2.1
 python-multipart~=0.0.20
+paramiko~=4.0.0
+opencv-python~=4.12.0.88
+scp~=0.15.0
+thefuzz~=0.22.1
+pdf2image~=1.17.0
+numpy<2.3.0
+pytesseract~=0.3.13
+python-dateutil~=2.9.0.post0
+psycopg2-binary~=2.9.11
