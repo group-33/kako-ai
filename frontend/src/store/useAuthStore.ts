@@ -1,47 +1,42 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
-
-export type User = {
-    name: string;
-    email: string;
-};
+import { supabase } from "@/lib/supabase";
+import { User } from "@supabase/supabase-js";
 
 type AuthStore = {
-    isAuthenticated: boolean;
     user: User | null;
-    login: (name: string, email: string) => void;
-    logout: () => void;
-    updateProfile: (name: string, email: string) => void;
+    loading: boolean;
+    signIn: (email: string, password: string) => Promise<{ error: any }>;
+    signOut: () => Promise<{ error: any }>;
+    updateProfile: (name: string) => Promise<{ error: any }>;
 };
 
-export const useAuthStore = create<AuthStore>()(
-    persist(
-        (set) => ({
-            isAuthenticated: false,
-            user: null,
+export const useAuthStore = create<AuthStore>((_set) => ({
+    user: null,
+    loading: true,
 
-            login: (name, email) => {
-                set({
-                    isAuthenticated: true,
-                    user: { name, email },
-                });
-            },
+    signIn: async (email, password) => {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        return { error };
+    },
 
-            logout: () => {
-                set({
-                    isAuthenticated: false,
-                    user: null,
-                });
-            },
+    signOut: async () => {
+        const { error } = await supabase.auth.signOut();
+        return { error };
+    },
 
-            updateProfile: (name, email) => {
-                set((state) => ({
-                    user: state.user ? { ...state.user, name, email } : null,
-                }));
-            },
-        }),
-        {
-            name: "kako-auth-storage",
-        }
-    )
-);
+    updateProfile: async (name: string) => {
+        const { error } = await supabase.auth.updateUser({
+            data: { full_name: name }
+        });
+        return { error };
+    },
+}));
+
+// Set up the listener to keep the store in sync with Supabase
+supabase.auth.getSession().then(({ data: { session } }) => {
+    useAuthStore.setState({ user: session?.user ?? null, loading: false });
+});
+
+supabase.auth.onAuthStateChange((_event, session) => {
+    useAuthStore.setState({ user: session?.user ?? null, loading: false });
+});

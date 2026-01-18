@@ -7,12 +7,10 @@ import { cn } from "@/lib/utils";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export default function LoginPage() {
-    const { login } = useAuthStore();
+    const { signIn } = useAuthStore();
     const navigate = useNavigate();
     const { t } = useTranslation();
 
-    const [isSignUp, setIsSignUp] = useState(false);
-    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -23,32 +21,21 @@ export default function LoginPage() {
         setError("");
         setIsLoading(true);
 
-        // Simulate network delay
-        await new Promise((resolve) => setTimeout(resolve, 800));
-
-        if (!email || !password || (isSignUp && !name)) {
+        if (!email || !password) {
             setError(t('login.errorMissing'));
             setIsLoading(false);
             return;
         }
 
-        if (!email.includes("@")) {
-            setError(t('login.errorEmail'));
+        try {
+            const { error } = await signIn(email, password);
+            if (error) throw error;
+            navigate("/");
+        } catch (err: any) {
+            setError(err.message || "Authentication failed");
+        } finally {
             setIsLoading(false);
-            return;
         }
-
-        // Mock login success
-        let finalName = name;
-        if (!isSignUp) {
-            // Extract name from email if signing in directly
-            const parts = email.split("@");
-            finalName = parts[0] ? parts[0].charAt(0).toUpperCase() + parts[0].slice(1) : "User";
-        }
-
-        login(finalName, email);
-        navigate("/");
-        setIsLoading(false);
     };
 
     return (
@@ -74,20 +61,6 @@ export default function LoginPage() {
                     {error && (
                         <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
                             {error}
-                        </div>
-                    )}
-
-                    {isSignUp && (
-                        <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                            <label className="text-sm font-medium text-slate-300 ml-1">{t('login.name')}</label>
-                            <input
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all placeholder:text-slate-600"
-                                placeholder={t('login.namePlaceholder')}
-                                required
-                            />
                         </div>
                     )}
 
@@ -128,28 +101,17 @@ export default function LoginPage() {
                         {isLoading ? (
                             <>
                                 <Loader2 size={20} className="animate-spin" />
-                                {isSignUp ? t('login.loadingSignUp') : t('login.loading')}
+                                {t('login.loading')}
                             </>
                         ) : (
                             <>
-                                {isSignUp ? t('login.createAccount') : t('login.signIn')}
+                                {t('login.signIn')}
                                 <ArrowRight size={18} />
                             </>
                         )}
                     </button>
 
                     <div className="text-center space-y-4">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setIsSignUp(!isSignUp);
-                                setError("");
-                            }}
-                            className="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors outline-none focus:underline"
-                        >
-                            {isSignUp ? t('login.hasAccount') : t('login.noAccount')} <span className="underline decoration-indigo-400/30 underline-offset-4">{isSignUp ? t('login.signIn') : t('login.signUp')}</span>
-                        </button>
-
                         <p className="text-slate-500 text-xs">
                             {t('login.terms')}
                         </p>

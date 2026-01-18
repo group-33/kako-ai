@@ -5,15 +5,14 @@ import { User, LogOut, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function ProfilePage() {
-    const { user, logout, updateProfile } = useAuthStore();
+    const { user, signOut, updateProfile } = useAuthStore();
     const { t } = useTranslation();
 
-    const [name, setName] = useState(user?.name || "");
-    const [email, setEmail] = useState(user?.email || "");
+    const [name, setName] = useState(user?.user_metadata?.full_name || "");
     const [isEditing, setIsEditing] = useState(false);
 
-    const handleSave = () => {
-        updateProfile(name, email);
+    const handleSave = async () => {
+        await updateProfile(name);
         setIsEditing(false);
     };
 
@@ -23,8 +22,8 @@ export default function ProfilePage() {
 
                 {/* Header */}
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">{t('profile.title')}</h1>
-                    <p className="text-slate-500 mt-2">{t('profile.subtitle')}</p>
+                    <h1 className="text-3xl font-bold text-white">{t('profile.title')}</h1>
+                    <p className="text-slate-400 mt-2">{t('profile.subtitle')}</p>
                 </div>
 
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -32,7 +31,7 @@ export default function ProfilePage() {
                         <div className="w-24 h-24 rounded-full bg-slate-200 flex items-center justify-center text-slate-400 mb-4 ring-4 ring-white shadow-sm">
                             <User size={40} />
                         </div>
-                        <h2 className="text-xl font-bold text-slate-900">{user?.name}</h2>
+                        <h2 className="text-xl font-bold text-slate-900">{user?.user_metadata?.full_name || 'User'}</h2>
                         <p className="text-slate-500">{user?.email}</p>
                     </div>
 
@@ -52,18 +51,11 @@ export default function ProfilePage() {
                                 />
                             </div>
 
-                            <div className="grid gap-2">
+                            <div className="grid gap-2 opacity-60">
                                 <label className="text-sm font-medium text-slate-700">{t('profile.email')}</label>
-                                <input
-                                    type="email"
-                                    value={email}
-                                    disabled={!isEditing}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className={cn(
-                                        "w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all",
-                                        isEditing ? "bg-white border-slate-300" : "bg-slate-50 border-transparent text-slate-600"
-                                    )}
-                                />
+                                <div className="w-full px-4 py-2 rounded-lg border border-transparent bg-slate-50 text-slate-500">
+                                    {user?.email}
+                                </div>
                             </div>
                         </div>
 
@@ -73,8 +65,7 @@ export default function ProfilePage() {
                                     <button
                                         onClick={() => {
                                             setIsEditing(false);
-                                            setName(user?.name || "");
-                                            setEmail(user?.email || "");
+                                            setName(user?.user_metadata?.full_name || "");
                                         }}
                                         className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
                                     >
@@ -107,7 +98,7 @@ export default function ProfilePage() {
                             {t('profile.logoutDesc')}
                         </p>
                         <button
-                            onClick={logout}
+                            onClick={signOut}
                             className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
                         >
                             <LogOut size={16} />

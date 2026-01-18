@@ -42,8 +42,8 @@ export default function Configuration() {
 
                 {/* Header */}
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">{t('config.title')}</h1>
-                    <p className="text-slate-500 mt-2">{t('config.save')}</p>
+                    <h1 className="text-3xl font-bold text-white">{t('config.title')}</h1>
+                    <p className="text-slate-400 mt-2">{t('config.save')}</p>
                 </div>
 
                 {/* Model Selection */}

@@ -34,11 +34,11 @@ export default function Dashboard() {
                 {/* Header Section */}
                 <div className="flex items-end justify-between">
                     <div>
-                        <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">{t('dashboard.welcome', { name: user?.name || 'Engineer' })}</h1>
-                        <p className="text-lg text-slate-500 mt-2 font-medium">{t('dashboard.subheading')}</p>
+                        <h1 className="text-4xl font-extrabold text-white tracking-tight">{t('dashboard.welcome', { name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Engineer' })}</h1>
+                        <p className="text-lg text-slate-400 mt-2 font-medium">{t('dashboard.subheading')}</p>
                     </div>
                     <div className="flex gap-3">
-                        <div className="flex items-center gap-2 px-3 py-1 bg-emerald-100/50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200">
+                        <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-full border border-emerald-500/20">
                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                             {t('dashboard.systemOperational')}
                         </div>
@@ -101,7 +101,7 @@ export default function Dashboard() {
                 {/* Recent Activity Section */}
                 <div>
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-slate-800">{t('dashboard.recentProjects.title')}</h2>
+                        <h2 className="text-xl font-bold text-white">{t('dashboard.recentProjects.title')}</h2>
                         <button onClick={() => navigate('/chat')} className="text-indigo-600 text-sm font-semibold hover:text-indigo-700 transition-colors">
                             {t('dashboard.recentProjects.viewAll')}
                         </button>
