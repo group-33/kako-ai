@@ -34,17 +34,30 @@ dspy.configure(lm=GEMINI_2_5_FLASH)
 
 app = FastAPI(title="KakoAI")
 
+from fastapi.staticfiles import StaticFiles
+import tempfile
+import os
+
+# ... (existing imports)
+
 # Allow local frontend (Vite) to call the API from the browser.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve temporary files (for generated images/PDFs)
+temp_dir = tempfile.gettempdir()
+print(f"Mounting static files from: {temp_dir}")
+app.mount("/files", StaticFiles(directory=temp_dir), name="files")
 
 # Instantiate the unified agent once and store on app state for DI access
 app.state.agent = KakoAgent()
