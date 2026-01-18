@@ -97,7 +97,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
           className="flex items-center gap-2 hover:text-white transition-colors focus:outline-none"
         >
           {isOpen ? <ChevronDown size={16} className="text-slate-400" /> : <ChevronRight size={16} className="text-slate-400" />}
-          <Box size={16} className="text-indigo-400" />
+          <Box size={16} className="text-sky-500" />
           <span>Stückliste bearbeiten</span>
         </button>
 
@@ -114,7 +114,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
             <span>Export</span>
           </button>
 
-          <span className="text-[10px] uppercase tracking-wider font-bold text-indigo-300 bg-indigo-500/10 px-2 py-1 rounded border border-indigo-500/20">
+          <span className="text-[10px] uppercase tracking-wider font-bold text-sky-400 bg-sky-950/30 px-2 py-1 rounded border border-sky-500/20">
             Full Edit
           </span>
         </div>
@@ -153,7 +153,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                         <input
                           value={row.item_nr || ""}
                           onChange={(e) => handleFieldChange(i, "item_nr", e.target.value)}
-                          className="w-full bg-transparent border-none text-slate-300 focus:ring-0 focus:text-indigo-200 placeholder:text-slate-700"
+                          className="w-full bg-transparent border-none text-slate-300 focus:ring-0 focus:text-sky-200 placeholder:text-slate-700"
                           placeholder="-"
                         />
                       </td>
@@ -175,7 +175,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                           step="0.1"
                           value={row.quantity}
                           onChange={(e) => handleFieldChange(i, "quantity", e.target.value)}
-                          className="w-16 text-right bg-slate-950/50 border border-slate-700 rounded px-1.5 py-0.5 text-slate-200 focus:ring-1 focus:ring-indigo-500 outline-none"
+                          className="w-16 text-right bg-slate-950/50 border border-slate-700 rounded px-1.5 py-0.5 text-slate-200 focus:ring-1 focus:ring-sky-500 outline-none"
                         />
                       </td>
 
@@ -184,7 +184,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                         <input
                           value={row.unit}
                           onChange={(e) => handleFieldChange(i, "unit", e.target.value)}
-                          className="w-12 bg-transparent border-none text-slate-400 text-xs focus:ring-0 focus:text-indigo-300 text-center"
+                          className="w-12 bg-transparent border-none text-slate-400 text-xs focus:ring-0 focus:text-sky-300 text-center"
                         />
                       </td>
                     </tr>
@@ -204,7 +204,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                 disabled={isSaving}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-medium transition-all shadow-lg ${isSaved
                   ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                  : "bg-indigo-600 text-white hover:bg-indigo-500 shadow-indigo-900/20 disabled:opacity-50 disabled:cursor-wait"
+                  : "bg-blue-600 text-white hover:bg-blue-500 shadow-blue-900/20 disabled:opacity-50 disabled:cursor-wait"
                   }`}
               >
                 {isSaving ? "Speichert..." : isSaved ? "Gespeichert!" : "Änderungen übernehmen"}

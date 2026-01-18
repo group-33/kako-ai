@@ -50,10 +50,11 @@ export default function LoginPage() {
 
                 {/* Brand */}
                 <div className="flex flex-col items-center mb-10">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-4xl mb-4 shadow-lg shadow-indigo-900/50">
-                        K
-                    </div>
-                    <h1 className="text-2xl font-bold text-white tracking-tight">Kako AI</h1>
+                    <img
+                        src="/kako_logo.jpg"
+                        alt="Kako Elektro GmbH"
+                        className="h-24 w-auto object-contain bg-white p-3 rounded-2xl shadow-lg mb-4"
+                    />
                     <p className="text-slate-400 mt-2 text-sm">{t('login.subtitle')}</p>
                 </div>
 
@@ -70,7 +71,7 @@ export default function LoginPage() {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all placeholder:text-slate-600"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-500/50 focus:border-slate-500 transition-all placeholder:text-slate-600"
                             placeholder={t('login.emailPlaceholder')}
                             required
                         />
@@ -84,7 +85,7 @@ export default function LoginPage() {
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all placeholder:text-slate-600"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-500/50 focus:border-slate-500 transition-all placeholder:text-slate-600"
                             placeholder={t('login.passwordPlaceholder')}
                             required
                         />
@@ -94,7 +95,7 @@ export default function LoginPage() {
                         type="submit"
                         disabled={isLoading}
                         className={cn(
-                            "w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-3.5 rounded-xl transition-all shadow-lg shadow-indigo-900/20 flex items-center justify-center gap-2",
+                            "w-full bg-slate-100 hover:bg-white text-slate-900 font-semibold py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2",
                             isLoading && "opacity-80 cursor-not-allowed"
                         )}
                     >

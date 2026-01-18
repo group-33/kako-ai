@@ -33,11 +33,12 @@ export function Layout() {
             {/* Sidebar */}
             <aside className="w-64 bg-slate-900 flex flex-col p-4 border-r border-slate-800 shadow-xl z-10">
                 <div className="flex items-center justify-between mb-8 px-2">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-indigo-900/50">
-                            K
-                        </div>
-                        <div className="font-bold text-white text-xl tracking-tight">Kako AI</div>
+                    <div className="flex items-center gap-3 w-full">
+                        <img
+                            src="/kako_logo.jpg"
+                            alt="Kako Elektro GmbH"
+                            className="h-12 w-auto object-contain rounded bg-white p-1"
+                        />
                     </div>
                 </div>
 
@@ -47,7 +48,7 @@ export function Layout() {
                             to="/"
                             className={({ isActive }) => cn(
                                 "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 group",
-                                isActive ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20" : "hover:bg-slate-800/50 hover:text-white"
+                                isActive ? "bg-slate-700 text-white shadow-lg shadow-black/20" : "hover:bg-slate-800/50 hover:text-white"
                             )}
                             end
                         >
@@ -55,6 +56,7 @@ export function Layout() {
                             <span className="font-medium text-sm">{t('layout.dashboard')}</span>
                         </NavLink>
                     </div>
+
 
                     <div className="flex items-center justify-between px-3 text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-wider">
                         <span>{t('layout.chats')}</span>
@@ -64,7 +66,7 @@ export function Layout() {
                         onClick={handleNewChat}
                         className="flex items-center gap-3 w-full px-3 py-2.5 bg-slate-800/50 border border-slate-700/50 text-slate-300 rounded-lg transition hover:bg-slate-800 hover:border-slate-600 hover:text-white shadow-sm mb-4 group"
                     >
-                        <Plus size={16} className="text-indigo-400 group-hover:text-indigo-300 transition-colors" />
+                        <Plus size={16} className="text-sky-400 group-hover:text-sky-300 transition-colors" />
                         <span className="font-medium text-sm">{t('layout.newChat')}</span>
                     </button>
 
@@ -136,7 +138,7 @@ export function Layout() {
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-950 relative">
                 {/* Subtle top gradient for depth */}
-                <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-indigo-900/10 to-transparent pointer-events-none" />
+                <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-slate-900/50 to-transparent pointer-events-none" />
                 <Outlet />
             </main>
         </div>
