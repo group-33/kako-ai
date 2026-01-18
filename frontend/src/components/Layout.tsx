@@ -1,4 +1,5 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import {
     LayoutDashboard,
     MessageSquare,
@@ -13,9 +14,14 @@ import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export function Layout() {
-    const { threads, addThread, deleteThread } = useChatStore();
+    const { threads, addThread, deleteThread, fetchThreads } = useChatStore();
     const navigate = useNavigate();
     const { t } = useTranslation();
+
+    useEffect(() => {
+        // Load threads when layout mounts (authenticated session)
+        fetchThreads();
+    }, [fetchThreads]);
 
     const handleNewChat = () => {
         addThread(t('layout.newChat'));
