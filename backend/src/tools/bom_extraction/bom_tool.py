@@ -49,15 +49,17 @@ def _prepare_bom_image(file_path: str) -> str | None:
     return local_path
 
 def perform_bom_extraction(file_path: str) -> BillOfMaterials | str:
-    """High-level BOM extraction tool used by the agent and tests.
+    """High-level BOM extraction tool using remote/existing files.
+    
+    USE THIS TOOL WHEN:
+    - The user refers to a known filename or path on the server (e.g. "order_123.pdf", "/volume1/...").
+    - The file is NOT a new upload in this message.
 
     Args:
-        file_path: Absolute/relative path to the drawing image, or an identifier
-        that can be resolved on the remote system (for SSH-based lookup).
-
+        file_path: Absolute/relative path to the drawing, or a remote search identifier.
+    
     Returns:
-        A BillOfMaterials instance on success, or an error message string on
-        failure. Callers should treat non-BillOfMaterials returns as failures.
+        A BillOfMaterials instance on success.
     """
     print(f"🛠️ BOM extraction triggered for: {file_path}")
     try:
@@ -77,3 +79,45 @@ def perform_bom_extraction(file_path: str) -> BillOfMaterials | str:
         return prediction.bom
     except Exception as exc:
         return f"Error extracting BOM: {exc}"
+
+def perform_bom_extraction_upload(file: str) -> BillOfMaterials | str:
+    """High-level BOM extraction tool SPECIFICALLY for NEW USER UPLOADS.
+    
+    USE THIS TOOL ONLY WHEN:
+    - The system prompt indicates "[SYSTEM: File uploaded at '...']".
+    - The user says "extract from this file" referring to an attachment.
+    
+    Args:
+        file: The absolute file path to the uploaded file provided by the system.
+
+    Returns:
+        A BillOfMaterials instance on success, or an error message string on
+        failure. Callers should treat non-BillOfMaterials returns as failures.
+    """
+    try:
+        if not os.path.exists(file):
+            return f"Error: File not found at path '{file}'. Please ensure you are using the exact path provided by the system."
+
+        final_path = file
+        # Simple local processing: Check extension and convert if PDF.
+        if final_path.lower().endswith(".pdf"):
+            print(f"📄 file is PDF, converting to PNG: {final_path}")
+            final_path = convert_pdf_to_png(final_path)
+        
+        # If it's already an image (PNG, JPG, etc.), usage is direct.
+        # We assume main.py has already saved it to a local temp path.
+
+        print(f"--- 🤖 Sending file path to Gemini: {final_path} ---")
+        # Ensure we use 'url' or 'path' depending on dspy version, usually url=path works for local files in some dspy versions
+        # or dspy.Image(path)
+        # Based on existing code: dspy.Image(url=...)
+        dspy_image = dspy.Image(url=final_path)
+
+        # Use a BOM-optimised model while keeping the global default for other tools.
+        with dspy.context(lm=GEMINI_2_5_FLASH):
+            extractor = dspy.Predict(BOMExtractionSignature)
+            prediction = extractor(drawing=dspy_image)
+
+        return prediction.bom
+    except Exception as exc:
+        return f"Error extracting BOM from upload: {exc}"

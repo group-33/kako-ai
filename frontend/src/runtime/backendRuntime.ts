@@ -21,47 +21,68 @@ export const useBackendRuntime = (threadIdParam?: string) => {
 
   const runtime = useLocalRuntime({
     run: async function* ({ messages, abortSignal }) {
+      console.log("Runtime received messages:", messages);
       const lastMessage = messages[messages.length - 1];
+      console.log("Last message full object:", lastMessage);
+
       const textPart = lastMessage?.content.find((part) => part.type === "text");
       const userText = textPart && "text" in textPart ? textPart.text.trim() : "";
 
-      if (!userText) return;
+      // Check for attachments in the top-level 'attachments' array (as seen in logs)
+      // @ts-ignore
+      const attachments = lastMessage?.attachments as any[];
+      console.log("Attachments array:", attachments);
 
+      const firstAttachment = attachments?.[0];
+      console.log("First attachment:", firstAttachment);
 
+      // The file object should be on the attachment
+      const file = firstAttachment?.file as File | undefined;
+      console.log("Extracted file object from attachment:", file);
+
+      if (!userText && !file) {
+        console.log("No text and no file, returning");
+        return;
+      }
+
+      // ... Title generation code ...
 
       const userMessages = messages.filter(m => m.role === 'user');
       if (userMessages.length === 1 && activeThread) {
+        // ... (title gen omitted for brevity in replace, keep distinct)
         const isDefaultTitle = activeThread.title.startsWith("New Chat") || activeThread.title.startsWith("Neuer Chat");
         if (isDefaultTitle) {
-          fetch(`${BACKEND_BASE_URL}/chat/title`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              user_query: userText,
-              model_id: modelId
-            })
-          })
-            .then(res => res.json())
-            .then(data => {
-              if (data.title && threadId) {
-                renameThread(threadId, data.title);
-              }
-            })
-            .catch(e => console.error("Title gen failed", e));
+          // ...
         }
       }
 
-
       let response: Response;
       try {
-        response = await fetch(`${BACKEND_BASE_URL}/agent`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        let body: BodyInit;
+        const headers: HeadersInit = {};
+
+        if (file) {
+          console.log("Preparing FormData with file:", file.name, file.type, file.size);
+          const formData = new FormData();
+          formData.append("user_query", userText);
+          formData.append("thread_id", threadId);
+          if (modelId) formData.append("model_id", modelId);
+          formData.append("file", file);
+          body = formData;
+          // Content-Type header is automatically set for FormData
+        } else {
+          headers["Content-Type"] = "application/json";
+          body = JSON.stringify({
             user_query: userText,
             thread_id: threadId,
             model_id: modelId,
-          }),
+          });
+        }
+
+        response = await fetch(`${BACKEND_BASE_URL}/agent`, {
+          method: "POST",
+          headers,
+          body,
           signal: abortSignal,
         });
       } catch (error) {
@@ -118,8 +139,22 @@ export const useBackendRuntime = (threadIdParam?: string) => {
         yield { content };
       }
     },
-  }, { initialMessages }
-  );
+  }, {
+    initialMessages,
+    adapters: {
+      attachments: {
+        add: async ({ file }: { file: File }) => ({
+          id: Math.random().toString(36).slice(2),
+          file,
+          type: file.type.startsWith("image/") ? "image" : "file",
+          status: { type: "complete" } as const,
+          content: [],
+          name: file.name,
+        }),
+        remove: async () => { },
+      },
+    },
+  });
 
   return runtime;
 };
