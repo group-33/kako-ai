@@ -6,8 +6,11 @@ import re
 from datetime import datetime, timezone
 
 import dspy
-from fastapi import FastAPI, Depends, Form, Request, HTTPException
+from fastapi import FastAPI, Depends, Form, Request, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+import shutil
+import tempfile
+import os
 
 from backend.src.config import GEMINI_2_5_FLASH, AVAILABLE_MODELS, MODEL_OPTIONS
 from backend.src.agent import KakoAgent
@@ -93,29 +96,60 @@ async def run_agent(
         user_query: str | None = Form(
             default=None, description="Natural language request to complete."
         ),
+        thread_id: str | None = Form(default=None),
+        model_id: str | None = Form(default=None),
+        file: UploadFile | None = File(default=None),
         agent: KakoAgent = Depends(get_agent),
 ) -> AgentResponse:
     """Unified agent endpoint returning blocks the frontend can render.
 
-    Accepts either form-encoded `user_query` or a JSON body: `{ "user_query": "..." }`.
+    Accepts form-encoded `user_query` and optional `file`.
+    JSON body is supported ONLY if no file is uploaded (via manual parsing fallback).
     """
-    thread_id: str | None = None
+    
     bom_update = None
     payload = None
-    if user_query is None:
+
+    # Handle JSON fallback if CONTENT_TYPE is application/json
+    if request.headers.get("content-type") == "application/json":
         try:
             payload = AgentRequest.model_validate(await request.json())
             user_query = payload.user_query
             thread_id = payload.thread_id
             bom_update = payload.bom_update
+            model_id = payload.model_id
         except Exception as exc:
-            raise HTTPException(
-                status_code=400,
-                detail="Missing `user_query` (expected form field or JSON body).",
-            ) from exc
+             pass # Will fall through to form check
+
+    if user_query is None:
+         raise HTTPException(
+            status_code=400,
+            detail="Missing `user_query` (expected form field or JSON body).",
+        )
+
+    # Handle File Upload
+    file_path = None
+    if file:
+        try:
+            # Create a temporary file with the correct extension
+            suffix = os.path.splitext(file.filename)[1] if file.filename else ""
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                shutil.copyfileobj(file.file, tmp)
+                file_path = tmp.name
+            
+            print(f"📁 Received file: {file.filename} -> {file_path}")
+            
+            # Injection: Append the file location to the user query so the agent knows about it.
+            user_query += f" (I have attached a file at path: '{file_path}'. Please use this file for the request.)"
+            
+        except Exception as e:
+            print(f"Error saving uploaded file: {e}")
+            # Non-blocking error? Or fail? Let's just log for now.
+    else:
+        print("--- ⚠️  No file received in request ---")
 
     thread_key = thread_id or "default"
-    history = _get_history_for_thread(thread_id)
+    history = _get_history_for_thread(thread_key)
 
     # Apply user-confirmed BOM edits (if provided) before running the agent.
     if bom_update is not None:
@@ -144,11 +178,18 @@ async def run_agent(
             )
 
     # Detect file path tokens so we can fall back to BOM extraction if the agent doesn't call the tool.
-    file_match = None
-    # Accept absolute/relative paths and plain filenames with supported extensions.
+    file_match = file_path # Default to uploaded file
+    
+    # Also Check regex for OTHER paths in text if no upload, or in addition
     m = re.search(r"(?P<path>\S+?\.(?:png|jpg|jpeg|pdf))", user_query, flags=re.IGNORECASE)
     if m:
-        file_match = m.group("path")
+        # If regex finds a path, it might be the one we just injected OR a different one.
+        # If we injected one, it will be found here.
+        candidate = m.group("path")
+        # specific check if regex found something else
+        if not file_match:
+             file_match = candidate
+
 
 
     # Select LM based on request or default

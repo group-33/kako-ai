@@ -29,17 +29,22 @@ const useFileSrc = (file: File | undefined) => {
   const [src, setSrc] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    if (!file) {
+    if (!file || !(file instanceof File || file instanceof Blob)) {
       setSrc(undefined);
       return;
     }
 
-    const objectUrl = URL.createObjectURL(file);
-    setSrc(objectUrl);
+    try {
+      const objectUrl = URL.createObjectURL(file);
+      setSrc(objectUrl);
 
-    return () => {
-      URL.revokeObjectURL(objectUrl);
-    };
+      return () => {
+        URL.revokeObjectURL(objectUrl);
+      };
+    } catch (e) {
+      console.warn("Failed to create object URL", e);
+      setSrc(undefined);
+    }
   }, [file]);
 
   return src;
@@ -153,7 +158,7 @@ const AttachmentUI: FC = () => {
         className={cn(
           "aui-attachment-root relative",
           isImage &&
-            "aui-attachment-root-composer only:[&>#attachment-tile]:size-24"
+          "aui-attachment-root-composer only:[&>#attachment-tile]:size-24"
         )}
       >
         <AttachmentPreviewDialog>
@@ -162,7 +167,7 @@ const AttachmentUI: FC = () => {
               className={cn(
                 "aui-attachment-tile size-14 cursor-pointer overflow-hidden rounded-[14px] border bg-muted transition-opacity hover:opacity-75",
                 isComposer &&
-                  "aui-attachment-tile-composer border-foreground/20"
+                "aui-attachment-tile-composer border-foreground/20"
               )}
               role="button"
               id="attachment-tile"
