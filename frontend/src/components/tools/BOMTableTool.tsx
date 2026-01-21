@@ -21,6 +21,7 @@ type BOMTableArgs = {
   bom_id: string;
   thread_id: string;
   source_document?: string;
+  preview_image?: string;
   rows: BOMRow[];
 };
 
@@ -221,23 +222,39 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
           </div>
 
           {/* RIGHT: IMAGE (if present) */}
-          {args.source_document && (
+          {(args.source_document || args.preview_image) && (
             <div className="w-full lg:w-1/3 border-t lg:border-t-0 lg:border-l border-slate-800 bg-slate-950/20 p-4 flex flex-col gap-2">
               <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Quelldatei</span>
               <div className="relative group rounded overflow-hidden border border-slate-800 bg-slate-950 shadow-inner">
-                <img
-                  src={args.source_document.startsWith('/') ? `${BACKEND_BASE_URL}${args.source_document}` : args.source_document}
-                  alt="Source Drawing"
-                  className="w-full h-auto object-contain max-h-[400px]"
-                />
-                <a
-                  href={args.source_document.startsWith('/') ? `${BACKEND_BASE_URL}${args.source_document}` : args.source_document}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-medium transition-opacity"
-                >
-                  Original anzeigen
-                </a>
+                {(() => {
+                  const previewPath = args.preview_image || args.source_document;
+                  if (!previewPath) return null;
+                  const imgSrc = previewPath.startsWith('/') ? `${BACKEND_BASE_URL}${previewPath}` : previewPath;
+
+                  const linkPath = args.source_document || args.preview_image;
+                  const linkSrc = linkPath && linkPath.startsWith('/') ? `${BACKEND_BASE_URL}${linkPath}` : linkPath;
+
+                  return (
+                    <>
+                      <img
+                        src={imgSrc}
+                        alt="Source Drawing"
+                        className="w-full h-auto object-contain max-h-[400px]"
+                      />
+                      {linkSrc && (
+                        <a
+                          href={linkSrc}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-medium transition-opacity"
+                        >
+                          Original anzeigen
+                        </a>
+                      )}
+                    </>
+                  )
+                })()}
+
               </div>
             </div>
           )}

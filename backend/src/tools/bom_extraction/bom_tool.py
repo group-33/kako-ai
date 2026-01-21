@@ -48,7 +48,7 @@ def _prepare_bom_image(file_path: str) -> str | None:
 
     return local_path
 
-def perform_bom_extraction(file_path: str) -> BillOfMaterials | str:
+def perform_bom_extraction(file_path: str) -> tuple[BillOfMaterials, str] | str:
     """High-level BOM extraction tool using remote/existing files.
     
     USE THIS TOOL WHEN:
@@ -59,7 +59,7 @@ def perform_bom_extraction(file_path: str) -> BillOfMaterials | str:
         file_path: Absolute/relative path to the drawing, or a remote search identifier.
     
     Returns:
-        A BillOfMaterials instance on success.
+        A tuple (BillOfMaterials, used_image_path) on success.
     """
     print(f"🛠️ BOM extraction triggered for: {file_path}")
     try:
@@ -76,11 +76,12 @@ def perform_bom_extraction(file_path: str) -> BillOfMaterials | str:
             extractor = dspy.Predict(BOMExtractionSignature)
             prediction = extractor(drawing=dspy_image)
 
-        return prediction.bom
+        # Return the BOM AND the path to the image used (for preview)
+        return prediction.bom, merged_file_path
     except Exception as exc:
         return f"Error extracting BOM: {exc}"
 
-def perform_bom_extraction_upload(file: str) -> BillOfMaterials | str:
+def perform_bom_extraction_upload(file: str) -> tuple[BillOfMaterials, str] | str:
     """High-level BOM extraction tool SPECIFICALLY for NEW USER UPLOADS.
     
     USE THIS TOOL ONLY WHEN:
@@ -91,8 +92,8 @@ def perform_bom_extraction_upload(file: str) -> BillOfMaterials | str:
         file: The absolute file path to the uploaded file provided by the system.
 
     Returns:
-        A BillOfMaterials instance on success, or an error message string on
-        failure. Callers should treat non-BillOfMaterials returns as failures.
+        A tuple (BillOfMaterials, used_image_path) on success, or an error message string on
+        failure. Callers should treat non-tuple returns as failures.
     """
     try:
         if not os.path.exists(file):
@@ -118,6 +119,6 @@ def perform_bom_extraction_upload(file: str) -> BillOfMaterials | str:
             extractor = dspy.Predict(BOMExtractionSignature)
             prediction = extractor(drawing=dspy_image)
 
-        return prediction.bom
+        return prediction.bom, final_path
     except Exception as exc:
         return f"Error extracting BOM from upload: {exc}"

@@ -211,6 +211,7 @@ async def run_agent(
     saw_bom = False
     trajectory = getattr(prediction, "trajectory", None)
     for tool_name, tool_args, observation in extract_tool_calls_from_trajectory(trajectory):
+        src_image_for_preview = None
         if tool_name != "perform_bom_extraction":
             if tool_name in {
                 "filter_sellers_by_shipping",
@@ -227,29 +228,53 @@ async def run_agent(
                     blocks.append(cost_block)
             continue
         bom: BillOfMaterials | None = None
-        if isinstance(observation, BillOfMaterials):
+        if isinstance(observation, tuple):
+            # (bom, used_image_path)
+            bom_obj, used_image = observation
+            if isinstance(bom_obj, BillOfMaterials):
+                bom = bom_obj
+                src_image_for_preview = used_image
+        elif isinstance(observation, BillOfMaterials):
             bom = observation
         elif isinstance(observation, dict):
             try:
                 bom = BillOfMaterials.model_validate(observation)
             except Exception:
                 bom = None
+        
         if bom is None:
             continue
 
         saw_bom = True
         source = tool_args.get("file_path") or tool_args.get("filename")
+        
+        # If we got a specific preview image from the tool, use it. Otherwise assume source is valid (or let utility handle it)
+        preview = src_image_for_preview if src_image_for_preview else None
+        
         bom_id = compute_bom_id(bom, source_document=source)
         app.state.boms[thread_key] = {"bom_id": bom_id, "bom": bom, "source_document": source}
         append_to_history(history, user_query="__BOM_EXTRACTED__", process_result=bom.model_dump_json())
         blocks.append(
-            build_bom_tool_block(bom, source_document=source, bom_id=bom_id, thread_id=thread_key)
+            build_bom_tool_block(bom, source_document=source, preview_image=preview, bom_id=bom_id, thread_id=thread_key)
         )
 
     # Fallback: if query included a file path, but the agent didn't call the BOM tool.
     if file_match and not saw_bom:
         result = perform_bom_extraction(file_match)
-        if isinstance(result, BillOfMaterials):
+        # Check for tuple return
+        if isinstance(result, tuple):
+             bom_res, pub_res = result
+             if isinstance(bom_res, BillOfMaterials):
+                bom_id = compute_bom_id(bom_res, source_document=file_match)
+                app.state.boms[thread_key] = {"bom_id": bom_id, "bom": bom_res, "source_document": file_match}
+                append_to_history(history, user_query="__BOM_EXTRACTED__", process_result=bom_res.model_dump_json())
+                blocks.append(
+                    build_bom_tool_block(bom_res, source_document=file_match, preview_image=pub_res, bom_id=bom_id, thread_id=thread_key)
+                )
+             else:
+                  blocks.append(TextBlock(content=str(result)))
+        elif isinstance(result, BillOfMaterials):
+            # Legacy fallback if tool somehow returns just BOM
             bom_id = compute_bom_id(result, source_document=file_match)
             app.state.boms[thread_key] = {"bom_id": bom_id, "bom": result, "source_document": file_match}
             append_to_history(history, user_query="__BOM_EXTRACTED__", process_result=result.model_dump_json())
