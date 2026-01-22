@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 import dspy
 from fastapi import FastAPI, Depends, Form, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 from backend.src.config import GEMINI_2_5_FLASH, AVAILABLE_MODELS, MODEL_OPTIONS
 from backend.src.agent import KakoAgent
@@ -42,13 +43,18 @@ import os
 
 # Allow local frontend (Vite) to call the API from the browser.
 app.add_middleware(
+    TrustedHostMiddleware, 
+    allowed_hosts=["*"]  # <--- CHANGE THIS to "*"
+)
+
+app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:5174",
-        "http://127.0.0.1:5174",
-    ],
+    #allow_origins=[
+    #    "http://localhost:5173",
+    #    "http://127.0.0.1:5173",
+    #    "https://kakoai.de",
+    #],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

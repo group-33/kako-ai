@@ -5,6 +5,7 @@ from scp import SCPClient
 from thefuzz import process
 from pdf2image import convert_from_path
 from dotenv import load_dotenv
+import time
 
 load_dotenv()
 
@@ -30,7 +31,32 @@ def fetch_file_via_ssh(filename: str) -> str:
     
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    max_retries = 3
+    retry_delay = 2
     
+    for attempt in range(max_retries):
+        try:
+            print(f"🔌 Connecting to SSH (Attempt {attempt + 1}/{max_retries})...")
+            ssh.connect(
+                SSH_HOST, 
+                port=SSH_PORT, 
+                username=SSH_USER, 
+                password=SSH_PASS,
+                # 🛑 CRITICAL: Give the proxy time to handshake!
+                banner_timeout=30,  
+                timeout=30
+            )
+            # If we get here, connection is successful
+            break 
+        except Exception as e:
+            print(f"⚠️ Connection failed: {e}")
+            if attempt < max_retries - 1:
+                print(f"⏳ Retrying in {retry_delay}s...")
+                time.sleep(retry_delay)
+            else:
+                print("❌ Max retries reached.")
+                raise e # Re-raise the last error if all fail
     try:
         ssh.connect(SSH_HOST, port=SSH_PORT, username=SSH_USER, password=SSH_PASS)
         stdin, stdout, stderr = ssh.exec_command(f"ls -1 '{REMOTE_DIR}'")

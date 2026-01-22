@@ -21,3 +21,4 @@ venv.bak/
 # Cursor
 .cursorignore
 .cursorindexingignore
+service.yaml

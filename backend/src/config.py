@@ -8,7 +8,7 @@ import dspy
 load_dotenv(override=True)
 
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "backend/src/kako-ai_auth.json"
+#os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "backend/src/kako-ai_auth.json"
 VERTEX_ARGS = {
     "project": "kako-ai-480517",
     "vertex_location": "europe-west1"
