@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import dspy
 
-from backend.src.tools.bom_extraction.bom_tool import perform_bom_extraction, perform_bom_extraction_upload
+from backend.src.tools.bom_extraction.bom_tool import (
+    perform_bom_extraction,
+    perform_bom_extraction_upload,
+)
 from backend.src.tools.demand_analysis.feasibility import (
     run_structured_feasibility_check,
 )
@@ -20,10 +23,7 @@ from backend.src.tools.demand_analysis.inventory import (
     get_orders_by_customer,
     get_boms_for_orders,
 )
-from backend.src.tools.demand_analysis.bom import (
-    bom_check,
-    perform_bom_matching
-)
+from backend.src.tools.demand_analysis.bom import bom_check, perform_bom_matching
 from backend.src.tools.procurement.procurement import (
     filter_sellers_by_shipping,
     sort_and_filter_by_best_price,
@@ -50,7 +50,7 @@ class KakoAgentSignature(dspy.Signature):
 TOOLBOX = [
     perform_bom_extraction,
     perform_bom_extraction_upload,
-    #Demand analysis
+    # Demand analysis
     bom_check,
     perform_bom_matching,
     run_full_feasibility_analysis,
@@ -77,7 +77,8 @@ class KakoAgent:
     """Thin wrapper around the unified ReAct agent."""
 
     def __init__(self) -> None:
-        self.agent = dspy.ReAct(KakoAgentSignature, tools=TOOLBOX)
+        # Reduce max_iters to 2 (from default 5-7) to save API quota
+        self.agent = dspy.ReAct(KakoAgentSignature, tools=TOOLBOX, max_iters=2)
 
     def __call__(
         self, user_query: str, history: dspy.History | None = None

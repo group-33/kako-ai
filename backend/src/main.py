@@ -1,13 +1,18 @@
 """FastAPI entrypoint exposing the unified KakoAI agent and HTTP API."""
+
 from __future__ import annotations
 
 import uuid
 import re
 from datetime import datetime, timezone
+from functools import lru_cache
+import hashlib
 
 import dspy
 from fastapi import FastAPI, Depends, Form, Request, HTTPException, UploadFile, File
+from litellm.exceptions import RateLimitError, InternalServerError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 import shutil
 import tempfile
 import os
@@ -33,7 +38,7 @@ from backend.src.utils import (
 from backend.src.tools.bom_extraction.bom_tool import perform_bom_extraction
 
 # --- Configure LLM globally ---
-dspy.configure(lm=GEMINI_2_5_FLASH)
+dspy.configure(lm=GEMINI_2_5_FLASH)  # 1,500 req/day free tier
 
 app = FastAPI(title="KakoAI")
 
@@ -66,6 +71,24 @@ app.mount("/files", StaticFiles(directory=temp_dir), name="files")
 app.state.agent = KakoAgent()
 app.state.histories = {}
 app.state.boms = {}
+app.state.response_cache = (
+    {}
+)  # Simple in-memory cache: {query_hash: (response, timestamp)}
+
+
+# Simple cache helper (expires after 5 minutes)
+def get_cached_response(query: str, thread_id: str):
+    cache_key = hashlib.md5(f"{thread_id}:{query}".encode()).hexdigest()
+    if cache_key in app.state.response_cache:
+        cached, timestamp = app.state.response_cache[cache_key]
+        if (datetime.now(timezone.utc) - timestamp).seconds < 300:  # 5 min TTL
+            return cached
+    return None
+
+
+def cache_response(query: str, thread_id: str, response: AgentResponse):
+    cache_key = hashlib.md5(f"{thread_id}:{query}".encode()).hexdigest()
+    app.state.response_cache[cache_key] = (response, datetime.now(timezone.utc))
 
 
 def get_agent(request: Request) -> KakoAgent:
@@ -92,21 +115,21 @@ def _get_history_for_thread(thread_id: str | None) -> dspy.History:
 
 @app.post("/agent", response_model=AgentResponse)
 async def run_agent(
-        request: Request,
-        user_query: str | None = Form(
-            default=None, description="Natural language request to complete."
-        ),
-        thread_id: str | None = Form(default=None),
-        model_id: str | None = Form(default=None),
-        file: UploadFile | None = File(default=None),
-        agent: KakoAgent = Depends(get_agent),
+    request: Request,
+    user_query: str | None = Form(
+        default=None, description="Natural language request to complete."
+    ),
+    thread_id: str | None = Form(default=None),
+    model_id: str | None = Form(default=None),
+    # file: UploadFile | None = File(default=None),
+    agent: KakoAgent = Depends(get_agent),
 ) -> AgentResponse:
     """Unified agent endpoint returning blocks the frontend can render.
 
     Accepts form-encoded `user_query` and optional `file`.
     JSON body is supported ONLY if no file is uploaded (via manual parsing fallback).
     """
-    
+
     bom_update = None
     payload = None
 
@@ -119,15 +142,16 @@ async def run_agent(
             bom_update = payload.bom_update
             model_id = payload.model_id
         except Exception as exc:
-             pass # Will fall through to form check
+            pass  # Will fall through to form check
 
     if user_query is None:
-         raise HTTPException(
+        raise HTTPException(
             status_code=400,
             detail="Missing `user_query` (expected form field or JSON body).",
         )
 
     # Handle File Upload
+    file = None
     file_path = None
     if file:
         try:
@@ -136,12 +160,12 @@ async def run_agent(
             with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
                 shutil.copyfileobj(file.file, tmp)
                 file_path = tmp.name
-            
+
             print(f"📁 Received file: {file.filename} -> {file_path}")
-            
+
             # Injection: Append the file location to the user query so the agent knows about it.
             user_query += f" (I have attached a file at path: '{file_path}'. Please use this file for the request.)"
-            
+
         except Exception as e:
             print(f"Error saving uploaded file: {e}")
             # Non-blocking error? Or fail? Let's just log for now.
@@ -178,29 +202,52 @@ async def run_agent(
             )
 
     # Detect file path tokens so we can fall back to BOM extraction if the agent doesn't call the tool.
-    file_match = file_path # Default to uploaded file
-    
+    file_match = file_path  # Default to uploaded file
+
     # Also Check regex for OTHER paths in text if no upload, or in addition
-    m = re.search(r"(?P<path>\S+?\.(?:png|jpg|jpeg|pdf))", user_query, flags=re.IGNORECASE)
+    m = re.search(
+        r"(?P<path>\S+?\.(?:png|jpg|jpeg|pdf))", user_query, flags=re.IGNORECASE
+    )
     if m:
         # If regex finds a path, it might be the one we just injected OR a different one.
         # If we injected one, it will be found here.
         candidate = m.group("path")
         # specific check if regex found something else
         if not file_match:
-             file_match = candidate
-
-
+            file_match = candidate
 
     # Select LM based on request or default
-    selected_lm = GEMINI_2_5_FLASH  # Default
+    selected_lm = GEMINI_2_5_FLASH  # Default (1,500 req/day free tier, 1M context)
     if payload and payload.model_id:
         selected_lm = AVAILABLE_MODELS.get(payload.model_id, GEMINI_2_5_FLASH)
-    
-    # Run the agent with the selected LM context
-    with dspy.context(lm=selected_lm):
-        prediction = agent(user_query=user_query, history=history)
-    
+
+    # Check cache first (avoid redundant API calls)
+    cached = get_cached_response(user_query, thread_key)
+    if cached:
+        return cached
+
+    # Run the agent with the selected LM context + error handling
+    try:
+        with dspy.context(lm=selected_lm):
+            prediction = agent(user_query=user_query, history=history)
+    except RateLimitError as e:
+        # Extract retry delay from error message
+        match = re.search(r"Please retry in (\d+\.?\d*)s", str(e))
+        retry_seconds = int(float(match.group(1))) if match else 60
+        raise HTTPException(
+            status_code=429,
+            detail=f"Rate limit exceeded. Please try again in {retry_seconds} seconds.",
+            headers={"Retry-After": str(retry_seconds)},
+        )
+    except InternalServerError as e:
+        raise HTTPException(
+            status_code=503,
+            detail="Model temporarily unavailable. Please try again in a few moments.",
+        )
+    except Exception as e:
+        print(f"Unexpected error in agent: {e}")
+        raise HTTPException(status_code=500, detail=f"Agent error: {str(e)}")
+
     content = getattr(prediction, "process_result", None) or str(prediction)
 
     blocks: list[TextBlock | ToolUseBlock] = []
@@ -210,7 +257,9 @@ async def run_agent(
     # Convert tool outputs into UI blocks (lightweight adapter) using DSPy's recorded trajectory.
     saw_bom = False
     trajectory = getattr(prediction, "trajectory", None)
-    for tool_name, tool_args, observation in extract_tool_calls_from_trajectory(trajectory):
+    for tool_name, tool_args, observation in extract_tool_calls_from_trajectory(
+        trajectory
+    ):
         if tool_name != "perform_bom_extraction":
             if tool_name in {
                 "filter_sellers_by_shipping",
@@ -240,10 +289,20 @@ async def run_agent(
         saw_bom = True
         source = tool_args.get("file_path") or tool_args.get("filename")
         bom_id = compute_bom_id(bom, source_document=source)
-        app.state.boms[thread_key] = {"bom_id": bom_id, "bom": bom, "source_document": source}
-        append_to_history(history, user_query="__BOM_EXTRACTED__", process_result=bom.model_dump_json())
+        app.state.boms[thread_key] = {
+            "bom_id": bom_id,
+            "bom": bom,
+            "source_document": source,
+        }
+        append_to_history(
+            history,
+            user_query="__BOM_EXTRACTED__",
+            process_result=bom.model_dump_json(),
+        )
         blocks.append(
-            build_bom_tool_block(bom, source_document=source, bom_id=bom_id, thread_id=thread_key)
+            build_bom_tool_block(
+                bom, source_document=source, bom_id=bom_id, thread_id=thread_key
+            )
         )
 
     # Fallback: if query included a file path, but the agent didn't call the BOM tool.
@@ -251,40 +310,61 @@ async def run_agent(
         result = perform_bom_extraction(file_match)
         if isinstance(result, BillOfMaterials):
             bom_id = compute_bom_id(result, source_document=file_match)
-            app.state.boms[thread_key] = {"bom_id": bom_id, "bom": result, "source_document": file_match}
-            append_to_history(history, user_query="__BOM_EXTRACTED__", process_result=result.model_dump_json())
+            app.state.boms[thread_key] = {
+                "bom_id": bom_id,
+                "bom": result,
+                "source_document": file_match,
+            }
+            append_to_history(
+                history,
+                user_query="__BOM_EXTRACTED__",
+                process_result=result.model_dump_json(),
+            )
             blocks.append(
-                build_bom_tool_block(result, source_document=file_match, bom_id=bom_id, thread_id=thread_key)
+                build_bom_tool_block(
+                    result,
+                    source_document=file_match,
+                    bom_id=bom_id,
+                    thread_id=thread_key,
+                )
             )
         else:
             blocks.append(TextBlock(content=str(result)))
 
     append_to_history(history, user_query=user_query, process_result=content)
-    return AgentResponse(
+
+    response = AgentResponse(
         response_id=f"msg_{uuid.uuid4()}",
         created_at=datetime.now(timezone.utc),
         blocks=blocks,
     )
+
+    # Cache the response
+    cache_response(user_query, thread_key, response)
+
+    return response
 
 
 @app.post("/chat/title")
 async def generate_chat_title(request: AgentRequest):
     """Generates a concise title for a chat thread based on the first user message."""
     try:
+
         class GenerateTitle(dspy.Signature):
             """Summarize the user message into a short, concise chat title (max 5 words). Language should match the user's message."""
+
             message = dspy.InputField()
             title = dspy.OutputField()
 
         title_generator = dspy.Predict(GenerateTitle)
-        
+
         # dynamic model selection (default GEMINI_2_5_FLASH)
         selected_lm = AVAILABLE_MODELS.get(request.model_id, GEMINI_2_5_FLASH)
 
         with dspy.context(lm=selected_lm):
             prediction = title_generator(message=request.user_query)
             title = prediction.title
-            
+
         return {"title": title}
     except Exception as e:
         print(f"Title generation error: {e}")
@@ -296,10 +376,91 @@ def get_available_models() -> dict:
     """Return list of available LLMs for configuration."""
     return {"models": MODEL_OPTIONS}
 
+
 @app.get("/health")
 def service_health() -> dict:
     """Health check endpoint."""
 
     return {"status": "healthy", "message": "KakoAI API is up and running"}
+
+
+@app.get("/chat", response_class=HTMLResponse)
+def chat_interface():
+    """Minimal chat interface for testing."""
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>KakoAI Chat</title>
+        <style>
+            body { font-family: monospace; max-width: 800px; margin: 50px auto; padding: 20px; }
+            #messages { border: 1px solid #ccc; padding: 10px; height: 400px; overflow-y: scroll; margin-bottom: 10px; background: #f9f9f9; }
+            .message { margin: 10px 0; padding: 8px; border-radius: 4px; }
+            .user { background: #e3f2fd; text-align: right; }
+            .assistant { background: #f1f1f1; }
+            input { width: 80%; padding: 10px; font-family: monospace; }
+            button { padding: 10px 20px; }
+        </style>
+    </head>
+    <body>
+        <h1>KakoAI Chat</h1>
+        <div id="messages"></div>
+        <input type="text" id="input" placeholder="Type your message..." onkeypress="if(event.key==='Enter')sendMessage()">
+        <button onclick="sendMessage()">Send</button>
+        
+        <script>
+            const threadId = 'chat-' + Date.now();
+            const messagesDiv = document.getElementById('messages');
+            const input = document.getElementById('input');
+            
+            async function sendMessage() {
+                const message = input.value.trim();
+                if (!message) return;
+                
+                // Display user message
+                addMessage(message, 'user');
+                input.value = '';
+                
+                // Send to backend
+                try {
+                    const formData = new FormData();
+                    formData.append('user_query', message);
+                    formData.append('thread_id', threadId);
+                    
+                    const response = await fetch('/agent', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    // Display assistant response
+                    if (data.blocks && data.blocks.length > 0) {
+                        const text = data.blocks
+                            .filter(b => b.type === 'text')
+                            .map(b => b.content)
+                            .join('\\n');
+                        addMessage(text || 'No response', 'assistant');
+                    } else {
+                        addMessage('No response received', 'assistant');
+                    }
+                } catch (error) {
+                    addMessage('Error: ' + error.message, 'assistant');
+                }
+            }
+            
+            function addMessage(text, role) {
+                const msg = document.createElement('div');
+                msg.className = 'message ' + role;
+                msg.textContent = (role === 'user' ? 'You: ' : 'AI: ') + text;
+                messagesDiv.appendChild(msg);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+        </script>
+    </body>
+    </html>
+    """
+    return html
+
 
 # Run with: uvicorn backend.src.main:app --reload
