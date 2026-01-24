@@ -6,12 +6,12 @@ import { CostAnalysisTool } from "./tools/CostAnalysisTool";
 import { useBackendRuntime } from "@/runtime/backendRuntime";
 
 import { useAssistantState } from "@assistant-ui/react";
-import { useEffect } from "react";
+import { useEffect, memo } from "react";
 import { useChatStore } from "@/store/useChatStore";
 
 function PersistenceObserver({ threadId }: { threadId: string }) {
   const messages = useAssistantState(({ thread }) => thread.messages);
-  const { updateThreadMessages } = useChatStore();
+  const updateThreadMessages = useChatStore(state => state.updateThreadMessages);
 
   useEffect(() => {
     if (threadId && messages.length > 0) {
@@ -22,7 +22,7 @@ function PersistenceObserver({ threadId }: { threadId: string }) {
   return null;
 }
 
-export function Chat({ threadId, initialDraft }: { threadId: string; initialDraft?: string }) {
+export const Chat = memo(function Chat({ threadId, initialDraft }: { threadId: string; initialDraft?: string }) {
   const runtime = useBackendRuntime(threadId);
 
   return (
@@ -37,4 +37,4 @@ export function Chat({ threadId, initialDraft }: { threadId: string; initialDraf
       </div>
     </AssistantRuntimeProvider>
   );
-}
+});

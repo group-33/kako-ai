@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useLocalRuntime } from "@assistant-ui/react";
 import type {
   Attachment,
@@ -17,29 +18,25 @@ const BACKEND_BASE_URL =
     .VITE_BACKEND_URL ?? "http://127.0.0.1:8000";
 
 export const useBackendRuntime = (threadIdParam?: string) => {
-  const { activeThreadId, threads, renameThread, modelId } = useChatStore();
+  const activeThreadId = useChatStore(state => state.activeThreadId);
   const threadId = threadIdParam ?? activeThreadId ?? "default";
-  const activeThread = threads.find((t) => t.id === threadId);
-  const initialMessages = activeThread?.messages || [];
+  const modelId = useChatStore(state => state.modelId);
+
+  // Fetch initial messages only when threadId changes to avoid reactive loops
+  const initialMessages = useMemo(() => {
+    return useChatStore.getState().threads.find(t => t.id === threadId)?.messages || [];
+  }, [threadId]);
 
   return useLocalRuntime({
     run: async function* ({ messages, abortSignal }) {
-      console.log("Runtime received messages:", messages);
       const lastMessage = messages[messages.length - 1];
-      console.log("Last message full object:", lastMessage);
-
       const textPart = lastMessage?.content.find((part) => part.type === "text");
       const userText = textPart && "text" in textPart ? textPart.text.trim() : "";
       const attachments = (lastMessage?.attachments ?? []) as ReadonlyArray<Attachment>;
-      console.log("Attachments array:", attachments);
-
       const firstAttachment = attachments?.[0];
-      console.log("First attachment:", firstAttachment);
       const file = firstAttachment?.file as File | undefined;
-      console.log("Extracted file object from attachment:", file);
 
       if (!userText && !file) {
-        console.log("No text and no file, returning");
         return;
       }
 
@@ -61,13 +58,11 @@ export const useBackendRuntime = (threadIdParam?: string) => {
             if (titleResponse.ok) {
               const data = await titleResponse.json();
               if (data?.title) {
-                await renameThread(currentThread.id, data.title);
+                await useChatStore.getState().renameThread(currentThread.id, data.title);
               }
             }
-          } catch (error) {
-            if (!abortSignal.aborted) {
-              console.warn("Title generation failed:", error);
-            }
+          } catch {
+            // Title generation failed, but we don't log it anymore.
           }
         }
       }
@@ -78,7 +73,6 @@ export const useBackendRuntime = (threadIdParam?: string) => {
         const headers: HeadersInit = {};
 
         if (file) {
-          console.log("Preparing FormData with file:", file.name, file.type, file.size);
           const formData = new FormData();
           formData.append("user_query", userText);
           formData.append("thread_id", threadId);

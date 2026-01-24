@@ -46,11 +46,11 @@ const Composer: FC<{ threadId: string; initialDraft?: string }> = ({ threadId, i
   const appliedDraftRef = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const composerText = useAssistantState(({ composer }) => composer.text);
-  const { drafts, setDraft } = useChatStore();
+  const setDraft = useChatStore(s => s.setDraft);
+  const storedDraft = useChatStore(s => s.drafts[threadId]);
   const lastSavedRef = useRef<string | null>(null);
   const hasInitializedRef = useRef(false);
   const prevComposerTextRef = useRef("");
-  const storedDraft = drafts[threadId];
   const effectiveDraft = storedDraft ?? initialDraft;
 
   useEffect(() => {
@@ -98,11 +98,20 @@ const Composer: FC<{ threadId: string; initialDraft?: string }> = ({ threadId, i
     }
     const prevText = prevComposerTextRef.current;
     const clearedByUser = prevText && !composerText;
+
+    // Update tracking ref immediately for logical consistency across renders
+    prevComposerTextRef.current = composerText;
+
     if (!composerText && storedDraft && !clearedByUser) return;
     if (lastSavedRef.current === composerText) return;
-    lastSavedRef.current = composerText;
-    setDraft(threadId, composerText);
-    prevComposerTextRef.current = composerText;
+
+    // Debounce the store update to prevent input frame drops
+    const handler = setTimeout(() => {
+      lastSavedRef.current = composerText;
+      setDraft(threadId, composerText);
+    }, 1000);
+
+    return () => clearTimeout(handler);
   }, [composerText, setDraft, storedDraft, threadId]);
 
   return (
@@ -124,6 +133,50 @@ const Composer: FC<{ threadId: string; initialDraft?: string }> = ({ threadId, i
 };
 
 
+import { MessageProvider } from "@assistant-ui/react";
+
+const VirtualMessageList: FC = () => {
+  const messages = useAssistantState((state) => state.thread.messages);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const lastMessageId = messages[messages.length - 1]?.id;
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      requestAnimationFrame(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+      });
+    }
+  }, [lastMessageId, messages.length]);
+
+  return (
+    <div
+      ref={scrollRef}
+      className="w-full h-full overflow-y-auto px-4"
+      style={{ scrollBehavior: 'smooth' }}
+    >
+      <div className="flex flex-col gap-5 pt-4 pb-1">
+        {messages.map((message, index) => {
+          const isUser = message.role === "user";
+          const isEditing = isUser && !!message.composer?.isEditing;
+
+          return (
+            <MessageProvider
+              key={message.id}
+              message={message}
+              index={index}
+              isLast={index === messages.length - 1}
+            >
+              {isEditing ? <EditComposer /> : isUser ? <UserMessage /> : <AssistantMessage />}
+            </MessageProvider>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 export const Thread: FC<{ threadId: string; initialDraft?: string }> = ({ threadId, initialDraft }) => {
   return (
     <ThreadPrimitive.Root
@@ -133,22 +186,18 @@ export const Thread: FC<{ threadId: string; initialDraft?: string }> = ({ thread
       }}
     >
       <ThreadPrimitive.Viewport
-        turnAnchor="top"
-        className="aui-thread-viewport relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll scroll-smooth px-4 pt-4"
+        className="aui-thread-viewport relative flex flex-1 flex-col overflow-hidden px-4 pt-4"
       >
         <ThreadPrimitive.If empty>
           <ThreadWelcome />
         </ThreadPrimitive.If>
 
-        <ThreadPrimitive.Messages
-          components={{
-            UserMessage,
-            EditComposer,
-            AssistantMessage,
-          }}
-        />
+        {/* We use VirtualMessageList which handles the scrolling */}
+        <div className="flex-1 w-full relative min-h-0">
+          <VirtualMessageList />
+        </div>
 
-        <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mx-auto mt-4 flex w-full max-w-(--thread-max-width) flex-col gap-4 overflow-visible rounded-t-3xl bg-[#090e20] pb-4 md:pb-6">
+        <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mx-auto mt-2 flex w-full max-w-(--thread-max-width) flex-col gap-4 overflow-visible rounded-t-3xl bg-[#090e20] pb-4 md:pb-6">
           <ThreadScrollToBottom />
           <Composer threadId={threadId} initialDraft={initialDraft} />
         </ThreadPrimitive.ViewportFooter>

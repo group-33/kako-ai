@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -21,7 +21,7 @@ export default function LoginPage() {
     const [showTerms, setShowTerms] = useState(false);
     const [showPrivacy, setShowPrivacy] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError("");
         setIsLoading(true);
@@ -33,15 +33,16 @@ export default function LoginPage() {
         }
 
         try {
-            if (isSignUp) {
-                const { error } = await signUp(email, password, name);
-                if (error) throw error;
-                navigate("/");
-            } else {
-                const { error } = await signIn(email, password);
-                if (error) throw error;
-                navigate("/");
+            const { error: authError } = isSignUp
+                ? await signUp(email, password, name)
+                : await signIn(email, password);
+
+            if (authError) {
+                setError(authError.message || "Authentication failed");
+                return;
             }
+
+            navigate("/");
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : "Authentication failed";
             setError(message);
@@ -86,6 +87,7 @@ export default function LoginPage() {
                                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-500/50 focus:border-slate-500 transition-all placeholder:text-slate-600"
                                 placeholder={t('login.namePlaceholder')}
                                 required
+                                autoComplete="name"
                             />
                         </div>
                     )}
@@ -99,6 +101,7 @@ export default function LoginPage() {
                             className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-500/50 focus:border-slate-500 transition-all placeholder:text-slate-600"
                             placeholder={t('login.emailPlaceholder')}
                             required
+                            autoComplete="email"
                         />
                     </div>
 
@@ -113,6 +116,7 @@ export default function LoginPage() {
                             className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-500/50 focus:border-slate-500 transition-all placeholder:text-slate-600"
                             placeholder={t('login.passwordPlaceholder')}
                             required
+                            autoComplete="current-password"
                         />
                     </div>
 

@@ -75,7 +75,7 @@ export const exportBOMsFromMessage = (threadId: string, currentBomId: string) =>
     const boms = targetMessage.content
         .filter(isToolCallPart)
         .filter((part) => part.toolName === "display_bom_table" && isBOMTableArgs(part.args))
-        .map((part) => part.args);
+        .map((part) => part.args) as BOMTableArgs[];
 
     if (boms.length === 0) return;
 

@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 
 const useFileSrc = (file: File | undefined) => {
   const src = useMemo(() => {
-    if (!file || !(file instanceof File || file instanceof Blob)) {
+    if (!file || !(file instanceof Blob)) {
       return undefined;
     }
 
@@ -146,8 +146,7 @@ const AttachmentUI: FC = () => {
       case "file":
         return "File";
       default: {
-        const _exhaustiveCheck: never = type;
-        throw new Error(`Unknown attachment type: ${_exhaustiveCheck}`);
+        throw new Error(`Unknown attachment type: ${type}`);
       }
     }
   });
