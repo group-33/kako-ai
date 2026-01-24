@@ -19,8 +19,6 @@ import {
   ThreadPrimitive,
   useAssistantApi,
   useAssistantState,
-  useMessage,
-  useThread,
 } from "@assistant-ui/react";
 
 import type { FC } from "react";
@@ -290,8 +288,9 @@ const MessageError: FC = () => {
 };
 
 const AssistantMessage: FC = () => {
-  const message = useMessage();
-  const { isRunning, messages } = useThread();
+  const message = useAssistantState(({ message }) => message);
+  const isRunning = useAssistantState(({ thread }) => thread.isRunning);
+  const messages = useAssistantState(({ thread }) => thread.messages);
 
   const isLast = messages[messages.length - 1]?.id === message.id;
   const hasContent = message.content && message.content.length > 0;
@@ -311,7 +310,6 @@ const AssistantMessage: FC = () => {
             }}
           />
         </div>
-
 
         {showThinking && (
           <div className="flex flex-col gap-2 mt-2">

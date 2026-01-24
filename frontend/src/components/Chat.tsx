@@ -5,17 +5,17 @@ import { ProcurementOptionsTool } from "./tools/ProcurementOptionsTool";
 import { CostAnalysisTool } from "./tools/CostAnalysisTool";
 import { useBackendRuntime } from "@/runtime/backendRuntime";
 
-import { useThread } from "@assistant-ui/react";
+import { useAssistantState } from "@assistant-ui/react";
 import { useEffect } from "react";
 import { useChatStore } from "@/store/useChatStore";
 
 function PersistenceObserver({ threadId }: { threadId: string }) {
-  const { messages } = useThread();
+  const messages = useAssistantState(({ thread }) => thread.messages);
   const { updateThreadMessages } = useChatStore();
 
   useEffect(() => {
     if (threadId && messages.length > 0) {
-      updateThreadMessages(threadId, messages as any[]);
+      updateThreadMessages(threadId, messages);
     }
   }, [messages, threadId, updateThreadMessages]);
 

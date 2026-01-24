@@ -42,8 +42,9 @@ export default function LoginPage() {
                 if (error) throw error;
                 navigate("/");
             }
-        } catch (err: any) {
-            setError(err.message || "Authentication failed");
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Authentication failed";
+            setError(message);
         } finally {
             setIsLoading(false);
         }
@@ -52,14 +53,12 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative">
 
-            
             <div className="absolute top-4 right-4 animate-in fade-in zoom-in duration-300 delay-100">
                 <LanguageSwitcher />
             </div>
 
             <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-                
                 <div className="flex flex-col items-center mb-10">
                     <img
                         src="/kako_logo.jpg"
@@ -76,7 +75,7 @@ export default function LoginPage() {
                         </div>
                     )}
 
-                    
+
                     {isSignUp && (
                         <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                             <label className="text-sm font-medium text-slate-300 ml-1">{t('login.name')}</label>

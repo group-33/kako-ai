@@ -33,6 +33,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
   const handleFieldChange = (index: number, field: keyof BOMRow, value: string | number) => {
     const updated = [...data];
     if (updated[index]) {
+      // @ts-expect-error - dynamic assignment
       updated[index][field] = value;
       setData(updated);
       setIsSaved(false);
@@ -85,7 +86,6 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
 
   return (
     <div className="border border-slate-800 rounded-xl overflow-hidden my-4 bg-slate-900 shadow-lg font-sans w-full transition-all duration-300">
-      
       <div
         className="w-full bg-slate-950/50 px-4 py-3 font-semibold text-sm border-b border-slate-800 flex items-center justify-between text-slate-200 transition-colors"
       >
@@ -117,11 +117,9 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
         </div>
       </div>
 
-      
       {isOpen && (
         <div className="animate-in slide-in-from-top-2 duration-200 flex flex-col lg:flex-row border-t border-slate-800">
 
-          
           <div className="flex-1 min-w-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left whitespace-nowrap">
@@ -140,12 +138,10 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                       key={i}
                       className="border-b border-slate-800/50 last:border-0 hover:bg-slate-800/50 transition-colors"
                     >
-                      
                       <td className="px-3 py-2 text-slate-500 font-mono text-xs">
                         {row.pos || i + 1}
                       </td>
 
-                      
                       <td className="px-3 py-2">
                         <input
                           value={row.item_nr || ""}
@@ -155,7 +151,6 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                         />
                       </td>
 
-                      
                       <td className="px-3 py-2">
                         <input
                           value={row.description || row.component}
@@ -164,7 +159,6 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                         />
                       </td>
 
-                      
                       <td className="px-3 py-2 text-right">
                         <input
                           type="number"
@@ -176,7 +170,6 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                         />
                       </td>
 
-                      
                       <td className="px-3 py-2">
                         <input
                           value={row.unit}
@@ -190,7 +183,6 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
               </table>
             </div>
 
-            
             <div className="p-3 bg-slate-950/30 border-t border-slate-800 flex items-center justify-between">
               <span className="text-xs text-slate-500">
                 {data.length} Positionen
@@ -217,7 +209,6 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
             )}
           </div>
 
-          
           {args.source_document && (
             <div className="w-full lg:w-1/3 border-t lg:border-t-0 lg:border-l border-slate-800 bg-slate-950/20 p-4 flex flex-col gap-2">
               <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Quelldatei</span>

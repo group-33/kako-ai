@@ -11,7 +11,8 @@ type ModelOption = {
 };
 
 const BACKEND_BASE_URL =
-    (import.meta as any).env.VITE_BACKEND_URL ?? "http://127.0.0.1:8000";
+    (import.meta as ImportMeta & { env: { VITE_BACKEND_URL?: string } }).env
+        .VITE_BACKEND_URL ?? "http://127.0.0.1:8000";
 
 export default function Configuration() {
     const { t } = useTranslation();
@@ -39,13 +40,11 @@ export default function Configuration() {
         <div className="h-full overflow-y-auto p-8 relative z-0">
             <div className="max-w-4xl mx-auto space-y-10">
 
-                
                 <div>
                     <h1 className="text-3xl font-bold text-white">{t('config.title')}</h1>
                     <p className="text-slate-400 mt-2">{t('config.save')}</p>
                 </div>
 
-                
                 <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
                     <div className="flex items-start gap-4 mb-6">
                         <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">

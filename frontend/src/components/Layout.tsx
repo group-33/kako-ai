@@ -30,7 +30,6 @@ export function Layout() {
 
     return (
         <div className="flex h-screen w-full bg-slate-950 text-slate-200">
-            
             <aside className="w-64 bg-slate-900 flex flex-col p-4 border-r border-slate-800 shadow-xl z-10">
                 <div className="flex items-center justify-center mb-8 px-2">
                     <div className="flex items-center justify-center w-full">
@@ -134,9 +133,7 @@ export function Layout() {
                 </div>
             </aside>
 
-            
             <main className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-950 relative">
-                
                 <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-slate-900/50 to-transparent pointer-events-none" />
                 <Outlet />
             </main>

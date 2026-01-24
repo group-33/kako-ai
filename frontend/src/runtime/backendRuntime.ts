@@ -1,5 +1,10 @@
 import { useLocalRuntime } from "@assistant-ui/react";
-import type { ThreadAssistantMessagePart } from "@assistant-ui/react";
+import type {
+  Attachment,
+  CompleteAttachment,
+  PendingAttachment,
+  ThreadAssistantMessagePart,
+} from "@assistant-ui/react";
 import type { ReadonlyJSONObject } from "assistant-stream/utils";
 import { useChatStore } from "@/store/useChatStore";
 
@@ -17,7 +22,7 @@ export const useBackendRuntime = (threadIdParam?: string) => {
   const activeThread = threads.find((t) => t.id === threadId);
   const initialMessages = activeThread?.messages || [];
 
-  const runtime = useLocalRuntime({
+  return useLocalRuntime({
     run: async function* ({ messages, abortSignal }) {
       console.log("Runtime received messages:", messages);
       const lastMessage = messages[messages.length - 1];
@@ -25,7 +30,7 @@ export const useBackendRuntime = (threadIdParam?: string) => {
 
       const textPart = lastMessage?.content.find((part) => part.type === "text");
       const userText = textPart && "text" in textPart ? textPart.text.trim() : "";
-      const attachments = lastMessage?.attachments as any[];
+      const attachments = (lastMessage?.attachments ?? []) as ReadonlyArray<Attachment>;
       console.log("Attachments array:", attachments);
 
       const firstAttachment = attachments?.[0];
@@ -153,18 +158,22 @@ export const useBackendRuntime = (threadIdParam?: string) => {
     initialMessages,
     adapters: {
       attachments: {
+        accept: "*/*",
         add: async ({ file }: { file: File }) => ({
           id: Math.random().toString(36).slice(2),
           file,
           type: file.type.startsWith("image/") ? "image" : "file",
-          status: { type: "complete" } as const,
-          content: [],
+          status: { type: "requires-action", reason: "composer-send" } as const,
           name: file.name,
+          contentType: file.type,
         }),
         remove: async () => { },
+        send: async (attachment: PendingAttachment): Promise<CompleteAttachment> => ({
+          ...attachment,
+          status: { type: "complete" },
+          content: [],
+        }),
       },
     },
   });
-
-  return runtime;
 };

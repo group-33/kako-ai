@@ -18,6 +18,32 @@ type BOMTableArgs = {
     rows: BOMRow[];
 };
 
+type ToolCallPart = {
+    type: "tool-call";
+    toolName: string;
+    args?: unknown;
+};
+
+const isToolCallPart = (part: unknown): part is ToolCallPart => {
+    return (
+        typeof part === "object" &&
+        part !== null &&
+        "type" in part &&
+        "toolName" in part &&
+        (part as ToolCallPart).type === "tool-call"
+    );
+};
+
+const isBOMTableArgs = (value: unknown): value is BOMTableArgs => {
+    return (
+        typeof value === "object" &&
+        value !== null &&
+        "bom_id" in value &&
+        "thread_id" in value &&
+        "rows" in value
+    );
+};
+
 export const exportBOMsFromMessage = (threadId: string, currentBomId: string) => {
     const { threads } = useChatStore.getState();
     const thread = threads.find(t => t.id === threadId);
@@ -27,13 +53,15 @@ export const exportBOMsFromMessage = (threadId: string, currentBomId: string) =>
     }
 
     // Find the message that contains this BOM
-    const targetMessage = thread.messages.find(m => {
-        if (typeof m.content !== 'object' || !Array.isArray(m.content)) return false;
-        return m.content.some((block: any) =>
-            block.type === 'tool-call' &&
-            block.toolName === 'display_bom_table' &&
-            block.args?.bom_id === currentBomId
-        );
+    const targetMessage = thread.messages.find((message) => {
+        const content = message.content;
+        if (!Array.isArray(content)) return false;
+        return content.some((part) => {
+            if (!isToolCallPart(part)) return false;
+            if (part.toolName !== "display_bom_table") return false;
+            if (!isBOMTableArgs(part.args)) return false;
+            return part.args.bom_id === currentBomId;
+        });
     });
 
     if (!targetMessage) {
@@ -45,8 +73,9 @@ export const exportBOMsFromMessage = (threadId: string, currentBomId: string) =>
     if (!Array.isArray(targetMessage.content)) return;
 
     const boms = targetMessage.content
-        .filter((block: any) => block.type === 'tool-call' && block.toolName === 'display_bom_table')
-        .map((block: any) => block.args as BOMTableArgs);
+        .filter(isToolCallPart)
+        .filter((part) => part.toolName === "display_bom_table" && isBOMTableArgs(part.args))
+        .map((part) => part.args);
 
     if (boms.length === 0) return;
 

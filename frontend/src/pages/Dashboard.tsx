@@ -57,7 +57,6 @@ export default function Dashboard() {
         <div className="h-full overflow-y-auto p-8 relative z-0">
             <div className="max-w-6xl mx-auto space-y-10">
 
-                
                 <div className="flex items-end justify-between">
                     <div>
                         <h1 className="text-4xl font-extrabold text-white tracking-tight">{t('dashboard.welcome', { name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Engineer' })}</h1>
@@ -71,7 +70,6 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <button
                         onClick={() => handleAction('extract')}
@@ -119,7 +117,6 @@ export default function Dashboard() {
                     </button>
                 </div>
 
-                
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <StatCard icon={<FileText size={20} />} label={t('dashboard.stats.activeProjects')} value={threads.length.toString()} trend={t('dashboard.stats.weekTrend', { count: updatedThisWeek })} />
                     <StatCard icon={<Activity size={20} />} label={t('dashboard.stats.bomsProcessed')} value="12" trend={t('dashboard.stats.successRate')} />
@@ -127,7 +124,6 @@ export default function Dashboard() {
                     <StatCard icon={<ShieldCheck size={20} />} label={t('dashboard.stats.compliance')} value="100%" trend={t('dashboard.stats.rohsVerified')} />
                 </div>
 
-                
                 <div>
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-xl font-bold text-white">{t('dashboard.recentProjects.title')}</h2>

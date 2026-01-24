@@ -1,17 +1,17 @@
 import { create } from "zustand";
 import { supabase } from "@/lib/supabase";
-import { User } from "@supabase/supabase-js";
+import type { AuthError, User } from "@supabase/supabase-js";
 
 type AuthStore = {
     user: User | null;
     loading: boolean;
-    signIn: (email: string, password: string) => Promise<{ error: any }>;
-    signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
-    signOut: () => Promise<{ error: any }>;
-    updateProfile: (name: string) => Promise<{ error: any }>;
+    signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+    signUp: (email: string, password: string, name: string) => Promise<{ error: AuthError | null }>;
+    signOut: () => Promise<{ error: AuthError | null }>;
+    updateProfile: (name: string) => Promise<{ error: AuthError | null }>;
 };
 
-export const useAuthStore = create<AuthStore>((_set) => ({
+export const useAuthStore = create<AuthStore>(() => ({
     user: null,
     loading: true,
 

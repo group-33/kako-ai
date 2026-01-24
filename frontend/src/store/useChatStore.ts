@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { ThreadMessage } from "@assistant-ui/react";
 import { supabase } from "@/lib/supabase";
 
-type Message = any; // We store the assistant-ui message objects directly
+type Message = ThreadMessage;
 
 type Thread = {
     id: string;
@@ -11,7 +12,7 @@ type Thread = {
     messages: Message[] | null;
 };
 
-type ChatStore = {
+export type ChatStore = {
     threads: Thread[];
     activeThreadId: string | null;
     modelId: string;

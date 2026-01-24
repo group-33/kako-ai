@@ -1,6 +1,6 @@
 "use client";
 
-import { PropsWithChildren, useEffect, useState, type FC } from "react";
+import { PropsWithChildren, useEffect, useMemo, useState, type FC } from "react";
 import { XIcon, PlusIcon, FileText } from "lucide-react";
 import {
   AttachmentPrimitive,
@@ -26,26 +26,25 @@ import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button
 import { cn } from "@/lib/utils";
 
 const useFileSrc = (file: File | undefined) => {
-  const [src, setSrc] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
+  const src = useMemo(() => {
     if (!file || !(file instanceof File || file instanceof Blob)) {
-      setSrc(undefined);
-      return;
+      return undefined;
     }
 
     try {
-      const objectUrl = URL.createObjectURL(file);
-      setSrc(objectUrl);
-
-      return () => {
-        URL.revokeObjectURL(objectUrl);
-      };
+      return URL.createObjectURL(file);
     } catch (e) {
       console.warn("Failed to create object URL", e);
-      setSrc(undefined);
+      return undefined;
     }
   }, [file]);
+
+  useEffect(() => {
+    if (!src) return undefined;
+    return () => {
+      URL.revokeObjectURL(src);
+    };
+  }, [src]);
 
   return src;
 };
@@ -146,9 +145,10 @@ const AttachmentUI: FC = () => {
         return "Document";
       case "file":
         return "File";
-      default:
+      default: {
         const _exhaustiveCheck: never = type;
         throw new Error(`Unknown attachment type: ${_exhaustiveCheck}`);
+      }
     }
   });
 
