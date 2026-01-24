@@ -1,15 +1,15 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { ThreadMessage } from "@assistant-ui/react";
+import type { ThreadMessageLike } from "@assistant-ui/react";
 import { supabase } from "@/lib/supabase";
 
-type Message = ThreadMessage;
+type Message = ThreadMessageLike;
 
 type Thread = {
     id: string;
     title: string;
     date: string;
-    messages: Message[] | null;
+    messages: ReadonlyArray<Message> | null;
 };
 
 export type ChatStore = {
@@ -24,9 +24,10 @@ export type ChatStore = {
     addThread: (baseTitle?: string) => Promise<string | null>;
     deleteThread: (id: string) => Promise<void>;
     renameThread: (threadId: string, newTitle: string) => Promise<void>;
-    updateThreadMessages: (threadId: string, messages: Message[]) => Promise<void>;
+    updateThreadMessages: (threadId: string, messages: ReadonlyArray<Message>) => Promise<void>;
     setDraft: (threadId: string, draft: string) => void;
     clearDraft: (threadId: string) => void;
+    ensureThread: (thread: Thread) => void;
 
     // Actions for messages (typically handled by Assistant UI runtime, but we need to notify store or DB)
     // For now, we mainly sync the thread title and usage. Message persistence detailed in Chat.tsx often.
@@ -138,22 +139,20 @@ export const useChatStore = create<ChatStore>()(
 
                 // Convert DB messages back to assistant-ui format
                 // Try to parse content as JSON (for tool calls/tables), fallback to string
-                const messages: Message[] = data.map(m => {
-                    let content = m.content;
+                const messages: Message[] = data.map((m) => {
+                    let content: Message["content"] = m.content ?? "";
                     try {
-                        // Check if it looks like a JSON array or object
-                        if (content.startsWith('[') || content.startsWith('{')) {
-                            content = JSON.parse(m.content);
+                        if (typeof content === "string" && (content.startsWith("[") || content.startsWith("{"))) {
+                            content = JSON.parse(content);
                         }
-                    } catch (e) {
-                        // Keep as plain text if parse fails
-                        console.warn("Failed to parse message content, using as text", e);
+                    } catch (error) {
+                        console.warn("Failed to parse message content, using as text", error);
                     }
 
                     return {
                         id: m.id,
                         role: m.role,
-                        content: content,
+                        content,
                         createdAt: new Date(m.created_at),
                     };
                 });
@@ -196,33 +195,31 @@ export const useChatStore = create<ChatStore>()(
                 return newThreadId;
             },
 
-            updateThreadMessages: async (threadId: string, messages: Message[]) => {
+            updateThreadMessages: async (threadId: string, messages: ReadonlyArray<Message>) => {
                 // Update local state immediately
                 set((state) => ({
                     threads: state.threads.map((t) =>
-                        t.id === threadId ? { ...t, messages, date: new Date().toISOString() } : t
+                        t.id === threadId
+                            ? { ...t, messages: Array.from(messages), date: new Date().toISOString() }
+                            : t
                     ),
                 }));
 
                 // Sync to Supabase
                 // We use upsert to handle both new messages and updates (streaming)
                 // We map the assistant-ui messages to our DB schema
-                const dbMessages = messages.map(m => {
-                    // Serialize content to JSON string to preserve tool calls / arrays
-                    let contentString = "";
-                    if (typeof m.content === 'string') {
-                        contentString = m.content;
-                    } else {
-                        // It's an array or object (Tool calls, etc.)
-                        contentString = JSON.stringify(m.content);
-                    }
+                const dbMessages = messages.map((m) => {
+                    const contentString =
+                        typeof m.content === "string"
+                            ? m.content
+                            : JSON.stringify(m.content);
 
                     return {
                         id: m.id,
                         thread_id: threadId,
                         role: m.role,
                         content: contentString,
-                        created_at: m.createdAt instanceof Date ? m.createdAt.toISOString() : (m.createdAt || new Date().toISOString())
+                        created_at: m.createdAt?.toISOString() ?? new Date().toISOString()
                     };
                 });
 
@@ -248,6 +245,13 @@ export const useChatStore = create<ChatStore>()(
                     const nextDrafts = { ...state.drafts };
                     delete nextDrafts[threadId];
                     return { drafts: nextDrafts };
+                });
+            },
+
+            ensureThread: (thread: Thread) => {
+                set((state) => {
+                    if (state.threads.some((t) => t.id === thread.id)) return state;
+                    return { threads: [thread, ...state.threads] };
                 });
             },
 
@@ -289,7 +293,7 @@ export const useChatStore = create<ChatStore>()(
             setActiveThread: (id) => {
                 set({ activeThreadId: id });
                 // We should trigger loading messages here or in the component effect
-                get().loadMessagesForThread(id);
+                void get().loadMessagesForThread(id);
             },
 
             setModelId: (id) => {

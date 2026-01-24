@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import {
     LayoutDashboard,
@@ -16,6 +16,7 @@ import { LanguageSwitcher } from "./LanguageSwitcher";
 export function Layout() {
     const { threads, addThread, deleteThread, fetchThreads } = useChatStore();
     const navigate = useNavigate();
+    const location = useLocation();
     const { t } = useTranslation();
 
     useEffect(() => {
@@ -26,6 +27,14 @@ export function Layout() {
         const newThreadId = await addThread(t('layout.newChat'));
         if (!newThreadId) return;
         navigate(`/chat/${newThreadId}`);
+    };
+
+    const handleDeleteThread = async (id: string) => {
+        const isActive = location.pathname === `/chat/${id}`;
+        await deleteThread(id);
+        if (isActive) {
+            navigate("/chat");
+        }
     };
 
     return (
@@ -91,7 +100,7 @@ export function Layout() {
                                         onClick={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
-                                            deleteThread(thread.id);
+                                            handleDeleteThread(thread.id);
                                         }}
                                         className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 transition-opacity"
                                     >

@@ -15,7 +15,7 @@ function PersistenceObserver({ threadId }: { threadId: string }) {
 
   useEffect(() => {
     if (threadId && messages.length > 0) {
-      updateThreadMessages(threadId, messages);
+      void updateThreadMessages(threadId, messages);
     }
   }, [messages, threadId, updateThreadMessages]);
 

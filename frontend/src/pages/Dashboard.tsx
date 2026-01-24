@@ -17,7 +17,7 @@ import { useTranslation } from "react-i18next";
 
 export default function Dashboard() {
     const navigate = useNavigate();
-    const { threads, addThread } = useChatStore();
+    const { threads, addThread, setDraft } = useChatStore();
     const { user } = useAuthStore();
     const { t } = useTranslation();
 
@@ -32,6 +32,7 @@ export default function Dashboard() {
 
         const newThreadId = await addThread(t('layout.newChat'));
         if (!newThreadId) return;
+        setDraft(newThreadId, initialMessage);
         navigate(`/chat/${newThreadId}`, { state: { initialDraft: initialMessage } });
     };
     const [showAllThreads, setShowAllThreads] = useState(false);

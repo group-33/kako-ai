@@ -54,6 +54,13 @@ const Composer: FC<{ threadId: string; initialDraft?: string }> = ({ threadId, i
   const effectiveDraft = storedDraft ?? initialDraft;
 
   useEffect(() => {
+    appliedDraftRef.current = false;
+    lastSavedRef.current = null;
+    prevComposerTextRef.current = "";
+    hasInitializedRef.current = false;
+  }, [threadId]);
+
+  useEffect(() => {
     if (!effectiveDraft) return;
 
     const applyDraft = () => {

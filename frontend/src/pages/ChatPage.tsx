@@ -1,21 +1,20 @@
 import { useEffect, useRef } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Chat } from "@/components/Chat";
 import { useChatStore } from "@/store/useChatStore";
 
 export default function ChatPage() {
     const { threadId } = useParams();
-    const { threads, setActiveThread, activeThreadId, loadMessagesForThread, deleteThread, drafts } = useChatStore();
-    const navigate = useNavigate();
+    const { threads, setActiveThread, activeThreadId, loadMessagesForThread, deleteThread, drafts, ensureThread } = useChatStore();
     const location = useLocation();
     const { t } = useTranslation();
     const threadsRef = useRef(threads);
+    const draftsRef = useRef(drafts);
     const prevThreadIdRef = useRef<string | null>(null);
     const prevPathRef = useRef<string | null>(null);
 
     const initialDraft = location.state?.initialDraft as string | undefined;
-    const isDraftStart = Boolean(initialDraft);
 
     useEffect(() => {
         if (threadId) {
@@ -24,22 +23,29 @@ export default function ChatPage() {
                 setActiveThread(threadId);
                 // Trigger load if missing
                 if (thread.messages === null) {
-                    loadMessagesForThread(threadId);
+                    void loadMessagesForThread(threadId);
                 }
             } else {
-                // If threads are still loading (threads array empty but isLoading true), wait? 
-                // But typically threads loaded in Layout.
-                // If thread in URL doesn't exist (e.g. deleted), redirect to main chat view
-                if (threads.length > 0 && !isDraftStart) navigate("/chat"); // Only redirect if we are sure we have loaded threads
+                ensureThread({
+                    id: threadId,
+                    title: t("layout.newChat"),
+                    date: new Date().toISOString(),
+                    messages: null,
+                });
+                void loadMessagesForThread(threadId);
             }
         }
-    }, [threadId, threads, setActiveThread, navigate, loadMessagesForThread, isDraftStart]);
+    }, [threadId, threads, setActiveThread, loadMessagesForThread, ensureThread, t]);
 
     const effectiveId = threadId || activeThreadId;
 
     useEffect(() => {
         threadsRef.current = threads;
     }, [threads]);
+
+    useEffect(() => {
+        draftsRef.current = drafts;
+    }, [drafts]);
 
     useEffect(() => {
         const prevThreadId = prevThreadIdRef.current;
@@ -52,13 +58,26 @@ export default function ChatPage() {
             const threadChanged = prevThreadId !== effectiveId;
             const pathChanged = prevPath !== null && prevPath !== location.pathname;
             if (isEmpty && !hasDraft && (threadChanged || pathChanged)) {
-                deleteThread(prevThreadId);
+                void deleteThread(prevThreadId);
             }
         }
 
         prevThreadIdRef.current = effectiveId ?? null;
         prevPathRef.current = location.pathname;
     }, [effectiveId, location.pathname, deleteThread, drafts]);
+
+    useEffect(() => {
+        return () => {
+            const currentId = effectiveId;
+            if (!currentId) return;
+            const thread = threadsRef.current.find(t => t.id === currentId);
+            const isEmpty = thread && Array.isArray(thread.messages) && thread.messages.length === 0;
+            const hasDraft = Boolean(draftsRef.current[currentId]?.trim());
+            if (isEmpty && !hasDraft) {
+                void deleteThread(currentId);
+            }
+        };
+    }, [effectiveId, deleteThread]);
 
     // Find the thread to check loading state
     const currentThread = threads.find(t => t.id === effectiveId);
