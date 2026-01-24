@@ -10,17 +10,19 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChatStore } from "@/store/useChatStore";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export function Layout() {
     const { threads, addThread, deleteThread, fetchThreads } = useChatStore();
+    const { user } = useAuthStore();
     const navigate = useNavigate();
     const location = useLocation();
     const { t } = useTranslation();
 
     useEffect(() => {
-        fetchThreads();
+        void fetchThreads();
     }, [fetchThreads]);
 
     const handleNewChat = async () => {
@@ -60,7 +62,9 @@ export function Layout() {
                             )}
                             end
                         >
-                            <LayoutDashboard size={18} />
+                            <div className="w-5 flex items-center justify-center shrink-0">
+                                <LayoutDashboard size={18} />
+                            </div>
                             <span className="font-medium text-sm">{t('layout.dashboard')}</span>
                         </NavLink>
                     </div>
@@ -69,7 +73,9 @@ export function Layout() {
                         onClick={handleNewChat}
                         className="flex items-center gap-3 w-full px-3 py-2.5 bg-slate-800/50 border border-slate-700/50 text-slate-300 rounded-lg transition hover:bg-slate-800 hover:border-slate-600 hover:text-white shadow-sm mb-4 group"
                     >
-                        <Plus size={16} className="text-sky-400 group-hover:text-sky-300 transition-colors" />
+                        <div className="w-5 flex items-center justify-center shrink-0">
+                            <Plus size={16} className="text-sky-400 group-hover:text-sky-300 transition-colors" />
+                        </div>
                         <span className="font-medium text-sm">{t('layout.newChat')}</span>
                     </button>
 
@@ -93,14 +99,16 @@ export function Layout() {
                                     }
                                 >
                                     <div className="flex items-center gap-3 overflow-hidden">
-                                        <MessageSquare size={14} className="shrink-0 opacity-70" />
+                                        <div className="w-5 flex items-center justify-center shrink-0">
+                                            <MessageSquare size={14} className="opacity-70" />
+                                        </div>
                                         <span className="truncate">{thread.title}</span>
                                     </div>
                                     <button
                                         onClick={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
-                                            handleDeleteThread(thread.id);
+                                            void handleDeleteThread(thread.id);
                                         }}
                                         className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 transition-opacity"
                                     >
@@ -112,7 +120,7 @@ export function Layout() {
                     </div>
                 </nav>
 
-                <div className="mt-auto pt-3 border-t border-slate-800 space-y-4 mt-3">
+                <div className="mt-auto pt-3 border-t border-slate-800 space-y-4">
                     <div className="space-y-1">
                         <NavLink
                             to="/config"
@@ -121,7 +129,9 @@ export function Layout() {
                                 isActive ? "bg-slate-800 text-slate-200" : "text-slate-400 group-hover:text-slate-200"
                             )}
                         >
-                            <Settings size={16} className="text-slate-500 group-hover:text-slate-400" />
+                            <div className="w-5 flex items-center justify-center shrink-0">
+                                <Settings size={16} className="text-slate-500 group-hover:text-slate-400" />
+                            </div>
                             <span>{t('layout.configuration')}</span>
                         </NavLink>
                         <NavLink
@@ -131,8 +141,18 @@ export function Layout() {
                                 isActive ? "bg-slate-800 text-slate-200" : "text-slate-400 group-hover:text-slate-200"
                             )}
                         >
-                            <User size={16} className="text-slate-500 group-hover:text-slate-400" />
-                            <span>{t('layout.profile')}</span>
+                            <div className="w-5 flex items-center justify-center shrink-0">
+                                {user?.user_metadata?.avatar_url ? (
+                                    <img
+                                        src={user.user_metadata.avatar_url}
+                                        alt="Avatar"
+                                        className="w-5 h-5 rounded-full object-cover ring-1 ring-slate-600"
+                                    />
+                                ) : (
+                                    <User size={16} className="text-slate-500 group-hover:text-slate-400" />
+                                )}
+                            </div>
+                            <span className="truncate">{user?.user_metadata?.full_name || t('layout.profile')}</span>
                         </NavLink>
                     </div>
 
@@ -143,7 +163,7 @@ export function Layout() {
             </aside>
 
             <main className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-950 relative">
-                <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-slate-900/50 to-transparent pointer-events-none" />
+                <div className="absolute top-0 left-0 w-full h-96 bg-linear-to-b from-slate-900/50 to-transparent pointer-events-none" />
                 <Outlet />
             </main>
         </div>
