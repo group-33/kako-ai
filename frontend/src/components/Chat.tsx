@@ -22,7 +22,7 @@ function PersistenceObserver({ threadId }: { threadId: string }) {
   return null;
 }
 
-export function Chat({ threadId }: { threadId: string }) {
+export function Chat({ threadId, initialDraft }: { threadId: string; initialDraft?: string }) {
   const runtime = useBackendRuntime(threadId);
 
   return (
@@ -33,7 +33,7 @@ export function Chat({ threadId }: { threadId: string }) {
         <ProcurementOptionsTool />
         <CostAnalysisTool />
 
-        <Thread />
+        <Thread threadId={threadId} initialDraft={initialDraft} />
       </div>
     </AssistantRuntimeProvider>
   );

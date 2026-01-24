@@ -33,7 +33,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 const CostAnalysisChart = ({ data }: { data: CostAnalysisData }) => {
     return (
         <div className="border rounded-xl overflow-hidden bg-white shadow-sm font-sans w-full my-4">
-            {/* Header */}
+            
             <div className="bg-slate-50 px-4 py-3 border-b flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <TrendingUp size={16} className="text-purple-600" />
@@ -50,7 +50,7 @@ const CostAnalysisChart = ({ data }: { data: CostAnalysisData }) => {
                 </div>
             </div>
 
-            {/* Chart Area */}
+            
             <div className="p-4 w-full" style={{ height: 300 }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data.items} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -78,7 +78,7 @@ const CostAnalysisChart = ({ data }: { data: CostAnalysisData }) => {
                 </ResponsiveContainer>
             </div>
 
-            {/* Footer Info */}
+            
             <div className="px-4 py-3 bg-slate-50 border-t text-xs text-slate-500">
                 Die Analyse basiert auf den aktuell ausgewählten Lieferantenoptionen.
             </div>

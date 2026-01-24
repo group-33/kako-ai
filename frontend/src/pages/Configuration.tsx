@@ -28,7 +28,6 @@ export default function Configuration() {
             })
             .catch((err) => {
                 console.error("Failed to fetch models", err);
-                // Fallback if backend fetch fails
                 setModels([
                     { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", provider: "Google" }
                 ]);
@@ -40,13 +39,13 @@ export default function Configuration() {
         <div className="h-full overflow-y-auto p-8 relative z-0">
             <div className="max-w-4xl mx-auto space-y-10">
 
-                {/* Header */}
+                
                 <div>
                     <h1 className="text-3xl font-bold text-white">{t('config.title')}</h1>
                     <p className="text-slate-400 mt-2">{t('config.save')}</p>
                 </div>
 
-                {/* Model Selection */}
+                
                 <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
                     <div className="flex items-start gap-4 mb-6">
                         <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">

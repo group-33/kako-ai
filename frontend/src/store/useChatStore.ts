@@ -16,6 +16,7 @@ type ChatStore = {
     activeThreadId: string | null;
     modelId: string;
     isLoading: boolean;
+    drafts: Record<string, string>;
 
     // Actions
     fetchThreads: () => Promise<void>;
@@ -23,6 +24,8 @@ type ChatStore = {
     deleteThread: (id: string) => Promise<void>;
     renameThread: (threadId: string, newTitle: string) => Promise<void>;
     updateThreadMessages: (threadId: string, messages: Message[]) => Promise<void>;
+    setDraft: (threadId: string, draft: string) => void;
+    clearDraft: (threadId: string) => void;
 
     // Actions for messages (typically handled by Assistant UI runtime, but we need to notify store or DB)
     // For now, we mainly sync the thread title and usage. Message persistence detailed in Chat.tsx often.
@@ -40,6 +43,7 @@ export const useChatStore = create<ChatStore>()(
             activeThreadId: null,
             modelId: "gemini-2.5-flash",
             isLoading: false,
+            drafts: {},
 
             fetchThreads: async () => {
                 console.log("fetching threads start");
@@ -58,12 +62,54 @@ export const useChatStore = create<ChatStore>()(
                 }
 
                 // Transform DB threads to Store threads
-                const threads: Thread[] = data.map(t => ({
+                const dbThreads: Thread[] = data.map(t => ({
                     id: t.id,
                     title: t.title,
                     date: t.updated_at,
                     messages: null // null indicates "not loaded yet"
                 }));
+
+                const threadIds = dbThreads.map(t => t.id);
+                const defaultTitles = new Set(["New Chat", "Neuer Chat"]);
+                let threadsWithMessages = new Set<string>();
+
+                if (threadIds.length > 0) {
+                    const { data: messageRows, error: messageError } = await supabase
+                        .from('messages')
+                        .select('thread_id')
+                        .in('thread_id', threadIds);
+
+                    if (!messageError && messageRows) {
+                        threadsWithMessages = new Set(messageRows.map(row => row.thread_id));
+                    }
+                }
+
+                const emptyDefaultThreads = dbThreads.filter(t =>
+                    defaultTitles.has(t.title) && !threadsWithMessages.has(t.id)
+                );
+
+                if (emptyDefaultThreads.length > 0) {
+                    const deleteIds = emptyDefaultThreads.map(t => t.id);
+                    supabase.from('threads').delete().in('id', deleteIds);
+                }
+
+                const filteredDbThreads = dbThreads.filter(t => !emptyDefaultThreads.some(e => e.id === t.id));
+
+                const existingThreads = get().threads;
+                const dbIds = new Set(filteredDbThreads.map(t => t.id));
+                const nowMs = Date.now();
+                const keepLocalThreads = existingThreads.filter((thread) => {
+                    if (dbIds.has(thread.id)) return false;
+                    if (Array.isArray(thread.messages) && thread.messages.length > 0) return true;
+                    const createdAt = Date.parse(thread.date);
+                    if (!Number.isNaN(createdAt)) {
+                        const ageMs = nowMs - createdAt;
+                        return ageMs < 5 * 60 * 1000;
+                    }
+                    return false;
+                });
+
+                const threads = [...filteredDbThreads, ...keepLocalThreads];
 
                 console.log("mapped threads:", threads);
                 set({ threads, isLoading: false });
@@ -190,6 +236,20 @@ export const useChatStore = create<ChatStore>()(
                 }
             },
 
+            setDraft: (threadId: string, draft: string) => {
+                set((state) => ({
+                    drafts: { ...state.drafts, [threadId]: draft }
+                }));
+            },
+
+            clearDraft: (threadId: string) => {
+                set((state) => {
+                    const nextDrafts = { ...state.drafts };
+                    delete nextDrafts[threadId];
+                    return { drafts: nextDrafts };
+                });
+            },
+
             deleteThread: async (id) => {
                 set(state => {
                     const newThreads = state.threads.filter(t => t.id !== id);
@@ -197,7 +257,9 @@ export const useChatStore = create<ChatStore>()(
                     if (state.activeThreadId === id) {
                         nextActive = newThreads.length > 0 ? (newThreads[0]?.id ?? null) : null;
                     }
-                    return { threads: newThreads, activeThreadId: nextActive };
+                    const nextDrafts = { ...state.drafts };
+                    delete nextDrafts[id];
+                    return { threads: newThreads, activeThreadId: nextActive, drafts: nextDrafts };
                 });
 
                 const { error } = await supabase

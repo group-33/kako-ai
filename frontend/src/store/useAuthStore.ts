@@ -6,6 +6,7 @@ type AuthStore = {
     user: User | null;
     loading: boolean;
     signIn: (email: string, password: string) => Promise<{ error: any }>;
+    signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
     signOut: () => Promise<{ error: any }>;
     updateProfile: (name: string) => Promise<{ error: any }>;
 };
@@ -16,6 +17,19 @@ export const useAuthStore = create<AuthStore>((_set) => ({
 
     signIn: async (email, password) => {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
+        return { error };
+    },
+
+    signUp: async (email, password, name) => {
+        const { error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: name
+                }
+            }
+        });
         return { error };
     },
 
@@ -31,8 +45,6 @@ export const useAuthStore = create<AuthStore>((_set) => ({
         return { error };
     },
 }));
-
-// Set up the listener to keep the store in sync with Supabase
 supabase.auth.getSession().then(({ data: { session } }) => {
     useAuthStore.setState({ user: session?.user ?? null, loading: false });
 });

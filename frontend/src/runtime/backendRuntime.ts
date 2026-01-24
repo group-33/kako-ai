@@ -14,8 +14,6 @@ const BACKEND_BASE_URL =
 export const useBackendRuntime = (threadIdParam?: string) => {
   const { activeThreadId, threads, renameThread, modelId } = useChatStore();
   const threadId = threadIdParam ?? activeThreadId ?? "default";
-
-  // Get initial messages from store
   const activeThread = threads.find((t) => t.id === threadId);
   const initialMessages = activeThread?.messages || [];
 
@@ -27,16 +25,11 @@ export const useBackendRuntime = (threadIdParam?: string) => {
 
       const textPart = lastMessage?.content.find((part) => part.type === "text");
       const userText = textPart && "text" in textPart ? textPart.text.trim() : "";
-
-      // Check for attachments in the top-level 'attachments' array (as seen in logs)
-      // @ts-ignore
       const attachments = lastMessage?.attachments as any[];
       console.log("Attachments array:", attachments);
 
       const firstAttachment = attachments?.[0];
       console.log("First attachment:", firstAttachment);
-
-      // The file object should be on the attachment
       const file = firstAttachment?.file as File | undefined;
       console.log("Extracted file object from attachment:", file);
 
@@ -45,14 +38,32 @@ export const useBackendRuntime = (threadIdParam?: string) => {
         return;
       }
 
-      // ... Title generation code ...
-
       const userMessages = messages.filter(m => m.role === 'user');
-      if (userMessages.length === 1 && activeThread) {
-        // ... (title gen omitted for brevity in replace, keep distinct)
-        const isDefaultTitle = activeThread.title.startsWith("New Chat") || activeThread.title.startsWith("Neuer Chat");
+      const currentThread = useChatStore.getState().threads.find((t) => t.id === threadId);
+      if (userMessages.length === 1 && currentThread && userText) {
+        const isDefaultTitle = currentThread.title.startsWith("New Chat") || currentThread.title.startsWith("Neuer Chat");
         if (isDefaultTitle) {
-          // ...
+          try {
+            const titleResponse = await fetch(`${BACKEND_BASE_URL}/chat/title`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                user_query: userText,
+                model_id: modelId,
+              }),
+              signal: abortSignal,
+            });
+            if (titleResponse.ok) {
+              const data = await titleResponse.json();
+              if (data?.title) {
+                await renameThread(currentThread.id, data.title);
+              }
+            }
+          } catch (error) {
+            if (!abortSignal.aborted) {
+              console.warn("Title generation failed:", error);
+            }
+          }
         }
       }
 
@@ -69,7 +80,6 @@ export const useBackendRuntime = (threadIdParam?: string) => {
           if (modelId) formData.append("model_id", modelId);
           formData.append("file", file);
           body = formData;
-          // Content-Type header is automatically set for FormData
         } else {
           headers["Content-Type"] = "application/json";
           body = JSON.stringify({

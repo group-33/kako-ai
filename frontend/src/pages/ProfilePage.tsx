@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { User, LogOut, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function ProfilePage() {
     const { user, signOut, updateProfile } = useAuthStore();
     const { t } = useTranslation();
+    const navigate = useNavigate();
 
     const [name, setName] = useState(user?.user_metadata?.full_name || "");
     const [isEditing, setIsEditing] = useState(false);
@@ -15,12 +17,16 @@ export default function ProfilePage() {
         await updateProfile(name);
         setIsEditing(false);
     };
+    const handleSignOut = async () => {
+        await signOut();
+        navigate("/login", { replace: true });
+    };
 
     return (
         <div className="h-full overflow-y-auto p-8 relative z-0">
             <div className="max-w-2xl mx-auto space-y-8">
 
-                {/* Header */}
+                
                 <div>
                     <h1 className="text-3xl font-bold text-white">{t('profile.title')}</h1>
                     <p className="text-slate-400 mt-2">{t('profile.subtitle')}</p>
@@ -98,7 +104,7 @@ export default function ProfilePage() {
                             {t('profile.logoutDesc')}
                         </p>
                         <button
-                            onClick={signOut}
+                            onClick={handleSignOut}
                             className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
                         >
                             <LogOut size={16} />

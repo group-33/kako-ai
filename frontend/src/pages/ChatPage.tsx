@@ -1,14 +1,21 @@
-import { useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Chat } from "@/components/Chat";
 import { useChatStore } from "@/store/useChatStore";
 
 export default function ChatPage() {
     const { threadId } = useParams();
-    const { threads, setActiveThread, activeThreadId, loadMessagesForThread } = useChatStore();
+    const { threads, setActiveThread, activeThreadId, loadMessagesForThread, deleteThread, drafts } = useChatStore();
     const navigate = useNavigate();
+    const location = useLocation();
     const { t } = useTranslation();
+    const threadsRef = useRef(threads);
+    const prevThreadIdRef = useRef<string | null>(null);
+    const prevPathRef = useRef<string | null>(null);
+
+    const initialDraft = location.state?.initialDraft as string | undefined;
+    const isDraftStart = Boolean(initialDraft);
 
     useEffect(() => {
         if (threadId) {
@@ -23,12 +30,35 @@ export default function ChatPage() {
                 // If threads are still loading (threads array empty but isLoading true), wait? 
                 // But typically threads loaded in Layout.
                 // If thread in URL doesn't exist (e.g. deleted), redirect to main chat view
-                if (threads.length > 0) navigate("/chat"); // Only redirect if we are sure we have loaded threads
+                if (threads.length > 0 && !isDraftStart) navigate("/chat"); // Only redirect if we are sure we have loaded threads
             }
         }
-    }, [threadId, threads, setActiveThread, navigate, loadMessagesForThread]);
+    }, [threadId, threads, setActiveThread, navigate, loadMessagesForThread, isDraftStart]);
 
     const effectiveId = threadId || activeThreadId;
+
+    useEffect(() => {
+        threadsRef.current = threads;
+    }, [threads]);
+
+    useEffect(() => {
+        const prevThreadId = prevThreadIdRef.current;
+        const prevPath = prevPathRef.current;
+
+        if (prevThreadId) {
+            const thread = threadsRef.current.find(t => t.id === prevThreadId);
+            const isEmpty = thread && Array.isArray(thread.messages) && thread.messages.length === 0;
+            const hasDraft = Boolean(drafts[prevThreadId]?.trim());
+            const threadChanged = prevThreadId !== effectiveId;
+            const pathChanged = prevPath !== null && prevPath !== location.pathname;
+            if (isEmpty && !hasDraft && (threadChanged || pathChanged)) {
+                deleteThread(prevThreadId);
+            }
+        }
+
+        prevThreadIdRef.current = effectiveId ?? null;
+        prevPathRef.current = location.pathname;
+    }, [effectiveId, location.pathname, deleteThread, drafts]);
 
     // Find the thread to check loading state
     const currentThread = threads.find(t => t.id === effectiveId);
@@ -49,7 +79,7 @@ export default function ChatPage() {
     return (
         <div className="h-full p-2 md:p-6">
             <div className="mx-auto max-w-5xl h-full flex flex-col">
-                <Chat key={effectiveId} threadId={effectiveId} />
+                <Chat key={effectiveId} threadId={effectiveId} initialDraft={initialDraft} />
             </div>
         </div>
     );

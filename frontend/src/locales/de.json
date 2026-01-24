@@ -1,7 +1,7 @@
 {
     "layout": {
         "dashboard": "Dashboard",
-        "chats": "Chats",
+        "chats": "Deine Chats",
         "newChat": "Neuer Chat",
         "configuration": "Einstellungen",
         "profile": "Profil"
@@ -14,12 +14,14 @@
             "extractBom": {
                 "title": "Stückliste aus Zeichnung",
                 "description": "Extrahiere Stücklisten aus Kundenzeichnungen durch KI als Basis für die Machbarkeitsprognose.",
-                "action": "Extraktion starten"
+                "action": "Extraktion starten",
+                "prompt": "Extrahiere eine vollständige Stückliste aus: [Zeichnung/Spezifikation oder Dateiname/Pfad]. Gib Position, Artikelnummer, Beschreibung, Menge und Einheit strukturiert aus."
             },
             "searchParts": {
                 "title": "Teile & Inventar",
                 "description": "Verbinde mit Octopart für optimale Beschaffungsoptionen und prüfe Bestand im Xentral ERP.",
-                "action": "Beschaffungstool"
+                "action": "Beschaffungstool",
+                "prompt": "Prüfe Verfügbarkeit und Beschaffungsoptionen für: [Teilenummern / Hersteller / Mengen]. Nenne besten Preis, MOQ, Lieferzeit und Lieferant."
             }
         },
         "stats": {
@@ -27,7 +29,7 @@
             "bomsProcessed": "Stücklisten Extrahiert",
             "totalSavings": "Beschaffungseinsparung",
             "compliance": "Compliance",
-            "weekTrend": "+2 diese Woche",
+            "weekTrend": "+{{count}} diese Woche",
             "successRate": "98% Genauigkeit",
             "viaOptimization": "durch Optimierung",
             "rohsVerified": "RoHS verifiziert"
@@ -35,6 +37,7 @@
         "recentProjects": {
             "title": "Letzte Analysen",
             "viewAll": "Alle anzeigen",
+            "viewLess": "Weniger anzeigen",
             "lastUpdated": "Zuletzt aktualisiert",
             "continue": "Öffnen",
             "noActivity": "Keine aktuellen Analysen.",
@@ -67,7 +70,19 @@
         "loadingSignUp": "Konto wird erstellt...",
         "terms": "Durch das Fortfahren stimmst du unseren Nutzungsbedingungen und der Datenschutzerklärung zu.",
         "errorMissing": "Bitte fülle alle Felder aus.",
-        "errorEmail": "Bitte gib eine gültige E-Mail-Adresse ein."
+        "errorEmail": "Bitte gib eine gültige E-Mail-Adresse ein.",
+        "termsPrefix": "Durch das Fortfahren stimmst du unseren ",
+        "termsLink": "Nutzungsbedingungen",
+        "termsAnd": " und der ",
+        "privacyLink": "Datenschutzerklärung",
+        "termsSuffix": " zu."
+    },
+    "legal": {
+        "termsTitle": "Nutzungsbedingungen",
+        "privacyTitle": "Datenschutzerklärung",
+        "close": "Schließen",
+        "termsContent": "# 1. Geltungsbereich\n\nDurch den Zugriff auf und die Nutzung der KakoAI-Plattform, Dienste und API (zusammenfassend der \"Dienst\") erklären Sie sich mit diesen Bedingungen einverstanden. Wenn Sie diesen Bedingungen nicht zustimmen, nutzen Sie den Dienst bitte nicht.\n\n# 2. Leistungsbeschreibung\n\nKakoAI bietet KI-gestützte Machbarkeitsprognosen, Stücklistenextraktion (BOM) und Tools zur Beschaffungsoptimierung. Obwohl wir nach hoher Genauigkeit streben, sind die von unseren Künstliche-Intelligenz-Modellen generierten Ausgaben probabilistisch und können Fehler enthalten. Nutzer sollten alle kritischen Daten, insbesondere in Bezug auf Teilenummern und Preise, vor Entscheidungen verifizieren.\n\n# 3. Nutzerpflichten\n\nSie verpflichten sich, den Dienst nur für rechtmäßige Zwecke zu nutzen. Sie versichern, dass alle auf die Plattform hochgeladenen Daten, einschließlich technischer Zeichnungen oder Spezifikationen, Ihr Eigentum sind oder Sie über die notwendigen Rechte zu deren Verarbeitung verfügen. Es ist Ihnen untersagt, nach Schwachstellen zu suchen, die API zurückzuentwickeln (Reverse Engineering) oder den Dienst zu nutzen, um ein Konkurrenzprodukt zu entwickeln.\n\n# 4. Geistiges Eigentum\n\nAlle Rechte, Titel und Anteile an dem Dienst (ausgenommen der von Nutzern bereitgestellten Inhalte) bleiben das ausschließliche Eigentum der Kako Elektro GmbH. Ihre Nutzung des Dienstes gewährt Ihnen kein Recht zur Nutzung unserer Marken, Logos oder Domainnamen.\n\n# 5. Haftungsbeschränkung\n\nSoweit gesetzlich zulässig, haftet die Kako Elektro GmbH nicht für indirekte, zufällige, besondere oder Folgeschäden oder für entgangenen Gewinn oder Umsatz, die sich direkt oder indirekt aus Ihrer Nutzung des Dienstes ergeben.\n\n# 6. Änderungen der Bedingungen\n\nWir behalten uns das Recht vor, diese Bedingungen jederzeit zu ändern. Wir werden über wesentliche Änderungen durch eine Ankündigung im Dienst informieren. Ihre fortgesetzte Nutzung des Dienstes nach einer solchen Änderung gilt als Zustimmung zu den neuen Nutzungsbedingungen.",
+        "privacyContent": "# 1. Einleitung\n\nDie Kako Elektro GmbH (\"wir\", \"unser\" oder \"uns\") respektiert Ihre Privatsphäre und verpflichtet sich zum Schutz Ihrer personenbezogenen Daten. Diese Datenschutzerklärung informiert Sie darüber, wie wir Ihre persönlichen Daten schützen, wenn Sie unsere Website besuchen oder unsere KakoAI-Plattform nutzen.\n\n# 2. Erfasste Daten\n\n**Identitätsdaten:** Vorname, Nachname und Benutzername.\n**Kontaktdaten:** E-Mail-Adresse und Rechnungsadresse.\n**Technische Daten:** IP-Adresse, Login-Daten, Browsertyp und -version.\n**Nutzungsdaten:** Informationen darüber, wie Sie unsere Website, hochgeladene Stücklisten und Chat-Anfragen nutzen.\n\n# 3. Verwendung Ihrer Daten\n\nWir verwenden Ihre personenbezogenen Daten nur, wenn dies gesetzlich zulässig ist. Üblicherweise verwenden wir Ihre Daten, um:\n- Sie als neuen Kunden zu registrieren.\n- Ihre Stücklistenextraktionen und Machbarkeitsberichte zu verarbeiten und bereitzustellen.\n- Unsere Beziehung zu Ihnen zu verwalten.\n- Unsere Website, Produkte/Dienste und Kundenbeziehungen zu verbessern.\n\n# 4. Datensicherheit\n\nWir haben angemessene Sicherheitsvorkehrungen getroffen, um zu verhindern, dass Ihre personenbezogenen Daten versehentlich verloren gehen, unbefugt verwendet oder abgerufen werden. Wir beschränken den Zugriff auf Ihre personenbezogenen Daten auf Mitarbeiter, Agenten, Auftragnehmer und andere Dritte, die diese Daten aus geschäftlichen Gründen kennen müssen.\n\n# 5. Drittanbieter\n\nWir können Ihre Daten an vertrauenswürdige Drittanbieter (z. B. OpenAI, Anthropic, Google Cloud, Octopart) weitergeben, jedoch ausschließlich zum Zweck der Bereitstellung der für den Dienst erforderlichen KI-Funktionalität und Suchergebnisse. Wir stellen sicher, dass alle Dritten die Sicherheit Ihrer Daten respektieren und diese gesetzeskonform behandeln.\n\n# 6. Ihre Rechte\n\nUnter bestimmten Umständen haben Sie gemäß den Datenschutzgesetzen Rechte in Bezug auf Ihre personenbezogenen Daten, einschließlich des Rechts auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit oder Widerspruch gegen die Verarbeitung."
     },
     "profile": {
         "title": "Profil",

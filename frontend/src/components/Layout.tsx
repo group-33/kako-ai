@@ -19,21 +19,21 @@ export function Layout() {
     const { t } = useTranslation();
 
     useEffect(() => {
-        // Load threads when layout mounts (authenticated session)
         fetchThreads();
     }, [fetchThreads]);
 
-    const handleNewChat = () => {
-        addThread(t('layout.newChat'));
-        navigate("/chat");
+    const handleNewChat = async () => {
+        const newThreadId = await addThread(t('layout.newChat'));
+        if (!newThreadId) return;
+        navigate(`/chat/${newThreadId}`);
     };
 
     return (
         <div className="flex h-screen w-full bg-slate-950 text-slate-200">
-            {/* Sidebar */}
+            
             <aside className="w-64 bg-slate-900 flex flex-col p-4 border-r border-slate-800 shadow-xl z-10">
-                <div className="flex items-center justify-between mb-8 px-2">
-                    <div className="flex items-center gap-3 w-full">
+                <div className="flex items-center justify-center mb-8 px-2">
+                    <div className="flex items-center justify-center w-full">
                         <img
                             src="/kako_logo.jpg"
                             alt="Kako Elektro GmbH"
@@ -42,8 +42,8 @@ export function Layout() {
                     </div>
                 </div>
 
-                <nav className="space-y-1 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                    <div className="mb-6">
+                <nav className="space-y-1 flex-1 min-h-0 flex flex-col">
+                    <div className="mb-2">
                         <NavLink
                             to="/"
                             className={({ isActive }) => cn(
@@ -57,11 +57,6 @@ export function Layout() {
                         </NavLink>
                     </div>
 
-
-                    <div className="flex items-center justify-between px-3 text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-wider">
-                        <span>{t('layout.chats')}</span>
-                    </div>
-
                     <button
                         onClick={handleNewChat}
                         className="flex items-center gap-3 w-full px-3 py-2.5 bg-slate-800/50 border border-slate-700/50 text-slate-300 rounded-lg transition hover:bg-slate-800 hover:border-slate-600 hover:text-white shadow-sm mb-4 group"
@@ -70,7 +65,11 @@ export function Layout() {
                         <span className="font-medium text-sm">{t('layout.newChat')}</span>
                     </button>
 
-                    <div className="space-y-1">
+                    <div className="flex items-center justify-between px-3 text-[10px] font-bold text-slate-500 mb-3 uppercase tracking-wider">
+                        <span>{t('layout.chats')}</span>
+                    </div>
+
+                    <div className="space-y-1 flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar rounded-xl bg-slate-800/40 border border-slate-800/70 px-2 py-2 mb-3">
                         {threads.map((thread) => {
                             return (
                                 <NavLink
@@ -105,7 +104,7 @@ export function Layout() {
                     </div>
                 </nav>
 
-                <div className="mt-auto pt-4 border-t border-slate-800 space-y-4">
+                <div className="mt-auto pt-3 border-t border-slate-800 space-y-4 mt-3">
                     <div className="space-y-1">
                         <NavLink
                             to="/config"
@@ -135,9 +134,9 @@ export function Layout() {
                 </div>
             </aside>
 
-            {/* Main Content Area */}
+            
             <main className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-950 relative">
-                {/* Subtle top gradient for depth */}
+                
                 <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-slate-900/50 to-transparent pointer-events-none" />
                 <Outlet />
             </main>

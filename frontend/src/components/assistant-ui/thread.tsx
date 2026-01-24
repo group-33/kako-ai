@@ -17,11 +17,14 @@ import {
   ErrorPrimitive,
   MessagePrimitive,
   ThreadPrimitive,
+  useAssistantApi,
+  useAssistantState,
   useMessage,
   useThread,
 } from "@assistant-ui/react";
 
 import type { FC } from "react";
+import { useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,10 +38,88 @@ import {
 } from "@/components/assistant-ui/attachment";
 
 import { cn } from "@/lib/utils";
+import { useChatStore } from "@/store/useChatStore";
 
 import { useTranslation } from "react-i18next";
 
-export const Thread: FC = () => {
+const Composer: FC<{ threadId: string; initialDraft?: string }> = ({ threadId, initialDraft }) => {
+  const { t } = useTranslation();
+  const api = useAssistantApi();
+  const appliedDraftRef = useRef(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const composerText = useAssistantState(({ composer }) => composer.text);
+  const { drafts, setDraft } = useChatStore();
+  const lastSavedRef = useRef<string | null>(null);
+  const hasInitializedRef = useRef(false);
+  const prevComposerTextRef = useRef("");
+  const storedDraft = drafts[threadId];
+  const effectiveDraft = storedDraft ?? initialDraft;
+
+  useEffect(() => {
+    if (!effectiveDraft) return;
+
+    const applyDraft = () => {
+      if (appliedDraftRef.current) return;
+      const currentText = api.composer().getState().text;
+      if (currentText.trim()) return;
+      api.composer().setText(effectiveDraft);
+      requestAnimationFrame(() => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+        const start = effectiveDraft.indexOf("[");
+        const end = effectiveDraft.indexOf("]");
+        if (start !== -1 && end > start) {
+          textarea.focus();
+          textarea.setSelectionRange(start, end + 1);
+        }
+      });
+      appliedDraftRef.current = true;
+    };
+
+    const timeoutId = window.setTimeout(applyDraft, 0);
+    const unsubscribe = api.on("thread-list-item.switched-to", applyDraft);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      unsubscribe?.();
+    };
+  }, [api, effectiveDraft]);
+
+  useEffect(() => {
+    if (!threadId) return;
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      if (!composerText && storedDraft) return;
+    }
+    const prevText = prevComposerTextRef.current;
+    const clearedByUser = prevText && !composerText;
+    if (!composerText && storedDraft && !clearedByUser) return;
+    if (lastSavedRef.current === composerText) return;
+    lastSavedRef.current = composerText;
+    setDraft(threadId, composerText);
+    prevComposerTextRef.current = composerText;
+  }, [composerText, setDraft, storedDraft, threadId]);
+
+  return (
+    <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
+      <ComposerPrimitive.AttachmentDropzone className="aui-composer-attachment-dropzone flex w-full flex-col rounded-3xl border border-input bg-background px-1 pt-2 shadow-xs outline-none transition-[color,box-shadow] has-[textarea:focus-visible]:border-ring has-[textarea:focus-visible]:ring-[3px] has-[textarea:focus-visible]:ring-ring/50 data-[dragging=true]:border-ring data-[dragging=true]:border-dashed data-[dragging=true]:bg-accent/50 dark:bg-background">
+        <ComposerAttachments />
+        <ComposerPrimitive.Input
+          placeholder={t('thread.composer.placeholder')}
+          className="aui-composer-input mb-1 max-h-32 min-h-16 w-full resize-none bg-transparent px-3.5 pt-1.5 pb-3 text-base outline-none placeholder:text-muted-foreground focus-visible:ring-0"
+          rows={1}
+          autoFocus
+          aria-label="Message input"
+          ref={textareaRef}
+        />
+        <ComposerAction />
+      </ComposerPrimitive.AttachmentDropzone>
+    </ComposerPrimitive.Root>
+  );
+};
+
+
+export const Thread: FC<{ threadId: string; initialDraft?: string }> = ({ threadId, initialDraft }) => {
   return (
     <ThreadPrimitive.Root
       className="aui-root aui-thread-root @container flex h-full flex-col bg-transparent"
@@ -62,9 +143,9 @@ export const Thread: FC = () => {
           }}
         />
 
-        <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mx-auto mt-4 flex w-full max-w-(--thread-max-width) flex-col gap-4 overflow-visible rounded-t-3xl bg-transparent pb-4 md:pb-6">
+        <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mx-auto mt-4 flex w-full max-w-(--thread-max-width) flex-col gap-4 overflow-visible rounded-t-3xl bg-[#090e20] pb-4 md:pb-6">
           <ThreadScrollToBottom />
-          <Composer />
+          <Composer threadId={threadId} initialDraft={initialDraft} />
         </ThreadPrimitive.ViewportFooter>
       </ThreadPrimitive.Viewport>
     </ThreadPrimitive.Root>
@@ -159,25 +240,6 @@ const ThreadSuggestions: FC = () => {
   );
 };
 
-const Composer: FC = () => {
-  const { t } = useTranslation();
-  return (
-    <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
-      <ComposerPrimitive.AttachmentDropzone className="aui-composer-attachment-dropzone flex w-full flex-col rounded-3xl border border-input bg-background px-1 pt-2 shadow-xs outline-none transition-[color,box-shadow] has-[textarea:focus-visible]:border-ring has-[textarea:focus-visible]:ring-[3px] has-[textarea:focus-visible]:ring-ring/50 data-[dragging=true]:border-ring data-[dragging=true]:border-dashed data-[dragging=true]:bg-accent/50 dark:bg-background">
-        <ComposerAttachments />
-        <ComposerPrimitive.Input
-          placeholder={t('thread.composer.placeholder')}
-          className="aui-composer-input mb-1 max-h-32 min-h-16 w-full resize-none bg-transparent px-3.5 pt-1.5 pb-3 text-base outline-none placeholder:text-muted-foreground focus-visible:ring-0"
-          rows={1}
-          autoFocus
-          aria-label="Message input"
-        />
-        <ComposerAction />
-      </ComposerPrimitive.AttachmentDropzone>
-    </ComposerPrimitive.Root>
-  );
-};
-
 const ComposerAction: FC = () => {
   return (
     <div className="aui-composer-action-wrapper relative mx-1 mt-2 mb-2 flex items-center justify-between">
@@ -250,7 +312,7 @@ const AssistantMessage: FC = () => {
           />
         </div>
 
-        {/* Loading State - only show if running, is last message, and no content yet */}
+
         {showThinking && (
           <div className="flex flex-col gap-2 mt-2">
             <ThinkingMessage />
