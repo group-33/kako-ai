@@ -35,10 +35,12 @@ class BOMItem(BaseModel):
             "Example: if '1.5 m' is listed, extract 1.5."
         )
     )
-    item_nr: Optional[str] = Field(
+    item_nr: str = Field(
         None,
         description=(
             "The unique identifier, part number, or order code for the item."
+            "Look for alphanumeric codes."
+            "Do not confuse this with the description."
         )
     )
     description: Optional[str] = Field(
@@ -46,10 +48,12 @@ class BOMItem(BaseModel):
         description="The full human-readable description text of the component."
     )
     unit: str = Field(
-        "pcs", 
+        None, 
         description=(
             "The unit of measurement (e.g., 'm', 'mm', 'kg', 'pcs'). "
-            "If no unit is explicitly written, default to 'pcs'."
+            "Look for: 'Stk', 'pc', 'pcs', 'm', 'mm', 'kg', 'l', 'm²'. "
+            "If the quantity is a length (e.g., profiles, tubes), the unit is likely 'm' or 'mm'. "
+            "Only default to 'pcs' if it is clearly a discrete countable item (like a socket or an insulating body)."
         )
     )
 
