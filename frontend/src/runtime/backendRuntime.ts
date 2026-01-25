@@ -1,5 +1,11 @@
+import { useMemo } from "react";
 import { useLocalRuntime } from "@assistant-ui/react";
-import type { ThreadAssistantMessagePart } from "@assistant-ui/react";
+import type {
+  Attachment,
+  CompleteAttachment,
+  PendingAttachment,
+  ThreadAssistantMessagePart,
+} from "@assistant-ui/react";
 import type { ReadonlyJSONObject } from "assistant-stream/utils";
 import { useChatStore } from "@/store/useChatStore";
 
@@ -12,56 +18,80 @@ const BACKEND_BASE_URL =
     .VITE_BACKEND_URL ?? "http://127.0.0.1:8000";
 
 export const useBackendRuntime = (threadIdParam?: string) => {
-  const { activeThreadId, threads, renameThread, modelId } = useChatStore();
+  const activeThreadId = useChatStore(state => state.activeThreadId);
   const threadId = threadIdParam ?? activeThreadId ?? "default";
+  const modelId = useChatStore(state => state.modelId);
 
-  // Get initial messages from store
-  const activeThread = threads.find((t) => t.id === threadId);
-  const initialMessages = activeThread?.messages || [];
+  // Fetch initial messages only when threadId changes to avoid reactive loops
+  const initialMessages = useMemo(() => {
+    return useChatStore.getState().threads.find(t => t.id === threadId)?.messages || [];
+  }, [threadId]);
 
-  const runtime = useLocalRuntime({
+  return useLocalRuntime({
     run: async function* ({ messages, abortSignal }) {
       const lastMessage = messages[messages.length - 1];
       const textPart = lastMessage?.content.find((part) => part.type === "text");
       const userText = textPart && "text" in textPart ? textPart.text.trim() : "";
+      const attachments = (lastMessage?.attachments ?? []) as ReadonlyArray<Attachment>;
+      const firstAttachment = attachments?.[0];
+      const file = firstAttachment?.file as File | undefined;
 
-      if (!userText) return;
-
-
+      if (!userText && !file) {
+        return;
+      }
 
       const userMessages = messages.filter(m => m.role === 'user');
-      if (userMessages.length === 1 && activeThread) {
-        const isDefaultTitle = activeThread.title.startsWith("New Chat") || activeThread.title.startsWith("Neuer Chat");
+      const currentThread = useChatStore.getState().threads.find((t) => t.id === threadId);
+      if (userMessages.length === 1 && currentThread && userText) {
+        const isDefaultTitle = currentThread.title.startsWith("New Chat") || currentThread.title.startsWith("Neuer Chat");
         if (isDefaultTitle) {
-          fetch(`${BACKEND_BASE_URL}/chat/title`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              user_query: userText,
-              model_id: modelId
-            })
-          })
-            .then(res => res.json())
-            .then(data => {
-              if (data.title && threadId) {
-                renameThread(threadId, data.title);
+          try {
+            const titleResponse = await fetch(`${BACKEND_BASE_URL}/chat/title`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                user_query: userText,
+                model_id: modelId,
+              }),
+              signal: abortSignal,
+            });
+            if (titleResponse.ok) {
+              const data = await titleResponse.json();
+              if (data?.title) {
+                await useChatStore.getState().renameThread(currentThread.id, data.title);
               }
-            })
-            .catch(e => console.error("Title gen failed", e));
+            }
+          } catch {
+            // Title generation failed, but we don't log it anymore.
+          }
         }
       }
 
-
       let response: Response;
       try {
-        response = await fetch(`${BACKEND_BASE_URL}/agent`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        let body: BodyInit;
+        const headers: HeadersInit = {};
+
+        if (file) {
+          const formData = new FormData();
+          formData.append("user_query", userText);
+          formData.append("thread_id", threadId);
+          if (modelId) formData.append("model_id", modelId);
+          formData.append("file", file);
+          body = formData;
+        } else {
+          headers["Content-Type"] = "application/json";
+          body = JSON.stringify({
             user_query: userText,
             thread_id: threadId,
             model_id: modelId,
-          }),
+          });
+        }
+
+        response = await fetch(`${BACKEND_BASE_URL}/agent`, {
+          method: "POST",
+          headers,
+          body,
           signal: abortSignal,
         });
       } catch (error) {
@@ -118,8 +148,26 @@ export const useBackendRuntime = (threadIdParam?: string) => {
         yield { content };
       }
     },
-  }, { initialMessages }
-  );
-
-  return runtime;
+  }, {
+    initialMessages,
+    adapters: {
+      attachments: {
+        accept: "*/*",
+        add: async ({ file }: { file: File }) => ({
+          id: Math.random().toString(36).slice(2),
+          file,
+          type: file.type.startsWith("image/") ? "image" : "file",
+          status: { type: "requires-action", reason: "composer-send" } as const,
+          name: file.name,
+          contentType: file.type,
+        }),
+        remove: async () => { },
+        send: async (attachment: PendingAttachment): Promise<CompleteAttachment> => ({
+          ...attachment,
+          status: { type: "complete" },
+          content: [],
+        }),
+      },
+    },
+  });
 };

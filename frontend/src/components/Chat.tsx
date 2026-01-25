@@ -5,24 +5,24 @@ import { ProcurementOptionsTool } from "./tools/ProcurementOptionsTool";
 import { CostAnalysisTool } from "./tools/CostAnalysisTool";
 import { useBackendRuntime } from "@/runtime/backendRuntime";
 
-import { useThread } from "@assistant-ui/react";
-import { useEffect } from "react";
+import { useAssistantState } from "@assistant-ui/react";
+import { useEffect, memo } from "react";
 import { useChatStore } from "@/store/useChatStore";
 
 function PersistenceObserver({ threadId }: { threadId: string }) {
-  const { messages } = useThread();
-  const { updateThreadMessages } = useChatStore();
+  const messages = useAssistantState(({ thread }) => thread.messages);
+  const updateThreadMessages = useChatStore(state => state.updateThreadMessages);
 
   useEffect(() => {
     if (threadId && messages.length > 0) {
-      updateThreadMessages(threadId, messages as any[]);
+      void updateThreadMessages(threadId, messages);
     }
   }, [messages, threadId, updateThreadMessages]);
 
   return null;
 }
 
-export function Chat({ threadId }: { threadId: string }) {
+export const Chat = memo(function Chat({ threadId, initialDraft }: { threadId: string; initialDraft?: string }) {
   const runtime = useBackendRuntime(threadId);
 
   return (
@@ -33,8 +33,8 @@ export function Chat({ threadId }: { threadId: string }) {
         <ProcurementOptionsTool />
         <CostAnalysisTool />
 
-        <Thread />
+        <Thread threadId={threadId} initialDraft={initialDraft} />
       </div>
     </AssistantRuntimeProvider>
   );
-}
+});

@@ -11,6 +11,7 @@ and assists in finding optimal procurement options.
 - **Authentication**: Client-side auth with user profiles.
 - **Internationalization**: Full English/German support.
 - **Dynamic Configuration**: Switch models on the fly.
+- **Draft Quick Actions**: Dashboard actions open localized draft prompts before sending.
 
 ## Layout
 

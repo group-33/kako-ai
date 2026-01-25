@@ -38,16 +38,12 @@ const ProcurementTable = ({ data }: { data: ProcurementData }) => {
 const ItemCard = ({ item }: { item: ProcurementItem }) => {
     const [sortBy, setSortBy] = useState<SortKey>("price");
     const [selectedKey, setSelectedKey] = useState<string | null>(null);
-
-    // Find best values for badges
     const bestPrice = item.options.length
         ? Math.min(...item.options.map((o) => o.price_per_unit))
         : 0;
     const bestDelivery = item.options.length
         ? Math.min(...item.options.map((o) => o.delivery_time_days))
         : 0;
-
-    // Sort options
     const sortedOptions = useMemo(() => {
         return [...item.options].sort((a, b) => {
             if (sortBy === "price") {
@@ -85,7 +81,6 @@ const ItemCard = ({ item }: { item: ProcurementItem }) => {
 
     return (
         <div className="border rounded-xl overflow-hidden bg-white shadow-sm font-sans ring-1 ring-slate-200">
-            {/* Header */}
             <div className="bg-slate-50 px-4 py-3 border-b flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Package size={18} className="text-purple-600" />
@@ -94,7 +89,6 @@ const ItemCard = ({ item }: { item: ProcurementItem }) => {
                     </h3>
                 </div>
 
-                {/* Sort Controls */}
                 <div className="flex bg-white rounded-lg p-1 border shadow-sm">
                     <button
                         onClick={() => setSortBy("price")}
@@ -117,11 +111,9 @@ const ItemCard = ({ item }: { item: ProcurementItem }) => {
                 </div>
             </div>
 
-            {/* Options Grid */}
             <div className="divide-y relative">
                 {sortedOptions.map((option, idx) => {
                     const optionKey = buildOptionKey(option);
-                    // Determine badges
                     const isBestPrice = option.price_per_unit === bestPrice;
                     const isFastest = option.delivery_time_days === bestDelivery;
                     const isSelected = selectedKey === optionKey;
@@ -137,7 +129,6 @@ const ItemCard = ({ item }: { item: ProcurementItem }) => {
                                     : "border-l-transparent hover:bg-slate-50"
                             )}
                         >
-                            {/* Left Section: Supplier & Badges */}
                             <div className="flex flex-col gap-1.5 flex-1">
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <span className="font-bold text-slate-900 text-sm">{option.supplier}</span>
@@ -165,8 +156,6 @@ const ItemCard = ({ item }: { item: ProcurementItem }) => {
                                     <span>Delivery: <strong className="text-slate-700">{option.delivery_time_days} days</strong></span>
                                 </div>
                             </div>
-
-                            {/* Right Section: Price & CTA */}
                             <div className="flex items-center justify-between sm:justify-end gap-6 min-w-[140px]">
                                 <div className="text-right">
                                     <div className="font-bold text-slate-900 text-base">
@@ -189,7 +178,6 @@ const ItemCard = ({ item }: { item: ProcurementItem }) => {
                 })}
             </div>
 
-            {/* Footer / Selection Action */}
             {selectedOption && (
                 <div className="bg-purple-50 px-4 py-2 border-t border-purple-100 flex justify-between items-center animate-in slide-in-from-bottom-2 fade-in">
                     <span className="text-xs text-purple-800 font-medium">

@@ -19,7 +19,7 @@ Built with modern web technologies:
 
 ### 🔐 Authentication & User Profile
 - **Client-Side Auth:** Secure-feel login system (mocked for MVP) with persistent session.
-- **Login Page:** Includes "Sign Up" toggle and immediate language switching.
+- **Login Page:** Includes "Sign Up" toggle, legal links (Terms/Privacy), and immediate language switching.
 - **Profile Management:** Edit display name/email and log out via the Profile page.
 - **Protected Routes:** Automatic redirection to `/login` for unauthenticated access.
 
@@ -29,6 +29,8 @@ Built with modern web technologies:
 - **Dynamic Naming:** New chats are automatically renamed based on the context of the first message (using the selected LLM).
 - **Thread Isolation:** Robust state management ensures messages don't bleed between threads.
 - **Localized Chat Config:** Supports localized naming sequences (e.g., "New Chat" vs "Neuer Chat").
+- **Draft Workflows:** Dashboard quick actions open a new chat with a localized draft prompt for review before sending.
+- **Draft Persistence:** Per-thread drafts are restored when you navigate back, and empty threads without drafts/messages are cleaned up.
 
 ### ⚙️ Configuration & Personalization
 - **Model Selection:** Dynamic configuration page to switch between available LLMs (Gemini 2.5 Flash, Pro, etc.).

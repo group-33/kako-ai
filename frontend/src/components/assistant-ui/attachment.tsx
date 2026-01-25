@@ -1,6 +1,6 @@
 "use client";
 
-import { PropsWithChildren, useEffect, useState, type FC } from "react";
+import { PropsWithChildren, useEffect, useMemo, useState, type FC } from "react";
 import { XIcon, PlusIcon, FileText } from "lucide-react";
 import {
   AttachmentPrimitive,
@@ -26,21 +26,25 @@ import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button
 import { cn } from "@/lib/utils";
 
 const useFileSrc = (file: File | undefined) => {
-  const [src, setSrc] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (!file) {
-      setSrc(undefined);
-      return;
+  const src = useMemo(() => {
+    if (!file || !(file instanceof Blob)) {
+      return undefined;
     }
 
-    const objectUrl = URL.createObjectURL(file);
-    setSrc(objectUrl);
-
-    return () => {
-      URL.revokeObjectURL(objectUrl);
-    };
+    try {
+      return URL.createObjectURL(file);
+    } catch (e) {
+      console.warn("Failed to create object URL", e);
+      return undefined;
+    }
   }, [file]);
+
+  useEffect(() => {
+    if (!src) return undefined;
+    return () => {
+      URL.revokeObjectURL(src);
+    };
+  }, [src]);
 
   return src;
 };
@@ -141,9 +145,9 @@ const AttachmentUI: FC = () => {
         return "Document";
       case "file":
         return "File";
-      default:
-        const _exhaustiveCheck: never = type;
-        throw new Error(`Unknown attachment type: ${_exhaustiveCheck}`);
+      default: {
+        throw new Error(`Unknown attachment type: ${type}`);
+      }
     }
   });
 
@@ -153,7 +157,7 @@ const AttachmentUI: FC = () => {
         className={cn(
           "aui-attachment-root relative",
           isImage &&
-            "aui-attachment-root-composer only:[&>#attachment-tile]:size-24"
+          "aui-attachment-root-composer only:[&>#attachment-tile]:size-24"
         )}
       >
         <AttachmentPreviewDialog>
@@ -162,7 +166,7 @@ const AttachmentUI: FC = () => {
               className={cn(
                 "aui-attachment-tile size-14 cursor-pointer overflow-hidden rounded-[14px] border bg-muted transition-opacity hover:opacity-75",
                 isComposer &&
-                  "aui-attachment-tile-composer border-foreground/20"
+                "aui-attachment-tile-composer border-foreground/20"
               )}
               role="button"
               id="attachment-tile"

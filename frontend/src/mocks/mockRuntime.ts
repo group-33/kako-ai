@@ -6,17 +6,9 @@ export const useMockRuntime = () => {
         run: async function* ({ messages, abortSignal }) {
             const lastMessage = messages[messages.length - 1];
             if (!lastMessage || lastMessage.content[0]?.type !== "text") return;
-
-            // Alles in Kleinbuchstaben umwandeln für den Vergleich
             const userText = lastMessage.content[0].text.toLowerCase();
-
-            // Simuliere Nachdenken
             await new Promise((resolve) => setTimeout(resolve, 600));
             if (abortSignal.aborted) return;
-
-            // --- LOGIK WEICHE ---
-
-            // TRIGGER: Reagiert auf "stückliste"
             if (userText.includes("stückliste")) {
                 const text =
                     "Verstanden. Ich habe die technischen Daten analysiert. Hier ist die vorläufige Stückliste sowie passende Beschaffungsoptionen für die kritischen Komponenten:";
@@ -27,8 +19,6 @@ export const useMockRuntime = () => {
                 }
 
                 await new Promise((resolve) => setTimeout(resolve, 300));
-
-                // NEU: Versuche echte BOM-Extraktion über das Backend, falls ein Pfad erkennbar ist
                 const pathMatch = lastMessage.content[0].text.match(
                     /(?:\/[^\s]+)+\.(?:png|jpg|jpeg|pdf)/i,
                 );
@@ -76,7 +66,6 @@ export const useMockRuntime = () => {
                             }
                         }
                     } catch {
-                        // Bei Fehler einfach auf Mock-Daten zurückfallen
                     }
                 }
 
@@ -99,7 +88,6 @@ export const useMockRuntime = () => {
                     ],
                 };
             }
-            // TRIGGER: Reagiert auf "kosten", "analyse", "chart"
             else if (userText.includes("kosten") || userText.includes("analyse") || userText.includes("chart")) {
                 const text = "Hier ist die Kostenanalyse basierend auf den aktuellen Komponentenpreisen:";
 
@@ -123,7 +111,6 @@ export const useMockRuntime = () => {
                 };
             }
             else {
-                // FALLBACK
                 const response =
                     "Ich bin bereit. Du kannst 'Stückliste' oder 'Kostenanalyse' anfordern.";
                 for (let i = 0; i < response.length; i += 3) {

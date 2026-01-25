@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import dspy
 
-from backend.src.tools.bom_extraction.bom_tool import perform_bom_extraction
+from backend.src.tools.bom_extraction.bom_tool import perform_bom_extraction, perform_bom_extraction_upload
 from backend.src.tools.demand_analysis.feasibility import (
     run_structured_feasibility_check,
 )
@@ -49,6 +49,7 @@ class KakoAgentSignature(dspy.Signature):
 
 TOOLBOX = [
     perform_bom_extraction,
+    perform_bom_extraction_upload,
     #Demand analysis
     bom_check,
     perform_bom_matching,
