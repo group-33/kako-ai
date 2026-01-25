@@ -2,6 +2,7 @@ import { makeAssistantToolUI } from "@assistant-ui/react";
 import { Box, Save, ChevronDown, ChevronRight, Download } from "lucide-react";
 import { useState } from "react";
 import { exportBOMsFromMessage } from "@/lib/excelExport";
+import { useTranslation } from "react-i18next";
 
 const BACKEND_BASE_URL =
   (import.meta as ImportMeta & { env: { VITE_BACKEND_URL?: string } }).env
@@ -25,6 +26,7 @@ type BOMTableArgs = {
 };
 
 const BOMTable = ({ args }: { args: BOMTableArgs }) => {
+  const { t } = useTranslation();
   const [data, setData] = useState(args.rows);
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -95,7 +97,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
         >
           {isOpen ? <ChevronDown size={16} className="text-slate-400" /> : <ChevronRight size={16} className="text-slate-400" />}
           <Box size={16} className="text-sky-500" />
-          <span>Stückliste bearbeiten</span>
+          <span>{t("bomTable.title")}</span>
         </button>
 
         <div className="flex items-center gap-3">
@@ -105,14 +107,14 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
               exportBOMsFromMessage(args.thread_id, args.bom_id);
             }}
             className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-green-400 transition-colors px-2 py-1 hover:bg-slate-800/50 rounded"
-            title="Download as Excel"
+            title={t("bomTable.exportTitle")}
           >
             <Download size={14} />
-            <span>Export</span>
+            <span>{t("bomTable.export")}</span>
           </button>
 
           <span className="text-[10px] uppercase tracking-wider font-bold text-sky-400 bg-sky-950/30 px-2 py-1 rounded border border-sky-500/20">
-            Full Edit
+            {t("bomTable.fullEdit")}
           </span>
         </div>
       </div>
@@ -125,11 +127,11 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
               <table className="w-full text-sm text-left whitespace-nowrap">
                 <thead className="bg-slate-950/30 text-slate-400 border-b border-slate-800">
                   <tr>
-                    <th className="px-3 py-2 font-medium w-12">Pos.</th>
-                    <th className="px-3 py-2 font-medium w-24">Art.Nr.</th>
-                    <th className="px-3 py-2 font-medium">Beschreibung</th>
-                    <th className="px-3 py-2 font-medium w-20 text-right">Menge</th>
-                    <th className="px-3 py-2 font-medium w-16">Einh.</th>
+                    <th className="px-3 py-2 font-medium w-12">{t("bomTable.headers.position")}</th>
+                    <th className="px-3 py-2 font-medium w-24">{t("bomTable.headers.itemNumber")}</th>
+                    <th className="px-3 py-2 font-medium">{t("bomTable.headers.description")}</th>
+                    <th className="px-3 py-2 font-medium w-20 text-right">{t("bomTable.headers.quantity")}</th>
+                    <th className="px-3 py-2 font-medium w-16">{t("bomTable.headers.unit")}</th>
                   </tr>
                 </thead>
                 <tbody className="text-slate-300">
@@ -166,7 +168,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                           step="0.1"
                           value={row.quantity}
                           onChange={(e) => handleFieldChange(i, "quantity", e.target.value)}
-                          className="w-16 text-right bg-slate-950/50 border border-slate-700 rounded px-1.5 py-0.5 text-slate-200 focus:ring-1 focus:ring-sky-500 outline-none"
+                          className="bom-qty-input w-16 text-right bg-slate-950/50 border border-slate-700 rounded px-1.5 py-0.5 text-slate-200 focus:ring-1 focus:ring-sky-500 outline-none"
                         />
                       </td>
 
@@ -185,7 +187,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
 
             <div className="p-3 bg-slate-950/30 border-t border-slate-800 flex items-center justify-between">
               <span className="text-xs text-slate-500">
-                {data.length} Positionen
+                {t("bomTable.positions", { count: data.length })}
               </span>
 
               <button
@@ -196,7 +198,11 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                   : "bg-blue-600 text-white hover:bg-blue-500 shadow-blue-900/20 disabled:opacity-50 disabled:cursor-wait"
                   }`}
               >
-                {isSaving ? "Speichert..." : isSaved ? "Gespeichert!" : "Änderungen übernehmen"}
+                {isSaving
+                  ? t("bomTable.save.saving")
+                  : isSaved
+                    ? t("bomTable.save.saved")
+                    : t("bomTable.save.apply")}
                 {!isSaved && !isSaving && <Save size={12} />}
                 {isSaving && <div className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
               </button>
@@ -204,18 +210,20 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
 
             {saveError && (
               <div className="px-4 py-2 text-xs text-red-700 bg-red-50 border-t border-red-500/20">
-                Fehler: {saveError}
+                {t("bomTable.save.error")}: {saveError}
               </div>
             )}
           </div>
 
           {args.source_document && (
             <div className="w-full lg:w-1/3 border-t lg:border-t-0 lg:border-l border-slate-800 bg-slate-950/20 p-4 flex flex-col gap-2">
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Quelldatei</span>
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                {t("bomTable.sourceFile")}
+              </span>
               <div className="relative group rounded overflow-hidden border border-slate-800 bg-slate-950 shadow-inner">
                 <img
                   src={args.source_document.startsWith('/') ? `${BACKEND_BASE_URL}${args.source_document}` : args.source_document}
-                  alt="Source Drawing"
+                  alt={t("bomTable.sourceAlt")}
                   className="w-full h-auto object-contain max-h-[400px]"
                 />
                 <a
@@ -224,7 +232,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                   rel="noreferrer"
                   className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-medium transition-opacity"
                 >
-                  Original anzeigen
+                  {t("bomTable.viewOriginal")}
                 </a>
               </div>
             </div>

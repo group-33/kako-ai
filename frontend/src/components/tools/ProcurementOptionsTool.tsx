@@ -2,6 +2,7 @@ import { makeAssistantToolUI } from "@assistant-ui/react";
 import { ShoppingCart, Package, Check, Trophy, Timer } from "lucide-react";
 import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 type SupplierOption = {
     supplier: string;
@@ -36,6 +37,7 @@ const ProcurementTable = ({ data }: { data: ProcurementData }) => {
 };
 
 const ItemCard = ({ item }: { item: ProcurementItem }) => {
+    const { t, i18n } = useTranslation();
     const [sortBy, setSortBy] = useState<SortKey>("price");
     const [selectedKey, setSelectedKey] = useState<string | null>(null);
     const bestPrice = item.options.length
@@ -73,11 +75,17 @@ const ItemCard = ({ item }: { item: ProcurementItem }) => {
                     </div>
                 </div>
                 <div className="p-4 text-sm text-slate-500">
-                    No supplier options available.
+                    {t("procurement.noOptions")}
                 </div>
             </div>
         );
     }
+
+    const formatCurrency = (value: number, currency: string) =>
+        new Intl.NumberFormat(i18n.language, {
+            style: "currency",
+            currency: currency || "EUR",
+        }).format(value);
 
     return (
         <div className="border rounded-xl overflow-hidden bg-white shadow-sm font-sans ring-1 ring-slate-200">
@@ -97,7 +105,7 @@ const ItemCard = ({ item }: { item: ProcurementItem }) => {
                             sortBy === "price" ? "bg-purple-100 text-purple-700" : "text-slate-500 hover:bg-slate-50"
                         )}
                     >
-                        Preis
+                        {t("procurement.sort.price")}
                     </button>
                     <button
                         onClick={() => setSortBy("delivery")}
@@ -106,7 +114,7 @@ const ItemCard = ({ item }: { item: ProcurementItem }) => {
                             sortBy === "delivery" ? "bg-purple-100 text-purple-700" : "text-slate-500 hover:bg-slate-50"
                         )}
                     >
-                        Lieferzeit
+                        {t("procurement.sort.delivery")}
                     </button>
                 </div>
             </div>
@@ -133,36 +141,45 @@ const ItemCard = ({ item }: { item: ProcurementItem }) => {
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <span className="font-bold text-slate-900 text-sm">{option.supplier}</span>
                                     {option.in_stock ? (
-                                        <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-medium">Available</span>
+                                        <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-medium">
+                                            {t("procurement.inStock")}
+                                        </span>
                                     ) : (
-                                        <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-medium">Out of stock</span>
+                                        <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-medium">
+                                            {t("procurement.outOfStock")}
+                                        </span>
                                     )}
 
                                     {isBestPrice && (
                                         <span className="flex items-center gap-1 text-[10px] bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded font-medium ring-1 ring-yellow-200">
-                                            <Trophy size={10} /> Best Price
+                                            <Trophy size={10} /> {t("procurement.bestPrice")}
                                         </span>
                                     )}
 
                                     {isFastest && (
                                         <span className="flex items-center gap-1 text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-medium ring-1 ring-blue-200">
-                                            <Timer size={10} /> Fastest
+                                            <Timer size={10} /> {t("procurement.fastest")}
                                         </span>
                                     )}
                                 </div>
 
                                 <div className="flex flex-col gap-0.5 text-xs text-slate-500">
-                                    <span>Part: {option.part_number}</span>
-                                    <span>Delivery: <strong className="text-slate-700">{option.delivery_time_days} days</strong></span>
+                                    <span>{t("procurement.part")}: {option.part_number}</span>
+                                    <span>
+                                        {t("procurement.delivery")}:{" "}
+                                        <strong className="text-slate-700">
+                                            {t("procurement.days", { count: option.delivery_time_days })}
+                                        </strong>
+                                    </span>
                                 </div>
                             </div>
                             <div className="flex items-center justify-between sm:justify-end gap-6 min-w-[140px]">
                                 <div className="text-right">
                                     <div className="font-bold text-slate-900 text-base">
-                                        {(option.price_per_unit).toLocaleString('de-DE', { style: 'currency', currency: option.currency })}
+                                        {formatCurrency(option.price_per_unit, option.currency)}
                                     </div>
                                     <div className="text-[10px] text-slate-400">
-                                        per unit (min. {option.min_order_quantity})
+                                        {t("procurement.perUnit", { min: option.min_order_quantity })}
                                     </div>
                                 </div>
 
@@ -181,7 +198,7 @@ const ItemCard = ({ item }: { item: ProcurementItem }) => {
             {selectedOption && (
                 <div className="bg-purple-50 px-4 py-2 border-t border-purple-100 flex justify-between items-center animate-in slide-in-from-bottom-2 fade-in">
                     <span className="text-xs text-purple-800 font-medium">
-                        Selected: {selectedOption.supplier}
+                        {t("procurement.selected", { supplier: selectedOption.supplier })}
                     </span>
                     <a
                         href={selectedOption.link}
@@ -190,7 +207,7 @@ const ItemCard = ({ item }: { item: ProcurementItem }) => {
                         className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all shadow-sm"
                     >
                         <ShoppingCart size={14} />
-                        Order
+                        {t("procurement.order")}
                     </a>
                 </div>
             )}

@@ -132,6 +132,52 @@
             "thinking": "Thinking..."
         }
     },
+    "bomTable": {
+        "title": "Edit BOM",
+        "exportTitle": "Download as Excel",
+        "export": "Export",
+        "fullEdit": "Full Edit",
+        "headers": {
+            "position": "Pos.",
+            "itemNumber": "Item No.",
+            "description": "Description",
+            "quantity": "Quantity",
+            "unit": "Unit"
+        },
+        "positions_one": "{{count}} position",
+        "positions_other": "{{count}} positions",
+        "save": {
+            "saving": "Saving...",
+            "saved": "Saved!",
+            "apply": "Apply changes",
+            "error": "Error"
+        },
+        "sourceFile": "Source file",
+        "sourceAlt": "Source drawing",
+        "viewOriginal": "View original"
+    },
+    "procurement": {
+        "noOptions": "No supplier options available.",
+        "sort": {
+            "price": "Price",
+            "delivery": "Delivery time"
+        },
+        "inStock": "Available",
+        "outOfStock": "Out of stock",
+        "bestPrice": "Best price",
+        "fastest": "Fastest",
+        "part": "Part",
+        "delivery": "Delivery",
+        "days_one": "{{count}} day",
+        "days_other": "{{count}} days",
+        "perUnit": "per unit (min. {{min}})",
+        "selected": "Selected: {{supplier}}",
+        "order": "Order"
+    },
+    "costAnalysis": {
+        "title": "Cost analysis",
+        "footer": "The analysis is based on the currently selected supplier options."
+    },
     "attachment": {
         "download": "Download"
     }
