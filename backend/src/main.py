@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 import uuid
-import re
 from datetime import datetime, timezone
 
 import dspy
 from fastapi import FastAPI, Depends, Form, Request, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-import shutil
+from fastapi.staticfiles import StaticFiles
 import tempfile
 import os
 
@@ -30,18 +29,11 @@ from backend.src.utils import (
     compute_bom_id,
     apply_bom_update,
 )
-from backend.src.tools.bom_extraction.bom_tool import perform_bom_extraction
 
 # --- Configure LLM globally ---
 dspy.configure(lm=GEMINI_2_5_FLASH)
 
 app = FastAPI(title="KakoAI")
-
-from fastapi.staticfiles import StaticFiles
-import tempfile
-import os
-
-# ... (existing imports)
 
 # Allow local frontend (Vite) to call the API from the browser.
 app.add_middleware(
@@ -108,17 +100,16 @@ async def run_agent(
     """
     
     bom_update = None
-    payload = None
 
     # Handle JSON fallback if CONTENT_TYPE is application/json
-    if request.headers.get("content-type") == "application/json":
+    if request.headers.get("content-type", "").startswith("application/json"):
         try:
             payload = AgentRequest.model_validate(await request.json())
             user_query = payload.user_query
             thread_id = payload.thread_id
             bom_update = payload.bom_update
             model_id = payload.model_id
-        except Exception as exc:
+        except Exception:
              pass # Will fall through to form check
 
     if user_query is None:
@@ -127,26 +118,23 @@ async def run_agent(
             detail="Missing `user_query` (expected form field or JSON body).",
         )
 
-    # Handle File Upload
     file_path = None
     if file:
         try:
-            # Create a temporary file with the correct extension
-            suffix = os.path.splitext(file.filename)[1] if file.filename else ""
+            suffix = os.path.splitext(file.filename or "")[1]
             with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-                shutil.copyfileobj(file.file, tmp)
                 file_path = tmp.name
+            with open(file_path, "wb") as buffer:
+                buffer.write(file.file.read())
             
-            print(f"📁 Received file: {file.filename} -> {file_path}")
-            
-            # Injection: Append the file location to the user query so the agent knows about it.
-            user_query += f" (I have attached a file at path: '{file_path}'. Please use this file for the request.)"
+            # Injection: Append the file location to the user query so the agent can use the path directly.
+            user_query += f" (Attached file path: '{file_path}'. Use this path for BOM extraction.)"
             
         except Exception as e:
-            print(f"Error saving uploaded file: {e}")
-            # Non-blocking error? Or fail? Let's just log for now.
-    else:
-        print("--- ⚠️  No file received in request ---")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to save uploaded file: {e}",
+            )
 
     thread_key = thread_id or "default"
     history = _get_history_for_thread(thread_key)
@@ -177,25 +165,8 @@ async def run_agent(
                 blocks=[TextBlock(content="BOM saved.")],
             )
 
-    # Detect file path tokens so we can fall back to BOM extraction if the agent doesn't call the tool.
-    file_match = file_path # Default to uploaded file
-    
-    # Also Check regex for OTHER paths in text if no upload, or in addition
-    m = re.search(r"(?P<path>\S+?\.(?:png|jpg|jpeg|pdf))", user_query, flags=re.IGNORECASE)
-    if m:
-        # If regex finds a path, it might be the one we just injected OR a different one.
-        # If we injected one, it will be found here.
-        candidate = m.group("path")
-        # specific check if regex found something else
-        if not file_match:
-             file_match = candidate
-
-
-
     # Select LM based on request or default
-    selected_lm = GEMINI_2_5_FLASH  # Default
-    if payload and payload.model_id:
-        selected_lm = AVAILABLE_MODELS.get(payload.model_id, GEMINI_2_5_FLASH)
+    selected_lm = AVAILABLE_MODELS.get(model_id, GEMINI_2_5_FLASH)
     
     # Run the agent with the selected LM context
     with dspy.context(lm=selected_lm):
@@ -207,37 +178,35 @@ async def run_agent(
     if content:
         blocks.append(TextBlock(content=content))
 
-    # Convert tool outputs into UI blocks (lightweight adapter) using DSPy's recorded trajectory.
-    saw_bom = False
+    # Convert tool outputs into UI blocks using DSPy's recorded trajectory.
     trajectory = getattr(prediction, "trajectory", None)
+    procurement_tools = {
+        "filter_sellers_by_shipping",
+        "sort_and_filter_by_best_price",
+        "search_part_by_mpn",
+        "find_alternatives",
+        "optimize_order",
+    }
     for tool_name, tool_args, observation in extract_tool_calls_from_trajectory(trajectory):
-        if tool_name != "perform_bom_extraction":
-            if tool_name in {
-                "filter_sellers_by_shipping",
-                "sort_and_filter_by_best_price",
-                "search_part_by_mpn",
-                "find_alternatives",
-                "optimize_order",
-            }:
-                procurement_block = build_procurement_tool_block(observation)
-                if procurement_block is not None:
-                    blocks.append(procurement_block)
-                cost_block = build_cost_analysis_tool_block(observation)
-                if cost_block is not None:
-                    blocks.append(cost_block)
+        if tool_name in procurement_tools:
+            procurement_block = build_procurement_tool_block(observation)
+            if procurement_block is not None:
+                blocks.append(procurement_block)
+            cost_block = build_cost_analysis_tool_block(observation)
+            if cost_block is not None:
+                blocks.append(cost_block)
             continue
-        bom: BillOfMaterials | None = None
-        if isinstance(observation, BillOfMaterials):
-            bom = observation
-        elif isinstance(observation, dict):
+        if tool_name != "perform_bom_extraction":
+            continue
+        bom = observation if isinstance(observation, BillOfMaterials) else None
+        if bom is None and isinstance(observation, dict):
             try:
                 bom = BillOfMaterials.model_validate(observation)
             except Exception:
-                bom = None
+                pass
         if bom is None:
             continue
 
-        saw_bom = True
         source = tool_args.get("file_path") or tool_args.get("filename")
         bom_id = compute_bom_id(bom, source_document=source)
         app.state.boms[thread_key] = {"bom_id": bom_id, "bom": bom, "source_document": source}
@@ -245,19 +214,6 @@ async def run_agent(
         blocks.append(
             build_bom_tool_block(bom, source_document=source, bom_id=bom_id, thread_id=thread_key)
         )
-
-    # Fallback: if query included a file path, but the agent didn't call the BOM tool.
-    if file_match and not saw_bom:
-        result = perform_bom_extraction(file_match)
-        if isinstance(result, BillOfMaterials):
-            bom_id = compute_bom_id(result, source_document=file_match)
-            app.state.boms[thread_key] = {"bom_id": bom_id, "bom": result, "source_document": file_match}
-            append_to_history(history, user_query="__BOM_EXTRACTED__", process_result=result.model_dump_json())
-            blocks.append(
-                build_bom_tool_block(result, source_document=file_match, bom_id=bom_id, thread_id=thread_key)
-            )
-        else:
-            blocks.append(TextBlock(content=str(result)))
 
     append_to_history(history, user_query=user_query, process_result=content)
     return AgentResponse(
@@ -295,6 +251,7 @@ async def generate_chat_title(request: AgentRequest):
 def get_available_models() -> dict:
     """Return list of available LLMs for configuration."""
     return {"models": MODEL_OPTIONS}
+
 
 @app.get("/health")
 def service_health() -> dict:

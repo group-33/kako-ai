@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import dspy
 
-from backend.src.tools.bom_extraction.bom_tool import perform_bom_extraction, perform_bom_extraction_upload
+from backend.src.tools.bom_extraction.bom_tool import perform_bom_extraction
 from backend.src.tools.demand_analysis.feasibility import (
     run_structured_feasibility_check,
 )
@@ -43,14 +43,13 @@ class KakoAgentSignature(dspy.Signature):
         desc="Conversation history for this thread; use it to maintain context across turns."
     )
     process_result: str = dspy.OutputField(
-        desc="Natural-language summary. REQUIRED: If you extracted a BOM, just say 'I have extracted the BOM information.' Do NOT list the items in the text response."
+        desc="Natural-language summary. Avoid repeating full structured outputs in text."
     )
 
 
 TOOLBOX = [
     perform_bom_extraction,
-    perform_bom_extraction_upload,
-    #Demand analysis
+    # demand analysis
     bom_check,
     perform_bom_matching,
     run_full_feasibility_analysis,

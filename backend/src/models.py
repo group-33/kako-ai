@@ -55,7 +55,6 @@ class BOMItem(BaseModel):
 
 class BillOfMaterials(BaseModel):
     items: List[BOMItem] = Field(description="All component line items that make up the BOM.")
-# --- API response models (backend -> frontend) --------------------------------
 
 
 class TextBlock(BaseModel):
