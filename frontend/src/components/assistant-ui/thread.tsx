@@ -138,23 +138,33 @@ import { MessageProvider } from "@assistant-ui/react";
 const VirtualMessageList: FC = () => {
   const messages = useAssistantState((state) => state.thread.messages);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const lastMessageId = messages[messages.length - 1]?.id;
+  const isAtBottomRef = useRef(true);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      requestAnimationFrame(() => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
-      });
+    const element = scrollRef.current;
+    if (!element) return;
+
+    const onScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = element;
+      const distanceToBottom = scrollHeight - scrollTop - clientHeight;
+      isAtBottomRef.current = distanceToBottom < 50;
+    };
+
+    element.addEventListener("scroll", onScroll);
+    return () => element.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (scrollRef.current && isAtBottomRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [lastMessageId, messages.length]);
+  }, [messages]);
 
   return (
     <div
       ref={scrollRef}
       className="w-full h-full overflow-y-auto px-4"
-      style={{ scrollBehavior: 'smooth' }}
+      style={{ overflowAnchor: "none", scrollBehavior: "smooth" }}
     >
       <div className="flex flex-col gap-5 pt-4 pb-1">
         {messages.map((message, index) => {
@@ -199,6 +209,9 @@ export const Thread: FC<{ threadId: string; initialDraft?: string }> = ({ thread
 
         <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mx-auto mt-2 flex w-full max-w-(--thread-max-width) flex-col gap-4 overflow-visible rounded-t-3xl bg-[#090e20] pb-4 md:pb-6">
           <ThreadScrollToBottom />
+          <ThreadPrimitive.If empty>
+            <ThreadSuggestions />
+          </ThreadPrimitive.If>
           <Composer threadId={threadId} initialDraft={initialDraft} />
         </ThreadPrimitive.ViewportFooter>
       </ThreadPrimitive.Viewport>
@@ -223,7 +236,7 @@ const ThreadScrollToBottom: FC = () => {
 const ThreadWelcome: FC = () => {
   const { t } = useTranslation();
   return (
-    <div className="aui-thread-welcome-root mx-auto my-auto flex w-full max-w-(--thread-max-width) grow flex-col">
+    <div className="aui-thread-welcome-root mx-auto my-auto flex w-full max-w-(--thread-max-width) grow flex-col pt-21">
       <div className="aui-thread-welcome-center flex w-full grow flex-col items-center justify-center">
         <div className="aui-thread-welcome-message flex size-full flex-col justify-center px-8">
           <div className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-2 animate-in font-semibold text-2xl duration-300 ease-out">
@@ -234,7 +247,6 @@ const ThreadWelcome: FC = () => {
           </div>
         </div>
       </div>
-      <ThreadSuggestions />
     </div>
   );
 };

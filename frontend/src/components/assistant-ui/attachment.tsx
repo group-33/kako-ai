@@ -1,7 +1,7 @@
 "use client";
 
 import { PropsWithChildren, useEffect, useMemo, useState, type FC } from "react";
-import { XIcon, PlusIcon, FileText } from "lucide-react";
+import { XIcon, PlusIcon, FileText, Download } from "lucide-react";
 import {
   AttachmentPrimitive,
   ComposerPrimitive,
@@ -24,10 +24,11 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 const useFileSrc = (file: File | undefined) => {
   const src = useMemo(() => {
-    if (!file || !(file instanceof Blob)) {
+    if (!file) {
       return undefined;
     }
 
@@ -49,19 +50,41 @@ const useFileSrc = (file: File | undefined) => {
   return src;
 };
 
+const isImageFile = (file: File) =>
+  file.type.startsWith("image/") ||
+  /\.(png|jpe?g|gif|webp|bmp|tiff?|heic|heif|svg)$/i.test(file.name);
+
 const useAttachmentSrc = () => {
   const { file, src } = useAssistantState(
     useShallow(({ attachment }): { file?: File; src?: string } => {
-      if (attachment.type !== "image") return {};
-      if (attachment.file) return { file: attachment.file };
-      const src = attachment.content?.filter((c) => c.type === "image")[0]
+      const imageSrc = attachment.content?.find((c) => c.type === "image")
         ?.image;
-      if (!src) return {};
-      return { src };
+      if (attachment.file && isImageFile(attachment.file)) {
+        return imageSrc ? { file: attachment.file, src: imageSrc } : { file: attachment.file };
+      }
+      return imageSrc ? { src: imageSrc } : {};
     })
   );
 
-  return useFileSrc(file) ?? src;
+  const fileSrc = useFileSrc(file);
+  const [fallbackSrc, setFallbackSrc] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (src || fileSrc || !file) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFallbackSrc(undefined);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => setFallbackSrc(reader.result as string);
+    reader.onerror = () => setFallbackSrc(undefined);
+    reader.readAsDataURL(file);
+
+    return () => reader.abort();
+  }, [file, fileSrc, src]);
+
+  return src ?? fileSrc ?? fallbackSrc;
 };
 
 type AttachmentPreviewProps = {
@@ -86,6 +109,7 @@ const AttachmentPreview: FC<AttachmentPreviewProps> = ({ src }) => {
 
 const AttachmentPreviewDialog: FC<PropsWithChildren> = ({ children }) => {
   const src = useAttachmentSrc();
+  const { t } = useTranslation();
 
   if (!src) return children;
 
@@ -104,6 +128,15 @@ const AttachmentPreviewDialog: FC<PropsWithChildren> = ({ children }) => {
         <div className="aui-attachment-preview relative mx-auto flex max-h-[80dvh] w-full items-center justify-center overflow-hidden bg-background">
           <AttachmentPreview src={src} />
         </div>
+        <a
+          href={src}
+          download
+          className="absolute bottom-4 right-4 inline-flex items-center gap-2 rounded-full bg-foreground/70 px-3 py-2 text-xs font-medium text-background shadow-lg transition hover:bg-foreground"
+          aria-label={t("attachment.download")}
+        >
+          <Download className="size-4" />
+          {t("attachment.download")}
+        </a>
       </DialogContent>
     </Dialog>
   );
@@ -117,11 +150,13 @@ const AttachmentThumb: FC = () => {
 
   return (
     <Avatar className="aui-attachment-tile-avatar h-full w-full rounded-none">
-      <AvatarImage
-        src={src}
-        alt="Attachment preview"
-        className="aui-attachment-tile-image object-cover"
-      />
+      {src ? (
+        <AvatarImage
+          src={src}
+          alt="Attachment preview"
+          className="aui-attachment-tile-image object-cover"
+        />
+      ) : null}
       <AvatarFallback delayMs={isImage ? 200 : 0}>
         <FileText className="aui-attachment-tile-fallback-icon size-8 text-muted-foreground" />
       </AvatarFallback>

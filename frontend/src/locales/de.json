@@ -131,5 +131,54 @@
         "message": {
             "thinking": "Denkt nach..."
         }
+    },
+    "bomTable": {
+        "title": "Stückliste bearbeiten",
+        "exportTitle": "Als Excel herunterladen",
+        "export": "Export",
+        "fullEdit": "Vollbearbeitung",
+        "headers": {
+            "position": "Pos.",
+            "itemNumber": "Art.Nr.",
+            "description": "Beschreibung",
+            "quantity": "Menge",
+            "unit": "Einh."
+        },
+        "positions_one": "{{count}} Position",
+        "positions_other": "{{count}} Positionen",
+        "save": {
+            "saving": "Speichert...",
+            "saved": "Gespeichert!",
+            "apply": "Änderungen übernehmen",
+            "error": "Fehler"
+        },
+        "sourceFile": "Quelldatei",
+        "sourceAlt": "Quelldatei",
+        "viewOriginal": "Original anzeigen"
+    },
+    "procurement": {
+        "noOptions": "Keine Lieferantenoptionen verfügbar.",
+        "sort": {
+            "price": "Preis",
+            "delivery": "Lieferzeit"
+        },
+        "inStock": "Verfügbar",
+        "outOfStock": "Nicht verfügbar",
+        "bestPrice": "Bester Preis",
+        "fastest": "Schnellste",
+        "part": "Teil",
+        "delivery": "Lieferung",
+        "days_one": "{{count}} Tag",
+        "days_other": "{{count}} Tage",
+        "perUnit": "pro Einheit (min. {{min}})",
+        "selected": "Ausgewählt: {{supplier}}",
+        "order": "Bestellen"
+    },
+    "costAnalysis": {
+        "title": "Kostenanalyse",
+        "footer": "Die Analyse basiert auf den aktuell ausgewählten Lieferantenoptionen."
+    },
+    "attachment": {
+        "download": "Herunterladen"
     }
 }

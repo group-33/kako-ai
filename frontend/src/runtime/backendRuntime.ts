@@ -21,6 +21,19 @@ export const useBackendRuntime = (threadIdParam?: string) => {
   const activeThreadId = useChatStore(state => state.activeThreadId);
   const threadId = threadIdParam ?? activeThreadId ?? "default";
   const modelId = useChatStore(state => state.modelId);
+  const isImageFile = (file: File) =>
+    file.type.startsWith("image/") ||
+    /\.(png|jpe?g|gif|webp|bmp|tiff?|heic|heif|svg)$/i.test(file.name);
+  const fileToDataUrl = (file: File) =>
+    new Promise<string | null>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = typeof reader.result === "string" ? reader.result : null;
+        resolve(result);
+      };
+      reader.onerror = () => reject(reader.error ?? new Error("Failed to read file"));
+      reader.readAsDataURL(file);
+    });
 
   // Fetch initial messages only when threadId changes to avoid reactive loops
   const initialMessages = useMemo(() => {
@@ -153,20 +166,33 @@ export const useBackendRuntime = (threadIdParam?: string) => {
     adapters: {
       attachments: {
         accept: "*/*",
-        add: async ({ file }: { file: File }) => ({
-          id: Math.random().toString(36).slice(2),
-          file,
-          type: file.type.startsWith("image/") ? "image" : "file",
-          status: { type: "requires-action", reason: "composer-send" } as const,
-          name: file.name,
-          contentType: file.type,
-        }),
+        add: async ({ file }: { file: File }) => {
+          const isImage = isImageFile(file);
+          const content = isImage
+            ? (() => {
+              return fileToDataUrl(file).then((dataUrl) =>
+                dataUrl ? [{ type: "image" as const, image: dataUrl }] : []
+              );
+            })()
+            : Promise.resolve([]);
+          return {
+            id: Math.random().toString(36).slice(2),
+            file,
+            type: isImage ? "image" : "file",
+            status: { type: "requires-action", reason: "composer-send" } as const,
+            name: file.name,
+            contentType: file.type,
+            content: await content,
+          };
+        },
         remove: async () => { },
-        send: async (attachment: PendingAttachment): Promise<CompleteAttachment> => ({
-          ...attachment,
-          status: { type: "complete" },
-          content: [],
-        }),
+        send: async (attachment: PendingAttachment): Promise<CompleteAttachment> => {
+          return {
+            ...attachment,
+            status: { type: "complete" },
+            content: attachment.content ?? [],
+          };
+        },
       },
     },
   });
