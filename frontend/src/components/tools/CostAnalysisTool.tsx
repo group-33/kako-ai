@@ -19,14 +19,14 @@ const CustomTooltip = ({
     active,
     payload,
     label,
-    formatter,
-}: Partial<TooltipContentProps<number, string>> & { formatter: Intl.NumberFormat }) => {
+    numberFormatter,
+}: Partial<TooltipContentProps<number, string>> & { numberFormatter: Intl.NumberFormat }) => {
     if (active && payload && payload.length) {
         return (
             <div className="bg-white p-3 border rounded-lg shadow-lg text-xs font-sans">
                 <p className="font-semibold text-slate-800 mb-1">{label}</p>
                 <p className="text-purple-600 font-bold">
-                    {formatter.format(Number(payload[0]?.value ?? 0))}
+                    {numberFormatter.format(Number(payload[0]?.value ?? 0))}
                 </p>
             </div>
         );
@@ -72,7 +72,7 @@ const CostAnalysisChart = ({ data }: { data: CostAnalysisData }) => {
                             tick={{ fontSize: 10, fill: "#64748b" }}
                             tickFormatter={(value) => formatter.format(Number(value))}
                         />
-                        <Tooltip content={<CustomTooltip formatter={formatter} />} cursor={{ fill: "#f8fafc" }} />
+                        <Tooltip content={<CustomTooltip numberFormatter={formatter} />} cursor={{ fill: "#f8fafc" }} />
                         <Bar dataKey="amount" radius={[4, 4, 0, 0]} maxBarSize={50}>
                             {data.items.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={entry.color || "#9333ea"} />

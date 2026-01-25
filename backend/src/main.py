@@ -127,8 +127,8 @@ async def run_agent(
             with open(file_path, "wb") as buffer:
                 buffer.write(file.file.read())
             
-            # Injection: Append the file location to the user query so the agent can use the path directly.
-            user_query += f" (Attached file path: '{file_path}'. Use this path for BOM extraction.)"
+            # Injection: Append the file location so the agent can use the path directly.
+            user_query += f" (file_path: '{file_path}')"
             
         except Exception as e:
             raise HTTPException(

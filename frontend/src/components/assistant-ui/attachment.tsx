@@ -71,6 +71,7 @@ const useAttachmentSrc = () => {
 
   useEffect(() => {
     if (src || fileSrc || !file) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFallbackSrc(undefined);
       return;
     }

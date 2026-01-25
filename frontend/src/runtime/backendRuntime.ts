@@ -171,7 +171,7 @@ export const useBackendRuntime = (threadIdParam?: string) => {
           const content = isImage
             ? (() => {
               return fileToDataUrl(file).then((dataUrl) =>
-                dataUrl ? [{ type: "image", image: dataUrl }] : []
+                dataUrl ? [{ type: "image" as const, image: dataUrl }] : []
               );
             })()
             : Promise.resolve([]);
@@ -187,7 +187,6 @@ export const useBackendRuntime = (threadIdParam?: string) => {
         },
         remove: async () => { },
         send: async (attachment: PendingAttachment): Promise<CompleteAttachment> => {
-          const isImage = attachment.file && isImageFile(attachment.file);
           return {
             ...attachment,
             status: { type: "complete" },

@@ -138,23 +138,33 @@ import { MessageProvider } from "@assistant-ui/react";
 const VirtualMessageList: FC = () => {
   const messages = useAssistantState((state) => state.thread.messages);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const lastMessageId = messages[messages.length - 1]?.id;
+  const isAtBottomRef = useRef(true);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      requestAnimationFrame(() => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
-      });
+    const element = scrollRef.current;
+    if (!element) return;
+
+    const onScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = element;
+      const distanceToBottom = scrollHeight - scrollTop - clientHeight;
+      isAtBottomRef.current = distanceToBottom < 50;
+    };
+
+    element.addEventListener("scroll", onScroll);
+    return () => element.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (scrollRef.current && isAtBottomRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [lastMessageId, messages.length]);
+  }, [messages]);
 
   return (
     <div
       ref={scrollRef}
       className="w-full h-full overflow-y-auto px-4"
-      style={{ scrollBehavior: 'smooth' }}
+      style={{ overflowAnchor: "none", scrollBehavior: "smooth" }}
     >
       <div className="flex flex-col gap-5 pt-4 pb-1">
         {messages.map((message, index) => {
