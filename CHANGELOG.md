@@ -1,0 +1,68 @@
+# Changelog
+
+## [Unreleased] – Jan 24/25, 2026
+- Draft flow and chat creation
+  - Quick Actions now create a thread and open `/chat/:id` with a localized draft (`frontend/src/pages/Dashboard.tsx`).
+  - Composer accepts an `initialDraft` and injects it into the Assistant UI composer (`frontend/src/components/assistant-ui/thread.tsx`, `frontend/src/components/Chat.tsx`, `frontend/src/pages/ChatPage.tsx`).
+  - Drafts persist per-thread across navigation (draft map + restore) (`frontend/src/store/useChatStore.ts`, `frontend/src/components/assistant-ui/thread.tsx`).
+  - Draft-only threads are not deleted when switching away if they contain a draft; empty/no-draft threads can be removed on navigation (`frontend/src/pages/ChatPage.tsx`).
+  - Empty default threads are cleaned on reload (default title + no messages) (`frontend/src/store/useChatStore.ts`).
+- Thread naming
+  - First user message now triggers `/chat/title`, and the thread is renamed if still default (`frontend/src/runtime/backendRuntime.ts`).
+- Sidebar layout and navigation
+  - KakoAI logo centered in sidebar header (`frontend/src/components/Layout.tsx`).
+  - New Chat navigates directly to the new thread (`frontend/src/components/Layout.tsx`).
+  - “Chats” label moved below New Chat and renamed to “Your chats” / “Deine Chats” (`frontend/src/components/Layout.tsx`, `frontend/src/locales/en.json`, `frontend/src/locales/de.json`).
+  - Threads list wrapped in a subtle panel with border/background and its own scroll area; dashboard/new chat remain fixed (`frontend/src/components/Layout.tsx`).
+  - Adjusted spacing between list panel and bottom section divider (`frontend/src/components/Layout.tsx`).
+- Dashboard updates
+  - Quick Action buttons trigger draft flows (BOM + procurement) (`frontend/src/pages/Dashboard.tsx`).
+  - “View all/Show less” toggle for recent threads list (`frontend/src/pages/Dashboard.tsx`, `frontend/src/locales/en.json`, `frontend/src/locales/de.json`).
+  - “+… this week” now computed from `updated_at` since Monday and injected into translations (`frontend/src/pages/Dashboard.tsx`, `frontend/src/locales/en.json`, `frontend/src/locales/de.json`).
+  - Visual polish for cards and recent activity list colors (`frontend/src/pages/Dashboard.tsx`).
+- Login & legal content
+  - Login subtitle centered (`frontend/src/pages/LoginPage.tsx`).
+  - Added sign-up mode with name field and toggle between sign-in/sign-up (`frontend/src/pages/LoginPage.tsx`, `frontend/src/store/useAuthStore.ts`).
+  - Added Legal modal with Terms/Privacy content and localized labels (`frontend/src/components/LegalModal.tsx`, `frontend/src/pages/LoginPage.tsx`, `frontend/src/locales/en.json`, `frontend/src/locales/de.json`).
+- Profile/logout
+  - Logout now navigates to `/login` after sign-out (`frontend/src/pages/ProfilePage.tsx`).
+- Chat UI polish
+  - Footer background made fully opaque and matched to the chat panel color so that LLM-generated text is not visible below the composer anymore (`frontend/src/components/assistant-ui/thread.tsx`).
+  - Draft placeholder selection behavior on injection (`frontend/src/components/assistant-ui/thread.tsx`).
+  - Sticky scroll behavior added to keep the view pinned while streaming, with `overflow-anchor: none` to avoid jumps (`frontend/src/components/assistant-ui/thread.tsx`).
+- Localization updates
+  - New draft prompts (longer, more directive) in EN/DE for BOM + procurement (`frontend/src/locales/en.json`, `frontend/src/locales/de.json`).
+  - Added “Show Less” and dynamic “+{{count}} this week” strings (`frontend/src/locales/en.json`, `frontend/src/locales/de.json`).
+  - Added terms/privacy modal strings and link fragments (`frontend/src/locales/en.json`, `frontend/src/locales/de.json`).
+- Legal content & wiring
+  - Added full Terms of Service and Privacy Policy text blocks (EN/DE) with structured sections and product-specific scope (`frontend/src/locales/en.json`, `frontend/src/locales/de.json`).
+  - Added separate localized labels for terms/privacy links and close button (`frontend/src/locales/en.json`, `frontend/src/locales/de.json`).
+  - Implemented a Legal modal component to render the policies (`frontend/src/components/LegalModal.tsx`).
+  - Wired Legal modal into the login page with clickable Terms/Privacy links and localized close labels (`frontend/src/pages/LoginPage.tsx`).
+- Configuration/profile styling
+  - Improved configuration and profile pages: color of blocks for both.
+  - Profile: added photo upload; profile nav icon switches to avatar when present; label uses display name when present.
+- BOM tool cleanup and behavior
+  - Removed the separate upload tool; BOM extraction uses `perform_bom_extraction` only (`backend/src/agent.py`, `backend/src/tools/bom_extraction/bom_tool.py`).
+  - BOM extraction now uses the active model context (no hardcoded model) (`backend/src/tools/bom_extraction/bom_tool.py`).
+  - Upload path injection simplified and language-agnostic (`backend/src/main.py`).
+  - File upload failures now return a 500 to the frontend; removed “no file received” log (`backend/src/main.py`).
+  - Portrait images rotate left for BOM preprocessing (`backend/src/tools/bom_extraction/bom_tool.py`).
+  - BOM tool docstrings/comments tightened (`backend/src/tools/bom_extraction/bom_tool.py`).
+  - Tool-output summary prompt simplified again to avoid brittle wording (`backend/src/agent.py`).
+- Agent prompt & safety
+  - System prompt tightened with strict domain boundaries, refusal policy, and security directives (`backend/src/agent.py`).
+  - User-confirmed data precedence rule documented in the system prompt (`backend/src/agent.py`).
+- Model selection consistency
+  - `model_id` now applied for both JSON and multipart requests; selection logic simplified (`backend/src/main.py`).
+  - JSON detection now handles `application/json; charset=...` (`backend/src/main.py`).
+  - Removed duplicate imports in `backend/src/main.py`.
+- Attachment previews
+  - Quick image previews now work for files without MIME types; data-URL fallback added for Safari (no broken blob previews) (`frontend/src/runtime/backendRuntime.ts`, `frontend/src/components/assistant-ui/attachment.tsx`).
+  - Download button added to image preview modal and localized (`frontend/src/components/assistant-ui/attachment.tsx`, `frontend/src/locales/en.json`, `frontend/src/locales/de.json`).
+  - BOM quantity input spinner arrows set to white via `color-scheme: dark` (no WebKit filter glitch) (`frontend/src/index.css`).
+- Display tool localization
+  - BOM table, procurement options, and cost analysis UI strings localized in EN/DE (`frontend/src/components/tools/BOMTableTool.tsx`, `frontend/src/components/tools/ProcurementOptionsTool.tsx`, `frontend/src/components/tools/CostAnalysisTool.tsx`, `frontend/src/locales/en.json`, `frontend/src/locales/de.json`).
+- Empty state positioning
+  - Suggestions moved into the composer footer on empty threads; welcome remains centered with a small top offset (`frontend/src/components/assistant-ui/thread.tsx`).
+  - Empty message list no longer renders when there are no messages (fixes extra padding) (`frontend/src/components/assistant-ui/thread.tsx`).
