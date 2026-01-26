@@ -118,7 +118,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
       </div>
 
       {isOpen && (
-        <div className="animate-in slide-in-from-top-2 duration-200 flex flex-col lg:flex-row border-t border-slate-800">
+        <div className="animate-in slide-in-from-top-2 duration-200 flex flex-col border-t border-slate-800">
 
           <div className="flex-1 min-w-0">
             <div className="overflow-x-auto">
@@ -215,7 +215,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
 
           {/* RIGHT: IMAGE (if present) */}
           {(args.source_document || args.preview_image) && (
-            <div className="w-full lg:w-1/2 border-t lg:border-t-0 lg:border-l border-slate-800 bg-slate-950/20 p-4 flex flex-col gap-2">
+            <div className="w-full border-t border-slate-800 bg-slate-950/20 p-4 flex flex-col gap-2">
               <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
                 {t("bomTable.sourceFile")}
               </span>
@@ -229,6 +229,18 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                   const imgSrc = previewPath.startsWith('http') || previewPath.startsWith('blob:')
                     ? previewPath
                     : (previewPath.startsWith('/') ? `${BACKEND_BASE_URL}${previewPath}` : `${BACKEND_BASE_URL}/${previewPath}`);
+
+                  const isPdf = imgSrc.toLowerCase().endsWith(".pdf");
+
+                  if (isPdf) {
+                    return (
+                      <iframe
+                        src={imgSrc}
+                        className="w-full aspect-[21/29] border-none"
+                        title="PDF Preview"
+                      />
+                    );
+                  }
 
                   return (
                     <img
