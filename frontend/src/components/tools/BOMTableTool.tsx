@@ -114,9 +114,6 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
             <span>{t("bomTable.export")}</span>
           </button>
 
-          <span className="text-[10px] uppercase tracking-wider font-bold text-sky-400 bg-sky-950/30 px-2 py-1 rounded border border-sky-500/20">
-            {t("bomTable.fullEdit")}
-          </span>
         </div>
       </div>
 
@@ -218,7 +215,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
 
           {/* RIGHT: IMAGE (if present) */}
           {(args.source_document || args.preview_image) && (
-            <div className="w-full lg:w-1/3 border-t lg:border-t-0 lg:border-l border-slate-800 bg-slate-950/20 p-4 flex flex-col gap-2">
+            <div className="w-full lg:w-1/2 border-t lg:border-t-0 lg:border-l border-slate-800 bg-slate-950/20 p-4 flex flex-col gap-2">
               <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
                 {t("bomTable.sourceFile")}
               </span>
@@ -233,29 +230,12 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                     ? previewPath
                     : (previewPath.startsWith('/') ? `${BACKEND_BASE_URL}${previewPath}` : `${BACKEND_BASE_URL}/${previewPath}`);
 
-                  const linkPath = args.source_document || args.preview_image;
-                  const linkSrc = linkPath && (linkPath.startsWith('http') || linkPath.startsWith('blob:'))
-                    ? linkPath
-                    : (linkPath && linkPath.startsWith('/') ? `${BACKEND_BASE_URL}${linkPath}` : `${BACKEND_BASE_URL}/${linkPath}`);
-
                   return (
-                    <>
-                      <img
-                        src={imgSrc}
-                        alt="Source Drawing"
-                        className="w-full h-auto object-contain max-h-[400px]"
-                      />
-                      {linkSrc && (
-                        <a
-                          href={linkSrc}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-medium transition-opacity"
-                        >
-                          Original anzeigen
-                        </a>
-                      )}
-                    </>
+                    <img
+                      src={imgSrc}
+                      alt="Source Drawing"
+                      className="w-full h-auto object-contain"
+                    />
                   )
                 })()}
               </div>
