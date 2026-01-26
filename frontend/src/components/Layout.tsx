@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import {
     LayoutDashboard,
@@ -10,30 +10,40 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChatStore } from "@/store/useChatStore";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export function Layout() {
     const { threads, addThread, deleteThread, fetchThreads } = useChatStore();
+    const { user } = useAuthStore();
     const navigate = useNavigate();
+    const location = useLocation();
     const { t } = useTranslation();
 
     useEffect(() => {
-        // Load threads when layout mounts (authenticated session)
-        fetchThreads();
+        void fetchThreads();
     }, [fetchThreads]);
 
-    const handleNewChat = () => {
-        addThread(t('layout.newChat'));
-        navigate("/chat");
+    const handleNewChat = async () => {
+        const newThreadId = await addThread(t('layout.newChat'));
+        if (!newThreadId) return;
+        navigate(`/chat/${newThreadId}`);
+    };
+
+    const handleDeleteThread = async (id: string) => {
+        const isActive = location.pathname === `/chat/${id}`;
+        await deleteThread(id);
+        if (isActive) {
+            navigate("/chat");
+        }
     };
 
     return (
         <div className="flex h-screen w-full bg-slate-950 text-slate-200">
-            {/* Sidebar */}
             <aside className="w-64 bg-slate-900 flex flex-col p-4 border-r border-slate-800 shadow-xl z-10">
-                <div className="flex items-center justify-between mb-8 px-2">
-                    <div className="flex items-center gap-3 w-full">
+                <div className="flex items-center justify-center mb-8 px-2">
+                    <div className="flex items-center justify-center w-full">
                         <img
                             src="/kako_logo.jpg"
                             alt="Kako Elektro GmbH"
@@ -42,8 +52,8 @@ export function Layout() {
                     </div>
                 </div>
 
-                <nav className="space-y-1 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                    <div className="mb-6">
+                <nav className="space-y-1 flex-1 min-h-0 flex flex-col">
+                    <div className="mb-2">
                         <NavLink
                             to="/"
                             className={({ isActive }) => cn(
@@ -52,25 +62,28 @@ export function Layout() {
                             )}
                             end
                         >
-                            <LayoutDashboard size={18} />
+                            <div className="w-5 flex items-center justify-center shrink-0">
+                                <LayoutDashboard size={18} />
+                            </div>
                             <span className="font-medium text-sm">{t('layout.dashboard')}</span>
                         </NavLink>
-                    </div>
-
-
-                    <div className="flex items-center justify-between px-3 text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-wider">
-                        <span>{t('layout.chats')}</span>
                     </div>
 
                     <button
                         onClick={handleNewChat}
                         className="flex items-center gap-3 w-full px-3 py-2.5 bg-slate-800/50 border border-slate-700/50 text-slate-300 rounded-lg transition hover:bg-slate-800 hover:border-slate-600 hover:text-white shadow-sm mb-4 group"
                     >
-                        <Plus size={16} className="text-sky-400 group-hover:text-sky-300 transition-colors" />
+                        <div className="w-5 flex items-center justify-center shrink-0">
+                            <Plus size={16} className="text-sky-400 group-hover:text-sky-300 transition-colors" />
+                        </div>
                         <span className="font-medium text-sm">{t('layout.newChat')}</span>
                     </button>
 
-                    <div className="space-y-1">
+                    <div className="flex items-center justify-between px-3 text-[10px] font-bold text-slate-500 mb-3 uppercase tracking-wider">
+                        <span>{t('layout.chats')}</span>
+                    </div>
+
+                    <div className="space-y-1 flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar rounded-xl bg-slate-800/40 border border-slate-800/70 px-2 py-2 mb-3">
                         {threads.map((thread) => {
                             return (
                                 <NavLink
@@ -86,14 +99,16 @@ export function Layout() {
                                     }
                                 >
                                     <div className="flex items-center gap-3 overflow-hidden">
-                                        <MessageSquare size={14} className="shrink-0 opacity-70" />
+                                        <div className="w-5 flex items-center justify-center shrink-0">
+                                            <MessageSquare size={14} className="opacity-70" />
+                                        </div>
                                         <span className="truncate">{thread.title}</span>
                                     </div>
                                     <button
                                         onClick={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
-                                            deleteThread(thread.id);
+                                            void handleDeleteThread(thread.id);
                                         }}
                                         className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 transition-opacity"
                                     >
@@ -105,7 +120,7 @@ export function Layout() {
                     </div>
                 </nav>
 
-                <div className="mt-auto pt-4 border-t border-slate-800 space-y-4">
+                <div className="mt-auto pt-3 border-t border-slate-800 space-y-4">
                     <div className="space-y-1">
                         <NavLink
                             to="/config"
@@ -114,7 +129,9 @@ export function Layout() {
                                 isActive ? "bg-slate-800 text-slate-200" : "text-slate-400 group-hover:text-slate-200"
                             )}
                         >
-                            <Settings size={16} className="text-slate-500 group-hover:text-slate-400" />
+                            <div className="w-5 flex items-center justify-center shrink-0">
+                                <Settings size={16} className="text-slate-500 group-hover:text-slate-400" />
+                            </div>
                             <span>{t('layout.configuration')}</span>
                         </NavLink>
                         <NavLink
@@ -124,8 +141,18 @@ export function Layout() {
                                 isActive ? "bg-slate-800 text-slate-200" : "text-slate-400 group-hover:text-slate-200"
                             )}
                         >
-                            <User size={16} className="text-slate-500 group-hover:text-slate-400" />
-                            <span>{t('layout.profile')}</span>
+                            <div className="w-5 flex items-center justify-center shrink-0">
+                                {user?.user_metadata?.avatar_url ? (
+                                    <img
+                                        src={user.user_metadata.avatar_url}
+                                        alt="Avatar"
+                                        className="w-5 h-5 rounded-full object-cover ring-1 ring-slate-600"
+                                    />
+                                ) : (
+                                    <User size={16} className="text-slate-500 group-hover:text-slate-400" />
+                                )}
+                            </div>
+                            <span className="truncate">{user?.user_metadata?.full_name || t('layout.profile')}</span>
                         </NavLink>
                     </div>
 
@@ -135,10 +162,8 @@ export function Layout() {
                 </div>
             </aside>
 
-            {/* Main Content Area */}
             <main className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-950 relative">
-                {/* Subtle top gradient for depth */}
-                <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-slate-900/50 to-transparent pointer-events-none" />
+                <div className="absolute top-0 left-0 w-full h-96 bg-linear-to-b from-slate-900/50 to-transparent pointer-events-none" />
                 <Outlet />
             </main>
         </div>

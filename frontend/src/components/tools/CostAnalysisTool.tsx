@@ -1,6 +1,8 @@
 import { makeAssistantToolUI } from "@assistant-ui/react";
+import type { TooltipContentProps } from "recharts";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { Euro, TrendingUp } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type CostItem = {
     category: string;
@@ -13,16 +15,18 @@ type CostAnalysisData = {
     items: CostItem[];
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({
+    active,
+    payload,
+    label,
+    numberFormatter,
+}: Partial<TooltipContentProps<number, string>> & { numberFormatter: Intl.NumberFormat }) => {
     if (active && payload && payload.length) {
         return (
             <div className="bg-white p-3 border rounded-lg shadow-lg text-xs font-sans">
                 <p className="font-semibold text-slate-800 mb-1">{label}</p>
                 <p className="text-purple-600 font-bold">
-                    {Number(payload[0].value).toLocaleString("de-DE", {
-                        style: "currency",
-                        currency: "EUR",
-                    })}
+                    {numberFormatter.format(Number(payload[0]?.value ?? 0))}
                 </p>
             </div>
         );
@@ -31,26 +35,26 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const CostAnalysisChart = ({ data }: { data: CostAnalysisData }) => {
+    const { t, i18n } = useTranslation();
+    const formatter = new Intl.NumberFormat(i18n.language, {
+        style: "currency",
+        currency: "EUR",
+    });
     return (
         <div className="border rounded-xl overflow-hidden bg-white shadow-sm font-sans w-full my-4">
-            {/* Header */}
             <div className="bg-slate-50 px-4 py-3 border-b flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <TrendingUp size={16} className="text-purple-600" />
                     <h3 className="font-semibold text-slate-800 text-sm">
-                        Kostenanalyse
+                        {t("costAnalysis.title")}
                     </h3>
                 </div>
                 <div className="flex items-center gap-1 text-slate-700 font-bold text-sm bg-purple-50 px-2 py-1 rounded border border-purple-100">
                     <Euro size={12} />
-                    {data.total_cost.toLocaleString("de-DE", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                    })}
+                    {formatter.format(data.total_cost)}
                 </div>
             </div>
 
-            {/* Chart Area */}
             <div className="p-4 w-full" style={{ height: 300 }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data.items} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -66,9 +70,9 @@ const CostAnalysisChart = ({ data }: { data: CostAnalysisData }) => {
                             axisLine={false}
                             tickLine={false}
                             tick={{ fontSize: 10, fill: "#64748b" }}
-                            tickFormatter={(value) => `${value}€`}
+                            tickFormatter={(value) => formatter.format(Number(value))}
                         />
-                        <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f8fafc" }} />
+                        <Tooltip content={<CustomTooltip numberFormatter={formatter} />} cursor={{ fill: "#f8fafc" }} />
                         <Bar dataKey="amount" radius={[4, 4, 0, 0]} maxBarSize={50}>
                             {data.items.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={entry.color || "#9333ea"} />
@@ -78,9 +82,8 @@ const CostAnalysisChart = ({ data }: { data: CostAnalysisData }) => {
                 </ResponsiveContainer>
             </div>
 
-            {/* Footer Info */}
             <div className="px-4 py-3 bg-slate-50 border-t text-xs text-slate-500">
-                Die Analyse basiert auf den aktuell ausgewählten Lieferantenoptionen.
+                {t("costAnalysis.footer")}
             </div>
         </div>
     );

@@ -1,5 +1,11 @@
+import { useMemo } from "react";
 import { useLocalRuntime } from "@assistant-ui/react";
-import type { ThreadAssistantMessagePart } from "@assistant-ui/react";
+import type {
+  Attachment,
+  CompleteAttachment,
+  PendingAttachment,
+  ThreadAssistantMessagePart,
+} from "@assistant-ui/react";
 import type { ReadonlyJSONObject } from "assistant-stream/utils";
 import { useChatStore } from "@/store/useChatStore";
 
@@ -12,47 +18,65 @@ const BACKEND_BASE_URL =
     .VITE_BACKEND_URL ?? "http://127.0.0.1:8000";
 
 export const useBackendRuntime = (threadIdParam?: string) => {
-  const { activeThreadId, threads, renameThread, modelId } = useChatStore();
+  const activeThreadId = useChatStore(state => state.activeThreadId);
   const threadId = threadIdParam ?? activeThreadId ?? "default";
+  const modelId = useChatStore(state => state.modelId);
+  const isImageFile = (file: File) =>
+    file.type.startsWith("image/") ||
+    /\.(png|jpe?g|gif|webp|bmp|tiff?|heic|heif|svg)$/i.test(file.name);
+  const fileToDataUrl = (file: File) =>
+    new Promise<string | null>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = typeof reader.result === "string" ? reader.result : null;
+        resolve(result);
+      };
+      reader.onerror = () => reject(reader.error ?? new Error("Failed to read file"));
+      reader.readAsDataURL(file);
+    });
 
-  // Get initial messages from store
-  const activeThread = threads.find((t) => t.id === threadId);
-  const initialMessages = activeThread?.messages || [];
+  // Fetch initial messages only when threadId changes to avoid reactive loops
+  const initialMessages = useMemo(() => {
+    return useChatStore.getState().threads.find(t => t.id === threadId)?.messages || [];
+  }, [threadId]);
 
-  const runtime = useLocalRuntime({
+  return useLocalRuntime({
     run: async function* ({ messages, abortSignal }) {
-      console.log("Runtime received messages:", messages);
       const lastMessage = messages[messages.length - 1];
-      console.log("Last message full object:", lastMessage);
-
       const textPart = lastMessage?.content.find((part) => part.type === "text");
       const userText = textPart && "text" in textPart ? textPart.text.trim() : "";
-
-      // Check for attachments in the top-level 'attachments' array (as seen in logs)
-      // @ts-ignore
-      const attachments = lastMessage?.attachments as any[];
-      console.log("Attachments array:", attachments);
-
+      const attachments = (lastMessage?.attachments ?? []) as ReadonlyArray<Attachment>;
       const firstAttachment = attachments?.[0];
-      console.log("First attachment:", firstAttachment);
-
-      // The file object should be on the attachment
       const file = firstAttachment?.file as File | undefined;
-      console.log("Extracted file object from attachment:", file);
 
       if (!userText && !file) {
-        console.log("No text and no file, returning");
         return;
       }
 
-      // ... Title generation code ...
-
       const userMessages = messages.filter(m => m.role === 'user');
-      if (userMessages.length === 1 && activeThread) {
-        // ... (title gen omitted for brevity in replace, keep distinct)
-        const isDefaultTitle = activeThread.title.startsWith("New Chat") || activeThread.title.startsWith("Neuer Chat");
+      const currentThread = useChatStore.getState().threads.find((t) => t.id === threadId);
+      if (userMessages.length === 1 && currentThread && userText) {
+        const isDefaultTitle = currentThread.title.startsWith("New Chat") || currentThread.title.startsWith("Neuer Chat");
         if (isDefaultTitle) {
-          // ...
+          try {
+            const titleResponse = await fetch(`${BACKEND_BASE_URL}/chat/title`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                user_query: userText,
+                model_id: modelId,
+              }),
+              signal: abortSignal,
+            });
+            if (titleResponse.ok) {
+              const data = await titleResponse.json();
+              if (data?.title) {
+                await useChatStore.getState().renameThread(currentThread.id, data.title);
+              }
+            }
+          } catch {
+            // Title generation failed, but we don't log it anymore.
+          }
         }
       }
 
@@ -62,14 +86,12 @@ export const useBackendRuntime = (threadIdParam?: string) => {
         const headers: HeadersInit = {};
 
         if (file) {
-          console.log("Preparing FormData with file:", file.name, file.type, file.size);
           const formData = new FormData();
           formData.append("user_query", userText);
           formData.append("thread_id", threadId);
           if (modelId) formData.append("model_id", modelId);
           formData.append("file", file);
           body = formData;
-          // Content-Type header is automatically set for FormData
         } else {
           headers["Content-Type"] = "application/json";
           body = JSON.stringify({
@@ -143,18 +165,35 @@ export const useBackendRuntime = (threadIdParam?: string) => {
     initialMessages,
     adapters: {
       attachments: {
-        add: async ({ file }: { file: File }) => ({
-          id: Math.random().toString(36).slice(2),
-          file,
-          type: file.type.startsWith("image/") ? "image" : "file",
-          status: { type: "complete" } as const,
-          content: [],
-          name: file.name,
-        }),
+        accept: "*/*",
+        add: async ({ file }: { file: File }) => {
+          const isImage = isImageFile(file);
+          const content = isImage
+            ? (() => {
+              return fileToDataUrl(file).then((dataUrl) =>
+                dataUrl ? [{ type: "image" as const, image: dataUrl }] : []
+              );
+            })()
+            : Promise.resolve([]);
+          return {
+            id: Math.random().toString(36).slice(2),
+            file,
+            type: isImage ? "image" : "file",
+            status: { type: "requires-action", reason: "composer-send" } as const,
+            name: file.name,
+            contentType: file.type,
+            content: await content,
+          };
+        },
         remove: async () => { },
+        send: async (attachment: PendingAttachment): Promise<CompleteAttachment> => {
+          return {
+            ...attachment,
+            status: { type: "complete" },
+            content: attachment.content ?? [],
+          };
+        },
       },
     },
   });
-
-  return runtime;
 };

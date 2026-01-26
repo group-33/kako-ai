@@ -4,15 +4,8 @@ import os
 import cv2
 import dspy
 
-from backend.src.config import GEMINI_2_5_FLASH
 from backend.src.models import BillOfMaterials
 from backend.src.tools.bom_extraction.file_utils import fetch_file_via_ssh, convert_pdf_to_png
-from backend.src.tools.bom_extraction.image_processing import (
-    extract_bom_tight_crop,
-    filter_unsafe_tables,
-    merge_images_vertically
-)
-
 
 
 class BOMExtractionSignature(dspy.Signature):
@@ -22,20 +15,10 @@ class BOMExtractionSignature(dspy.Signature):
     bom: BillOfMaterials = dspy.OutputField(desc="Structured Bill of Materials extracted from the drawing.")
 
 
-def _prepare_bom_image(file_path: str) -> str | None:
-    """Normalize and crop the drawing into a single BOM image on disk.
-
-    If ``file_path`` exists locally, it is used directly.
-    Otherwise, we treat it as a remote identifier and fetch the file via SSH first.
-
-    Returns the local image path to pass into the LLM, or None if no usable BOM tables were found.
-    """
-    # 1. Resolve the input into a local path (local path preferred, fallback to SSH)
-    if os.path.exists(file_path):
-        local_path = file_path
-    else:
-        local_path = fetch_file_via_ssh(file_path)
-
+def _prepare_bom_image(file_path: str) -> str:
+    """Return a local image path for the given drawing."""
+    # 1. Resolve the input into a local path (fallback to SSH fetch)
+    local_path = file_path if os.path.exists(file_path) else fetch_file_via_ssh(file_path)
     local_path = convert_pdf_to_png(local_path)
 
     # 2. Normalize orientation (rotate if portrait)
@@ -43,10 +26,10 @@ def _prepare_bom_image(file_path: str) -> str | None:
     if img_check is not None:
         h, w = img_check.shape[:2]
         if h > w:
-            print(f"🔄 Detected vertical image ({w}x{h}). Rotating 90° right...")
-            cv2.imwrite(local_path, cv2.rotate(img_check, cv2.ROTATE_90_CLOCKWISE))
+            cv2.imwrite(local_path, cv2.rotate(img_check, cv2.ROTATE_90_COUNTERCLOCKWISE))
 
     return local_path
+
 
 def perform_bom_extraction(file_path: str) -> tuple[BillOfMaterials, str] | str:
     """High-level BOM extraction tool using remote/existing files.
