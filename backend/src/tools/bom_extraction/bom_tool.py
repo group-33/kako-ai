@@ -6,6 +6,7 @@ import dspy
 
 from backend.src.models import BillOfMaterials
 from backend.src.tools.bom_extraction.file_utils import fetch_file_via_ssh, convert_pdf_to_png
+from backend.src.config import GEMINI_2_5_FLASH
 
 
 class BOMExtractionSignature(dspy.Signature):
