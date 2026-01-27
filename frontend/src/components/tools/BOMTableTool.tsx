@@ -22,6 +22,7 @@ type BOMTableArgs = {
   bom_id: string;
   thread_id: string;
   source_document?: string;
+  preview_image?: string;
   rows: BOMRow[];
 };
 
@@ -113,14 +114,12 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
             <span>{t("bomTable.export")}</span>
           </button>
 
-          <span className="text-[10px] uppercase tracking-wider font-bold text-sky-400 bg-sky-950/30 px-2 py-1 rounded border border-sky-500/20">
-            {t("bomTable.fullEdit")}
-          </span>
+
         </div>
       </div>
 
       {isOpen && (
-        <div className="animate-in slide-in-from-top-2 duration-200 flex flex-col lg:flex-row border-t border-slate-800">
+        <div className="animate-in slide-in-from-top-2 duration-200 flex flex-col border-t border-slate-800">
 
           <div className="flex-1 min-w-0">
             <div className="overflow-x-auto">
@@ -215,25 +214,34 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
             )}
           </div>
 
-          {args.source_document && (
-            <div className="w-full lg:w-1/3 border-t lg:border-t-0 lg:border-l border-slate-800 bg-slate-950/20 p-4 flex flex-col gap-2">
+          {(args.preview_image || args.source_document) && (
+            <div className="w-full border-t border-slate-800 bg-slate-950/20 p-4 flex flex-col gap-2">
               <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
                 {t("bomTable.sourceFile")}
               </span>
               <div className="relative group rounded overflow-hidden border border-slate-800 bg-slate-950 shadow-inner">
-                <img
-                  src={args.source_document.startsWith('/') ? `${BACKEND_BASE_URL}${args.source_document}` : args.source_document}
-                  alt={t("bomTable.sourceAlt")}
-                  className="w-full h-auto object-contain max-h-[400px]"
-                />
-                <a
-                  href={args.source_document.startsWith('/') ? `${BACKEND_BASE_URL}${args.source_document}` : args.source_document}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-medium transition-opacity"
-                >
-                  {t("bomTable.viewOriginal")}
-                </a>
+                {(() => {
+                  const rawSrc = args.preview_image || args.source_document || "";
+                  const imgSrc = rawSrc.startsWith('/') ? `${BACKEND_BASE_URL}${rawSrc}` : rawSrc;
+
+                  if (imgSrc.toLowerCase().endsWith(".pdf")) {
+                    return (
+                      <iframe
+                        src={imgSrc}
+                        className="w-full aspect-[21/29] border-none"
+                        title={t("bomTable.sourceAlt")}
+                      />
+                    );
+                  }
+
+                  return (
+                    <img
+                      src={imgSrc}
+                      alt={t("bomTable.sourceAlt")}
+                      className="w-full h-auto object-contain"
+                    />
+                  );
+                })()}
               </div>
             </div>
           )}

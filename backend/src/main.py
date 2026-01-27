@@ -196,23 +196,41 @@ async def run_agent(
             if cost_block is not None:
                 blocks.append(cost_block)
             continue
-        if tool_name != "perform_bom_extraction":
+        if tool_name not in ("perform_bom_extraction", "perform_bom_extraction_upload"):
             continue
-        bom = observation if isinstance(observation, BillOfMaterials) else None
-        if bom is None and isinstance(observation, dict):
+
+        bom: BillOfMaterials | None = None
+        src_image_for_preview: str | None = None
+
+        if isinstance(observation, tuple):
+            # (bom, used_image_path)
+            bom_obj, used_image = observation
+            if isinstance(bom_obj, BillOfMaterials):
+                bom = bom_obj
+                src_image_for_preview = used_image
+        elif isinstance(observation, BillOfMaterials):
+            bom = observation
+        elif isinstance(observation, dict):
             try:
                 bom = BillOfMaterials.model_validate(observation)
             except Exception:
                 pass
+        
         if bom is None:
             continue
 
-        source = tool_args.get("file_path") or tool_args.get("filename")
+        source = tool_args.get("file_path") or tool_args.get("file") or tool_args.get("filename")
         bom_id = compute_bom_id(bom, source_document=source)
         app.state.boms[thread_key] = {"bom_id": bom_id, "bom": bom, "source_document": source}
         append_to_history(history, user_query="__BOM_EXTRACTED__", process_result=bom.model_dump_json())
         blocks.append(
-            build_bom_tool_block(bom, source_document=source, bom_id=bom_id, thread_id=thread_key)
+            build_bom_tool_block(
+                bom, 
+                source_document=source, 
+                preview_image=src_image_for_preview, 
+                bom_id=bom_id, 
+                thread_id=thread_key
+            )
         )
 
     append_to_history(history, user_query=user_query, process_result=content)

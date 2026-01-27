@@ -86,6 +86,7 @@ class BOMTableData(BaseModel):
 
     rows: List[BOMRow]
     source_document: str | None = None
+    preview_image: str | None = None
 
 
 class ToolUseBlock(BaseModel):
