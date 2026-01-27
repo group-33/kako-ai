@@ -6,7 +6,6 @@ import dspy
 
 from backend.src.models import BillOfMaterials
 from backend.src.tools.bom_extraction.file_utils import fetch_file_via_ssh, convert_pdf_to_png
-from backend.src.config import GEMINI_2_5_FLASH
 
 
 class BOMExtractionSignature(dspy.Signature):
@@ -42,19 +41,7 @@ def _prepare_image_for_model(local_path: str) -> str:
 
 
 def perform_bom_extraction(file_path: str) -> tuple[BillOfMaterials, str] | str:
-    """High-level BOM extraction tool for BOTH remote drawings and local uploads.
-    
-    USE THIS TOOL WHEN:
-    - The user refers to a drawing by name (e.g. "order_123.pdf") -> Fetches from server.
-    - The user uploads a file -> Uses the provided absolute local path.
-
-    Args:
-        file_path: Absolute path (uploads) OR filename (remote search).
-    
-    Returns:
-        A tuple (BillOfMaterials, used_display_path) on success.
-    """
-    print(f"🛠️ BOM extraction triggered for: {file_path}")
+    """Extract a BOM from a local path or a remote filename."""
     try:
         # 1. Get the actual file (PDF or Image) - works for both local uploads and remote lookups
         display_path = _resolve_local_path(file_path)
@@ -62,13 +49,10 @@ def perform_bom_extraction(file_path: str) -> tuple[BillOfMaterials, str] | str:
         # 2. Get an image version for the AI model
         model_image_path = _prepare_image_for_model(display_path)
 
-        #print(f"--- 🤖 Sending file path to Gemini: {model_image_path} ---")
+        # 3. Perform the actual extraction
         dspy_image = dspy.Image(url=model_image_path)
-
-        # Use a BOM-optimised model while keeping the global default for other tools.
-        with dspy.context(lm=GEMINI_2_5_FLASH):
-            extractor = dspy.Predict(BOMExtractionSignature)
-            prediction = extractor(drawing=dspy_image)
+        extractor = dspy.Predict(BOMExtractionSignature)
+        prediction = extractor(drawing=dspy_image)
 
         # Return the BOM AND the path to the ORIGINAL file for display (PDF or Image)
         return prediction.bom, display_path
