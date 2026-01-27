@@ -196,7 +196,7 @@ async def run_agent(
             if cost_block is not None:
                 blocks.append(cost_block)
             continue
-        if tool_name not in ("perform_bom_extraction", "perform_bom_extraction_upload"):
+        if tool_name != "perform_bom_extraction":
             continue
 
         bom: BillOfMaterials | None = None
