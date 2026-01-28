@@ -59,19 +59,19 @@ def list_deliveries_in_range(start_date: str, end_date: str) -> List[Dict[str, A
     ]
 
 
-def get_inventory_for_product(product_id: str) -> Optional[int]:
+def get_inventory_for_product(product_id: str) -> Optional[dict]:
     """
-    Fetch current stock quantity for a product from Xentral.
+    Fetch current stock quantity and minimum stock for a product from Xentral.
     
     Args:
         product_id: The Xentral internal ID of the product.
         
     Returns:
-        Optional[int]: The quantity available (lagerbestand). Returns None if error or not found.
+        Optional[dict]: Dict with 'stock' (int/float) and 'min_stock' (int/float). Returns None if error.
     """
     if not XENTRAL_BEARER_TOKEN or not XENTRAL_BASE_URL:
         # Fallback to mock if no credentials
-        return 125
+        return {"stock": 125, "min_stock": 10}
 
     # Correct endpoint verified: /api/v1/artikel with include=lagerbestand
     url = f"{XENTRAL_BASE_URL}/api/v1/artikel"
@@ -96,12 +96,19 @@ def get_inventory_for_product(product_id: str) -> Optional[int]:
                 stock = lb.get("verkaufbar", 0)
             else:
                 stock = lb # Fallback if it is a number
-            return int(float(stock))
+            
+            # Fetch minimum stock (mindestlager)
+            min_stock = product.get("mindestlager", 0)
+            
+            return {
+                "stock": int(float(stock)), 
+                "min_stock": int(float(min_stock))
+            }
     except Exception as e:
         print(f"Error fetching inventory for {product_id}: {e}")
         return None
         
-    return 0
+    return None
 
 
 def get_inventory_for_part(part_number: str) -> Dict[str, Any]:

@@ -6,7 +6,11 @@ import json
 import psycopg2
 
 from backend.src.models import BillOfMaterials
-from backend.src.config import SUPABASE_PASSWORD
+from backend.src.config import (
+    VERTEX_ARGS,
+    SUPABASE_PASSWORD,
+)
+from backend.src.models import BillOfMaterials
 from backend.src.tools.demand_analysis.embeddings import get_vertex_embedding
 from backend.src.tools.demand_analysis.inventory import _fetch_bom_for_product, get_inventory_for_product
 
@@ -148,12 +152,6 @@ class ProductInfoStore:
         cursor = conn.cursor()
 
         if has_specific_id:
-            # Check for exact internal ID match first if input looks numeric and short-ish
-            if q_num.isdigit():
-                 cursor.execute("SELECT xentral_id, nummer, name_de FROM xentral_products WHERE xentral_id = %s LIMIT 1", (q_num,))
-                 row = cursor.fetchone()
-                 if row:
-                     return {"id": row[0], "nummer": row[1], "name_de": row[2], "_source": "EXACT_ID_MATCH"}
 
             cursor.execute("""
             SELECT xentral_id, nummer, name_de
@@ -217,7 +215,10 @@ class ProductInfoStore:
         conn.close()
         return None
 
-def check_feasibility(bom_input: dict | list | str, order_amount: int) -> str:
+from pydantic import BaseModel
+from typing import Union
+
+def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount: int = 1) -> str:
     """
     Check if an order can be fulfilled based on BOM and current inventory.
 
@@ -231,6 +232,7 @@ def check_feasibility(bom_input: dict | list | str, order_amount: int) -> str:
     results = {
         "feasible": True,
         "missing_items": [],
+        "warnings": [],
         "details": []
     }
 
@@ -238,110 +240,122 @@ def check_feasibility(bom_input: dict | list | str, order_amount: int) -> str:
     items = []
     parent_product_name = "Unknown Product"
 
-    # Case 1: Input is a Product ID (str)
+    # Resolve input to standard list of items
+    # Check string first to avoid ambiguity
     if isinstance(bom_input, str):
-        # validation/lookup via Supabase or existing helper
-        store = ProductInfoStore()
-        # Clean ID
-        p_id_raw = bom_input.strip()
-        
-        # Try to match if it's not a clear ID (e.g. if it's a name)
-        match = store.search(bom_number=p_id_raw, bom_desc=p_id_raw)
-        if match:
-            product_id = match.get("id") or match.get("product_id")
-            parent_product_name = match.get("name_de") or match.get("name") or p_id_raw
+        # Fallback to fetching BOM for ID for backward compatibility or direct ID usage
+        fetched = _fetch_bom_for_product(bom_input)
+        if fetched:
+            items = fetched
+        else:
+            items = [{"xentral_id": bom_input, "quantity": 1, "name": "Single Item"}]
             
-            # Fetch BOM
-            fetched_bom = _fetch_bom_for_product(str(product_id))
-            if fetched_bom:
-                items = fetched_bom
-            else:
-                 # If no BOM, maybe it's a direct article? 
-                 # We can treat it as a single item list where the item is the product itself.
-                 items = [{
-                     "artikel": product_id,
-                     "nummer": match.get("nummer"),
-                     "name_de": parent_product_name,
-                     "menge": 1 # 1 per parent
-                 }]
-        else:
-            return json.dumps({"error": f"Product '{bom_input}' not found in database."})
-
-    # Case 2: Input is List of items (already resolved BOM)
+    elif isinstance(bom_input, BillOfMaterials):
+        # Use the items directly from the model
+        items = bom_input.items
+        
     elif isinstance(bom_input, list):
-         items = bom_input
-
-    # Case 3: Input is Dict (BOM object)
-    elif isinstance(bom_input, dict):
-        if "items" in bom_input:
-            items = bom_input["items"]
-        else:
-             # Maybe a single item dict?
-             items = [bom_input]
-
-    if not items:
-        return json.dumps({"error": "No BOM items found to check."})
-
+        items = bom_input
+    
     for item in items:
-        # Extract item details. Structure depends on source (Xentral API vs our internal BOM model)
-        
-        # Default placeholders
-        xentral_id = None
-        part_number = None
-        name = None
-        qty_value = 1.0
-
-        # Check for nested Xentral structure (item['product'] dict)
-        if isinstance(item.get("product"), dict):
-            prod = item["product"]
-            xentral_id = prod.get("id")
-            part_number = prod.get("number") or prod.get("nummer")
-            name = prod.get("name") or prod.get("name_de")
-            qty_value = item.get("amount") or item.get("menge") or 1.0
+        # normalize fields based on input type (Model vs Dict)
+        if isinstance(item, BaseModel): # Robust check for Pydantic
+            # item is BOMItem from models.py (extracted from drawing).
+            # It contains external identifiers (item_nr, description) which we must resolve to a Xentral Internal ID to check stock.
+            
+            qty_per_unit = float(item.quantity) if item.quantity else 1.0
+            
+            # Access fields directly as attributes
+            item_nr = getattr(item, 'item_nr', None)
+            start_pn = getattr(item, 'part_number', None)
+            desc = getattr(item, 'description', None)
+            
+            search_query = item_nr or str(start_pn) or desc
+            
+            # Try to resolve ID
+            store = ProductInfoStore()
+            match = store.search(bom_number=str(search_query), bom_desc=desc)
+            
+            xentral_id = match.get("id") if match else None
+            name = desc or (match.get("name_de") if match else "Unknown")
+            part_number = item_nr or str(start_pn)
+            
         else:
-            # Fallback to flat structure (our model or simplified list)
-            xentral_id = item.get("artikel") or item.get("product_id") or item.get("id")
-            part_number = item.get("nummer") or item.get("part_number")
-            name = item.get("name_de") or item.get("bezeichnung") or item.get("description") or item.get("name")
-            qty_value = item.get("menge") or item.get("quantity") or item.get("amount") or 1.0
-        
-        # Quantity per unit
-        try:
-            qty_per_unit = float(qty_value)
-        except (ValueError, TypeError):
-            qty_per_unit = 1.0
+            # Dictionary input (Legacy path)
+            # Default placeholders
+            xentral_id = None
+            part_number = None
+            name = None
+            qty_value = 1.0
+
+            # Check for nested Xentral structure (item['product'] dict)
+            if isinstance(item.get("product"), dict):
+                prod = item["product"]
+                xentral_id = prod.get("id")
+                part_number = prod.get("number") or prod.get("nummer")
+                name = prod.get("name") or prod.get("name_de")
+                qty_value = item.get("amount") or item.get("menge") or 1.0
+            else:
+                # Fallback to flat structure (our model or simplified list)
+                xentral_id = item.get("artikel") or item.get("product_id") or item.get("id") or item.get("xentral_id")
+                part_number = item.get("nummer") or item.get("part_number")
+                name = item.get("name_de") or item.get("bezeichnung") or item.get("description") or item.get("name")
+                qty_value = item.get("menge") or item.get("quantity") or item.get("amount") or 1.0
+            
+            try:
+                qty_per_unit = float(qty_value)
+            except (ValueError, TypeError):
+                qty_per_unit = 1.0
 
         required_total = qty_per_unit * order_amount
         
         # Check stock
-        stock = None
+        stock_info = None
+        current_stock = 0
+        min_stock = 0
+        
         if xentral_id:
-            stock = get_inventory_for_product(str(xentral_id))
-        else:
-            # If we don't have an ID, we can't check stock reliably. 
-            # Try to resolve via part_number if available?
-            if part_number:
-                 store = ProductInfoStore()
-                 match = store.search(bom_number=part_number, bom_desc=name)
-                 if match and match.get("id"):
-                     xentral_id = match.get("id")
-                     stock = get_inventory_for_product(str(xentral_id))
+            stock_info = get_inventory_for_product(str(xentral_id))
+        elif part_number:
+             # Try second pass resolution if dict path failed
+             store = ProductInfoStore()
+             match = store.search(bom_number=part_number, bom_desc=name)
+             if match and match.get("id"):
+                 xentral_id = match.get("id")
+                 stock_info = get_inventory_for_product(str(xentral_id))
         
         # Handle stock result
-        if stock is None:
-             is_enough = False
-             stock_display = "Unknown (Error)"
-        else:
-             is_enough = stock >= required_total
-             stock_display = stock
+        is_enough = False
+        stock_display = "Unknown (Error)"
+        warning_msg = None
         
+        if stock_info:
+            current_stock = stock_info.get("stock", 0)
+            min_stock = stock_info.get("min_stock", 0)
+            stock_display = current_stock
+            
+            is_enough = current_stock >= required_total
+            
+            # Check Minimum Stock Warning
+            remaining_stock = current_stock - required_total
+            if is_enough and remaining_stock < min_stock:
+                warning_msg = f"Stock will fall below minimum! (Remaining: {remaining_stock}, Min: {min_stock})"
+                results["warnings"].append({
+                    "part": part_number or name,
+                    "message": warning_msg
+                })
+        else:
+             is_enough = False # Treat error/unknown as not feasible for safety
+
         item_status = {
             "part_number": part_number,
             "name": name,
             "required_per_unit": qty_per_unit,
             "total_required": required_total,
             "in_stock": stock_display,
-            "feasible": is_enough
+            "min_stock": min_stock if stock_info else "Unknown",
+            "feasible": is_enough,
+            "warning": warning_msg
         }
         
         results["details"].append(item_status)
@@ -349,5 +363,5 @@ def check_feasibility(bom_input: dict | list | str, order_amount: int) -> str:
         if not is_enough:
             results["feasible"] = False
             results["missing_items"].append(item_status)
-
+            
     return json.dumps(results, indent=2)

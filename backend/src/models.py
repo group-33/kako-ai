@@ -126,6 +126,8 @@ class AgentRequest(BaseModel):
     model_id: str | None = None
     bom_update: BOMUpdate | None = None
 
+    model_config = {'protected_namespaces': ()}
+
 
 class AgentResponse(BaseModel):
     """Top-level response object returned by backend endpoints to the frontend."""
