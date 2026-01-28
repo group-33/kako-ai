@@ -58,6 +58,7 @@ class BOMItem(BaseModel):
     )
 
 class BillOfMaterials(BaseModel):
+    title: Optional[str] = Field(None, description="The title of the technical drawing, usually found in the title block.")
     items: List[BOMItem] = Field(description="All component line items that make up the BOM.")
 
 
