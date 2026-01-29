@@ -104,7 +104,6 @@ class ProductInfoStore:
         cursor = conn.cursor()
 
         if has_specific_id:
-
             cursor.execute("""
             SELECT xentral_id, nummer, name_de
             FROM xentral_products
