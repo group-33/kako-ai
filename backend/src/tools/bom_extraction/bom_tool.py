@@ -4,15 +4,16 @@ import os
 import cv2
 import dspy
 
-from backend.src.models import BillOfMaterials
+from backend.src.models import RawBillOfMaterials, BillOfMaterials, BOMItem
 from backend.src.tools.bom_extraction.file_utils import fetch_file_via_ssh, convert_pdf_to_png
+from backend.src.tools.demand_analysis.bom import perform_bom_matching
 
 
 class BOMExtractionSignature(dspy.Signature):
     """Extract a structured BOM from the given technical drawing image."""
 
     drawing = dspy.InputField(desc="Customer technical drawing as an image.")
-    bom: BillOfMaterials = dspy.OutputField(desc="Structured Bill of Materials extracted from the drawing.")
+    bom: RawBillOfMaterials = dspy.OutputField(desc="Structured Bill of Materials extracted from the drawing.")
 
 
 def _resolve_local_path(file_path: str) -> str:
@@ -40,7 +41,7 @@ def _prepare_image_for_model(local_path: str) -> str:
     return local_path
 
 
-def perform_bom_extraction(file_path: str) -> tuple[BillOfMaterials, str] | str:
+def perform_bom_extraction(file_path: str) -> tuple[RawBillOfMaterials, str] | str:
     """Extract a BOM from a local path or a remote filename."""
     try:
         # 1. Get the actual file (PDF or Image) - works for both local uploads and remote lookups
@@ -55,6 +56,23 @@ def perform_bom_extraction(file_path: str) -> tuple[BillOfMaterials, str] | str:
         prediction = extractor(drawing=dspy_image)
 
         # Return the BOM AND the path to the ORIGINAL file for display (PDF or Image)
-        return prediction.bom, display_path
+        raw_bom = prediction.bom
+        full_items = []
+        for raw_item in raw_bom.items:
+            # Create a BOMItem using the data extracted by the AI
+            full_item = BOMItem(**raw_item.dict()) 
+            full_items.append(full_item)
+            
+        full_bom = BillOfMaterials(
+            items=full_items,
+            title=raw_bom.title
+            )
+
+        # 4. Enrich Data (Database Step)
+        # Now we look up the Xentral IDs using the clean extracted data
+        enriched_bom = perform_bom_matching(full_bom)
+        print(enriched_bom)
+
+        return enriched_bom, display_path
     except Exception as exc:
         return f"Error extracting BOM: {exc}"

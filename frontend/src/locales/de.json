@@ -140,6 +140,7 @@
         "headers": {
             "position": "Pos.",
             "itemNumber": "Art.Nr.",
+            "xentral_number":"Xentral Nr.",
             "description": "Beschreibung",
             "quantity": "Menge",
             "unit": "Einh."

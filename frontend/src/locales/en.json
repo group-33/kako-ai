@@ -141,6 +141,7 @@
             "position": "Pos.",
             "itemNumber": "Item No.",
             "description": "Description",
+            "xentral_number":"Xentral Nr.",
             "quantity": "Quantity",
             "unit": "Unit"
         },

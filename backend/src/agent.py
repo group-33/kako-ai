@@ -91,7 +91,7 @@ TOOLBOX = [
     perform_bom_extraction,
     # demand analysis
     bom_check,
-    perform_bom_matching,
+    #perform_bom_matching,
     run_full_feasibility_analysis,
     list_deliveries_in_range,
     get_inventory_for_part,

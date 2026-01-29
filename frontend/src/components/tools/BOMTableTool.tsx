@@ -12,6 +12,7 @@ type BOMRow = {
   id: string;
   pos?: string | number;
   item_nr?: string;
+  xentral_number?: string;
   component: string; // fallback
   description?: string;
   quantity: number;
@@ -56,6 +57,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
             item_id: row.id,
             quantity: Number(row.quantity),
             item_nr: row.item_nr || null,
+            xentral_number: row.xentral_number || null,
             description: row.description || row.component,
             unit: row.unit
           })),
@@ -128,6 +130,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                   <tr>
                     <th className="px-3 py-2 font-medium w-12">{t("bomTable.headers.position")}</th>
                     <th className="px-3 py-2 font-medium w-24">{t("bomTable.headers.itemNumber")}</th>
+                    <th className="px-3 py-2 font-medium w-32">{t("bomTable.headers.xentral_number")}</th>
                     <th className="px-3 py-2 font-medium">{t("bomTable.headers.description")}</th>
                     <th className="px-3 py-2 font-medium w-20 text-right">{t("bomTable.headers.quantity")}</th>
                     <th className="px-3 py-2 font-medium w-16">{t("bomTable.headers.unit")}</th>
@@ -149,6 +152,15 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                           onChange={(e) => handleFieldChange(i, "item_nr", e.target.value)}
                           className="w-full bg-transparent border-none text-slate-300 focus:ring-0 focus:text-sky-200 placeholder:text-slate-700"
                           placeholder="-"
+                        />
+                      </td>
+
+                      <td className="px-3 py-2">
+                        <input
+                          value={row.xentral_number || ""}
+                          onChange={(e) => handleFieldChange(i, "xentral_number", e.target.value)}
+                          className="w-full bg-transparent border-none text-slate-300 focus:ring-0 focus:text-sky-200 placeholder:text-slate-700"
+                          placeholder="Not Matched"
                         />
                       </td>
 

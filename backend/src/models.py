@@ -18,7 +18,7 @@ class BOMItem(BaseModel):
 class BillOfMaterials(BaseModel):
     items: List[BOMItem] = Field(description="All component line items that make up the BOM.")
 """
-class BOMItem(BaseModel):
+class RawBOMItem(BaseModel):
     part_number: int = Field(
         "1",
         description=(
@@ -57,9 +57,20 @@ class BOMItem(BaseModel):
         )
     )
 
-class BillOfMaterials(BaseModel):
-    items: List[BOMItem] = Field(description="All component line items that make up the BOM.")
+class RawBillOfMaterials(BaseModel):
+    title: Optional[str] = Field(None, description="The title of the technical drawing, usually found in the title block.")
+    items: List[RawBOMItem] = Field(description="All component line items that make up the BOM.")
 
+class BOMItem(RawBOMItem):
+    """Inherits raw data and adds Xentral ERP fields."""
+    xentral_number: Optional[str] = Field(
+        None, 
+        description="The internal database ID of the product in Xentral."
+    )
+
+class BillOfMaterials(BaseModel):
+    title: Optional[str] = Field(None, description="The title of the technical drawing, usually found in the title block.")
+    items: List[BOMItem] = Field(description="All component line items that make up the BOM.")
 
 class TextBlock(BaseModel):
     """Standard text response block."""
@@ -74,6 +85,7 @@ class BOMRow(BaseModel):
     id: str
     pos: str | int | None = None
     item_nr: str | None = None
+    xentral_number: str | None = None
     component: str  # Kept for backward compat (will map to description usually)
     description: str | None = None
     quantity: float
@@ -106,6 +118,7 @@ class BOMOverride(BaseModel):
     item_id: str
     quantity: float
     item_nr: str | None = None
+    xentral_number: str | None = None
     description: str | None = None
     unit: str | None = None
     component: str | None = None # Deprecated but kept for safety

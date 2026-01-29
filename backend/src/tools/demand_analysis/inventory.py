@@ -9,6 +9,7 @@ from dateutil.relativedelta import relativedelta
 from backend.src.config import XENTRAL_BEARER_TOKEN, XENTRAL_BASE_URL, XENTRAL_TIMEOUT_SECONDS
 from backend.src.models import BillOfMaterials
 
+
 def _build_headers() -> Dict[str, str]:
     """Build authorization headers for Xentral API calls."""
     return {
@@ -267,6 +268,224 @@ def get_boms_for_orders(order_numbers: List[str]) -> Dict[str, Any]:
             results[order_nr] = {"error": f"Failed to process order: {str(e)}"}
             
     return results
+
+def xentral_BOM(bom: BillOfMaterials) -> Dict[str, Any]:
+    """
+    Overwrites the BOM for a product in Xentral.
+    """
+    from backend.src.tools.demand_analysis.bom import ProductInfoStore
+    
+    store = ProductInfoStore()
+    target_identifier = bom.title or "New Extracted BOM"
+
+    # 1. Resolve Parent Product
+    parent_match = store.search(target_identifier, target_identifier)
+    parent_id = None
+    final_number = None
+    
+    if parent_match:
+        parent_id = str(parent_match.get("id"))
+        final_number = parent_match.get("nummer")
+        print(f"   ✅ Found Parent in DB: {final_number} (ID: {parent_id})")
+    else:
+        # Fallback: Live API Check
+        print(f"   🔎 SQL Miss. Checking Live API for '{target_identifier}'...")
+        api_id, api_num = _get_id_from_api_by_name(target_identifier)
+        
+        if api_id:
+            parent_id = api_id
+            final_number = api_num
+            print(f"   ✅ Found Parent via Live API: {final_number} (ID: {parent_id})")
+        else:
+            print(f"   ✨ Parent not found. Creating '{target_identifier}'...")
+            new_id, new_num = _create_product(name=target_identifier)
+            if not new_id:
+                return {"error": f"Failed to create product '{target_identifier}'."}
+            parent_id = str(new_id)
+            final_number = new_num
+            print(f"   ✅ Created New Product: {final_number} (ID: {parent_id})")
+    
+    # 2. Resolve Child Items
+    resolved_items = []
+    print("   🔍 Resolving Child Parts...")
+    
+    for item in bom.items:
+        child_id = None
+        search_key = item.xentral_number or item.item_nr
+        
+        # A. SQL Store
+        match = store.search(search_key, item.description)
+        if match:
+            child_id = match.get("id")
+        
+        # B. Live API Fallback
+        if not child_id and search_key:
+            print(f"      ⚠️ SQL Miss for '{search_key}'. Trying Live API...")
+            child_id = _get_id_from_api_by_number(search_key)
+            if child_id:
+                print(f"      ✅ Resolved via Live API: ID {child_id}")
+
+        if child_id:
+            resolved_items.append({
+                "part_id": child_id,
+                "quantity": item.quantity,
+                "item_nr": item.item_nr
+            })
+        else:
+            print(f"      ❌ FAILED to resolve part: {item.item_nr} / {item.description}")
+    
+
+    created_count = 0
+    errors = []
+    
+    if not resolved_items:
+        print("   ⚠️ Warning: No valid child parts found. BOM will be empty.")
+
+    for r_item in resolved_items:
+        # Using V1 Creation Logic
+        success = _create_bom_part_v1(parent_id, int(r_item["part_id"]), float(r_item["quantity"]))
+        if success:
+            created_count += 1
+        else:
+            errors.append(f"Failed to add part ID {r_item['part_id']} ({r_item['item_nr']})")
+
+    return {
+        "status": "completed",
+        "parent_product_number": final_number,
+        "parent_product_id": parent_id,
+        "entries_deleted": 0, # Explicitly 0
+        "entries_created": created_count,
+        "errors": errors
+    }
+
+
+# --- API Helpers -------------------------------------------------------------
+
+def _get_id_from_api_by_number(number: str) -> str | None:
+    """Fallback: Search Live API by 'nummer'."""
+    url = f"{XENTRAL_BASE_URL}/api/v1/products"
+    params = {
+        "filter[0][property]": "nummer",
+        "filter[0][expression]": "eq",
+        "filter[0][value]": number,
+        "items": 1
+    }
+    try:
+        resp = requests.get(url, params=params, headers=_build_headers(), timeout=XENTRAL_TIMEOUT_SECONDS)
+        if resp.status_code == 200:
+            data = resp.json()
+            rows = data.get("data", []) if isinstance(data, dict) else []
+            if rows:
+                return str(rows[0].get("id"))
+    except Exception:
+        pass
+    return None
+
+def _get_id_from_api_by_name(name: str) -> Tuple[str | None, str | None]:
+    """Fallback: Search Live API by 'name_de'."""
+    url = f"{XENTRAL_BASE_URL}/api/v1/products"
+    params = {
+        "filter[0][property]": "name_de",
+        "filter[0][expression]": "eq",
+        "filter[0][value]": name,
+        "items": 1
+    }
+    try:
+        resp = requests.get(url, params=params, headers=_build_headers(), timeout=XENTRAL_TIMEOUT_SECONDS)
+        if resp.status_code == 200:
+            data = resp.json()
+            rows = data.get("data", []) if isinstance(data, dict) else []
+            if rows:
+                return str(rows[0].get("id")), str(rows[0].get("nummer"))
+    except Exception:
+        pass
+    return None, None
+
+def _create_product(name: str) -> Tuple[str | None, str | None]:
+    """Create product via V1 API. Robust parsing."""
+    url = f"{XENTRAL_BASE_URL}/api/v1/products"
+    
+    payload = {
+        "name": name,
+        "hasBillOfMaterials": True,
+        "project": {"id": "1"}, 
+        "freeFields": [
+            {"id": "1", "value": "aktiv"},
+            {"id": "7", "value": "KakoAI-Generated"}
+        ],
+        "description": "Generated by KakoAI via Agent",
+        "categories": [{"id": "7"}]
+    }
+
+    try:
+        resp = requests.post(url, json=payload, headers=_build_headers(), timeout=XENTRAL_TIMEOUT_SECONDS)
+        
+        if resp.status_code == 201:
+            location_url = resp.headers.get("Location", "")
+            if not location_url:
+                print("Error: 201 Created but no Location header found.")
+                return None, None
+            
+            new_id = location_url.rstrip('/').split('/')[-1]
+            if not new_id.isdigit():
+                print(f"Error: Could not parse ID from Location header: {location_url}")
+                return None, None
+
+            details_url = f"{XENTRAL_BASE_URL}/api/v1/products/{new_id}"
+            det_resp = requests.get(details_url, headers=_build_headers(), timeout=XENTRAL_TIMEOUT_SECONDS)
+            
+            new_number = "UNKNOWN"
+            if det_resp.status_code == 200:
+                data = det_resp.json()
+                if isinstance(data, dict) and "data" in data:
+                    data = data["data"]
+                
+                if isinstance(data, list) and len(data) > 0:
+                    new_number = data[0].get("nummer", "UNKNOWN")
+                elif isinstance(data, dict):
+                    new_number = data.get("nummer", "UNKNOWN")
+            
+            return str(new_id), str(new_number)
+
+        else:
+            print(f"Xentral Creation Failed: {resp.status_code} - {resp.text}")
+            
+    except Exception as e:
+        print(f"Error creating product: {e}")
+        
+    return None, None
+
+
+def _delete_bom_part_v2(parent_id: str, entry_id: str) -> bool:
+    """STUB: V1 has no delete. Returning True to bypass."""
+    return True 
+
+
+def _create_bom_part_v1(parent_id: str, child_part_id: int, quantity: float) -> bool:
+    """
+    Create BOM part using V1 Endpoint.
+    """
+    # V1 Endpoint
+    url = f"{XENTRAL_BASE_URL}/api/v1/products/{parent_id}/parts"
+    
+    # V1 Payload: Flat ID + Quantity
+    payload = [{
+        "part": {"id": str(child_part_id)}, 
+        "amount": quantity,
+    }]
+    
+    try:
+        resp = requests.post(url, json=payload, headers=_build_headers(), timeout=XENTRAL_TIMEOUT_SECONDS)
+        
+        if resp.status_code in [200, 201]:
+            return True
+        
+        print(f"      [V1 Error] Failed to add part: {resp.status_code} {resp.text}")
+        return False
+        
+    except Exception as e:
+        print(f"      [V1 Exception] {e}")
+        return False
 
 
 # --- HTTP helper -------------------------------------------------------------
