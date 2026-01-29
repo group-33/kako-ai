@@ -217,11 +217,7 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
             match_source = "SEARCH"
             
             if pre_resolved_id and pre_resolved_id != "NOT_FOUND":
-                 # If we have it, assume it's the internal ID or usable number.
-                 # Note: BOMItem.xentral_number might be the 'nummer' (string) or 'id' (int).
-                 # Inventory check expects 'str(xentral_id)' which is the internal ID.
-                 # If xentral_number holds the Part Number (e.g. 914...), we might still need to search by number to get ID.
-                 # But description says "internal database ID". Let's trust it's the ID if it looks like one.
+                 # If we have it, assume it's the internal ID.
                  xentral_id = pre_resolved_id
                  match_source = "DIRECT"
             else:

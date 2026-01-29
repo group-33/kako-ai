@@ -13,11 +13,11 @@ def run_showcase():
     
     # Product ID 3 (part number 9142083116) has Stock 81, Min 20.
     item = BOMItem(
-        position=1,
+        part_number=1, # Field 'part_number' in model corresponds to 'Position' (int)
         quantity=1.0,
         description="Showcase Part",
         item_nr="9142083116", # Resolves to Xentral ID 3
-        part_number="9142083116"
+        unit="pcs"
     )
     
     bom = BillOfMaterials(
@@ -30,12 +30,12 @@ def run_showcase():
     
     # Create a second BOM model to test the "Direct Shortcut" (xentral_number present)
     item_direct = BOMItem(
-        position=2,
+        part_number=2,
         quantity=1.0,
         description="Direct ID Test",
         item_nr="DUMMY_NR", # Should be ignored if xentral_number works
-        part_number="DUMMY_PN",
-        xentral_number="3" # Direct ID for the same product
+        xentral_number="3", # Direct ID for the same product
+        unit="pcs"
     )
     bom_direct = BillOfMaterials(project_id="DirectTest", items=[item_direct])
     
