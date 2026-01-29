@@ -6,15 +6,11 @@ import json
 import psycopg2
 
 from backend.src.models import BillOfMaterials
-from backend.src.config import SUPABASE_PASSWORD, DB_HOST, DB_PORT, DB_USER, DB_NAME
+from backend.src.config import SUPABASE_PASSWORD, DB_HOST, DB_PORT, DB_USER, DB_NAME, SUPABASE_DSN
 from backend.src.models import BillOfMaterials
 from backend.src.tools.demand_analysis.embeddings import get_vertex_embedding
 from backend.src.tools.demand_analysis.inventory import _fetch_bom_for_product, get_inventory_for_product
 
-
-# Handle missing port gracefully
-_db_port = f":{DB_PORT}" if DB_PORT else ""
-SUPABASE_DSN = f"postgresql://{DB_USER}:{SUPABASE_PASSWORD}@{DB_HOST}{_db_port}/{DB_NAME}?sslmode=require"
 
 class BOMCheck(dspy.Signature):
     """Determine if the requested product is a Bill-of-Materials."""
@@ -212,16 +208,32 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
             start_pn = getattr(item, 'part_number', None)
             desc = getattr(item, 'description', None)
             
-            search_query = item_nr or str(start_pn) or desc
+            # NEW: Check if xentral_number is already resolved/present
+            pre_resolved_id = getattr(item, 'xentral_number', None)
             
-            # Try to resolve ID
-            store = ProductInfoStore()
-            match = store.search(bom_number=str(search_query), bom_desc=desc)
-            
-            xentral_id = match.get("id") if match else None
-            name = desc or (match.get("name_de") if match else "Unknown")
+            xentral_id = None
+            name = desc or "Unknown"
             part_number = item_nr or str(start_pn)
+            match_source = "SEARCH"
             
+            if pre_resolved_id and pre_resolved_id != "NOT_FOUND":
+                 # If we have it, assume it's the internal ID or usable number.
+                 # Note: BOMItem.xentral_number might be the 'nummer' (string) or 'id' (int).
+                 # Inventory check expects 'str(xentral_id)' which is the internal ID.
+                 # If xentral_number holds the Part Number (e.g. 914...), we might still need to search by number to get ID.
+                 # But description says "internal database ID". Let's trust it's the ID if it looks like one.
+                 xentral_id = pre_resolved_id
+                 match_source = "DIRECT"
+            else:
+                search_query = item_nr or str(start_pn) or desc
+                
+                # Try to resolve ID
+                store = ProductInfoStore()
+                match = store.search(bom_number=str(search_query), bom_desc=desc)
+                
+                xentral_id = match.get("id") if match else None
+                name = desc or (match.get("name_de") if match else "Unknown")
+        else:    
         else:
             # Dictionary input (Legacy path)
             # Default placeholders
