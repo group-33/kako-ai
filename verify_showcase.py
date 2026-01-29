@@ -25,21 +25,36 @@ def run_showcase():
         items=[item]
     )
     
+
     print(f"Created BOM Model with item: {item.item_nr}")
     
+    # Create a second BOM model to test the "Direct Shortcut" (xentral_number present)
+    item_direct = BOMItem(
+        position=2,
+        quantity=1.0,
+        description="Direct ID Test",
+        item_nr="DUMMY_NR", # Should be ignored if xentral_number works
+        part_number="DUMMY_PN",
+        xentral_number="3" # Direct ID for the same product
+    )
+    bom_direct = BillOfMaterials(project_id="DirectTest", items=[item_direct])
+    
     scenarios = [
-        (50, "Safe Order"),      # Req 50, Rem 31 (>20) -> OK
-        (65, "Warning Zone"),    # Req 65, Rem 16 (<20) -> Warning
-        (90, "Infeasible")       # Req 90, Rem -9 -> Fail
+        (50, "Safe Order (Standard Lookup)", bom),
+        (65, "Warning Zone (Standard Lookup)", bom),
+        (50, "Direct ID Shortcut (Should match ID 3)", bom_direct)
     ]
     
-    for amount, label in scenarios:
+    for amount, label, bom_obj in scenarios:
         print(f"\nTesting {label} (Amount: {amount})...")
         try:
-            result_json = check_feasibility(bom, order_amount=amount)
+            result_json = check_feasibility(bom_obj, order_amount=amount)
             result = json.loads(result_json)
             
             print(f"Feasible: {result['feasible']}")
+            if result['details']:
+                 print(f"DEBUG Details: {result['details'][0]['part_number']} - In Stock: {result['details'][0]['in_stock']}")
+            
             if result['warnings']:
                 print("Warnings:")
                 for w in result['warnings']:

@@ -233,7 +233,6 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
                 
                 xentral_id = match.get("id") if match else None
                 name = desc or (match.get("name_de") if match else "Unknown")
-        else:    
         else:
             # Dictionary input (Legacy path)
             # Default placeholders
