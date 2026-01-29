@@ -100,7 +100,7 @@ export default function Configuration() {
                             )
                         })}
                         {loading && (
-                            <div className="col-span-2 text-center py-8 text-slate-500">Loading models...</div>
+                            <div className="col-span-2 text-center py-8 text-slate-500">{t('config.loadingModels')}</div>
                         )}
                     </div>
                 </div>
