@@ -8,7 +8,6 @@ import psycopg2
 from backend.src.models import BillOfMaterials
 from backend.src.config import SUPABASE_PASSWORD, DB_HOST, DB_PORT, DB_USER, DB_NAME, SUPABASE_DSN
 from backend.src.models import BillOfMaterials
-from backend.src.tools.demand_analysis.embeddings import get_vertex_embedding
 from backend.src.tools.demand_analysis.inventory import _fetch_bom_for_product, get_inventory_for_product
 
 
