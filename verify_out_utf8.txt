@@ -1,0 +1,14 @@
+﻿--- Feasibility Check Showcase (Real Data) ---
+Created BOM Model with item: 9142083116
+
+Testing Safe Order (Amount: 50)...
+Error checking feasibility: invalid integer value "None" for connection option "port"
+
+
+Testing Warning Zone (Amount: 65)...
+Error checking feasibility: invalid integer value "None" for connection option "port"
+
+
+Testing Infeasible (Amount: 90)...
+Error checking feasibility: invalid integer value "None" for connection option "port"
+

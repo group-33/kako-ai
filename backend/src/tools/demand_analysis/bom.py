@@ -11,7 +11,10 @@ from backend.src.models import BillOfMaterials
 from backend.src.tools.demand_analysis.embeddings import get_vertex_embedding
 from backend.src.tools.demand_analysis.inventory import _fetch_bom_for_product, get_inventory_for_product
 
-SUPABASE_DSN = f"postgresql://{DB_USER}:{SUPABASE_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
+
+# Handle missing port gracefully
+_db_port = f":{DB_PORT}" if DB_PORT else ""
+SUPABASE_DSN = f"postgresql://{DB_USER}:{SUPABASE_PASSWORD}@{DB_HOST}{_db_port}/{DB_NAME}?sslmode=require"
 
 class BOMCheck(dspy.Signature):
     """Determine if the requested product is a Bill-of-Materials."""
