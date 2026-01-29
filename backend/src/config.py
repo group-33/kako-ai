@@ -31,6 +31,11 @@ XENTRAL_TIMEOUT_SECONDS = 10
 SUPABASE_DSN = os.getenv("SUPABASE_DSN")
 SUPABASE_PASSWORD = os.getenv("SUPABASE_PASSWORD")
 
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_USER = os.getenv("DB_USER")
+DB_NAME = os.getenv("DB_NAME")
+
 # --- Gemini model handles ---
 GEMINI_3_PRO = dspy.LM("vertex_ai/gemini-3-pro-preview", **VERTEX_ARGS)
 GEMINI_2_5_PRO = dspy.LM("vertex_ai/gemini-2.5-pro", **VERTEX_ARGS)

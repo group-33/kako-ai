@@ -86,7 +86,7 @@ export default function ChatPage() {
     if (currentThread && currentThread.messages === null) {
         return (
             <div className="flex h-full items-center justify-center bg-slate-950">
-                <div className="text-slate-400 animate-pulse">Loading conversation...</div>
+                <div className="text-slate-400 animate-pulse">{t('chatPage.loadingConversation')}</div>
             </div>
         );
     }

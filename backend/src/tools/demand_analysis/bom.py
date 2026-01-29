@@ -6,18 +6,10 @@ import json
 import psycopg2
 
 from backend.src.models import BillOfMaterials
-from backend.src.config import (
-    VERTEX_ARGS,
-    SUPABASE_PASSWORD,
-)
+from backend.src.config import SUPABASE_PASSWORD, DB_HOST, DB_PORT, DB_USER, DB_NAME
 from backend.src.models import BillOfMaterials
 from backend.src.tools.demand_analysis.embeddings import get_vertex_embedding
 from backend.src.tools.demand_analysis.inventory import _fetch_bom_for_product, get_inventory_for_product
-
-DB_HOST = "aws-1-eu-north-1.pooler.supabase.com"
-DB_PORT = "5432"
-DB_USER = "postgres.lnnlghymsockmysbbour"
-DB_NAME = "postgres"
 
 SUPABASE_DSN = f"postgresql://{DB_USER}:{SUPABASE_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
 
@@ -63,64 +55,26 @@ def bom_check(product_identifier: str) -> str:
     )
 
 
-def perform_bom_matching(bom: BillOfMaterials) -> str:
+def perform_bom_matching(bom: BillOfMaterials) -> BillOfMaterials:
     """
     Matches extracted BOM items against the internal Xentral ERP product database.
-    
-    This tool takes a raw Bill of Materials (BOM) and performs a hybrid search 
-    (Exact ID Match -> Text Substring -> Semantic Vector Search) for each item 
-    to find its corresponding Xentral SKU.
-
-    Args:
-        bom (BillOfMaterials): The structured BOM object extracted from a technical drawing.
-
-    Returns:
-        str: A JSON-formatted string containing a list of items. Each item includes:
-             - 'bom_part_id': The position number from the drawing.
-             - 'extracted_number': The raw order number found in the BOM.
-             - 'match_found': Boolean indicating if a database match was found.
-             - 'xentral_number': The matched ERP SKU (if found).
-             - 'xentral_name': The matched ERP Product Name.
-             - 'confidence_source': How the match was found (e.g., 'ID_MATCH', 'VECTOR_MATCH').
+    Finds the Xentral number.
     """
     store = ProductInfoStore()
+    #print("in bom matching")
 
-    items_list = bom.items if hasattr(bom, "items") else bom
-
-    results = []
-
-    for item in items_list:
-        part_number = getattr(item, "part_number", None)
-        number = getattr(item, "item_nr", None)
-        desc = getattr(item, "description", None)
-        unit = getattr(item, "unit", None)
-        quantity = getattr(item, "quantity", None)
-
-        match = store.search(bom_number=number, bom_desc=desc)
-
-        entry = {
-            "bom_part_id": part_number,         
-            "extracted_number": str(number) if number else None,
-            "extracted_description": desc,
-            "unit": unit,
-            "quantity": quantity,
-            "match_found": False,
-            "xentral_number": None,
-            "xentral_name": None,
-            "confidence_source": None
-        }
-
-        if match:
-            entry.update({
-                "match_found": True,
-                "xentral_number": match.get('nummer'),
-                "xentral_name": match.get('name_de'),
-                "confidence_source": match.get('_source')
-            })
+    for item in bom.items:
+        # Search using the extracted item number and description
+        match = store.search(bom_number=item.item_nr, bom_desc=item.description) #
         
-        results.append(entry)
+        if match:
+            item.xentral_number = match.get("nummer")
+            #item.xentral_number = match.get("nummer")
+            #item.match_source = match.get("_source")
+        else:
+            item.xentral_number = "NOT_FOUND"
 
-    return json.dumps(results, indent=2)
+    return bom
 
 
 class ProductInfoStore:
@@ -196,21 +150,6 @@ class ProductInfoStore:
                     conn.close()
                     return {"id": row[0], "nummer": row[1], "name_de": row[2], "_source": "TEXT_MATCH"}
                 
-        if len(q_desc) > 3:
-                query_vector = get_vertex_embedding(q_desc)
-                
-                cursor.execute("""
-                    SELECT xentral_id, nummer, name_de 
-                    FROM xentral_products 
-                    ORDER BY embedding <-> %s::vector
-                    LIMIT 1
-                """, (query_vector,))
-                
-                row = cursor.fetchone()
-                if row:
-                    cursor.close()
-                    conn.close()
-                    return {"id": row[0], "nummer": row[1], "name_de": row[2], "_source": "VECTOR_MATCH"}
         cursor.close()
         conn.close()
         return None

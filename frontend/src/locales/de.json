@@ -45,13 +45,15 @@
         }
     },
     "chatPage": {
-        "selectPlaceholder": "Wähle einen Workflow oder starte einen neuen."
+        "selectPlaceholder": "Wähle einen Workflow oder starte einen neuen.",
+        "loadingConversation": "Konversation wird geladen..."
     },
     "config": {
         "title": "Einstellungen",
         "modelSelection": "KI-Modell Auswahl",
         "modelDesc": "Wähle das LLM, das den Kako AI Agenten antreibt.",
-        "save": "Einstellungen werden automatisch gespeichert."
+        "save": "Einstellungen werden automatisch gespeichert.",
+        "loadingModels": "Modelle werden geladen..."
     },
     "login": {
         "subtitle": "Generativer KI-Copilot für Machbarkeit & Beschaffung",
@@ -130,6 +132,10 @@
         },
         "message": {
             "thinking": "Denkt nach..."
+        },
+        "actionBar": {
+            "copy": "Kopieren",
+            "refresh": "Aktualisieren"
         }
     },
     "bomTable": {
@@ -140,6 +146,7 @@
         "headers": {
             "position": "Pos.",
             "itemNumber": "Art.Nr.",
+            "xentral_number": "Xentral Nr.",
             "description": "Beschreibung",
             "quantity": "Menge",
             "unit": "Einh."
@@ -179,6 +186,8 @@
         "footer": "Die Analyse basiert auf den aktuell ausgewählten Lieferantenoptionen."
     },
     "attachment": {
-        "download": "Herunterladen"
+        "download": "Herunterladen",
+        "add": "Anhang hinzufügen",
+        "remove": "Datei entfernen"
     }
 }

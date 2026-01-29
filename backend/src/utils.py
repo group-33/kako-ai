@@ -94,6 +94,7 @@ def build_bom_tool_block(
         item_nr = item.item_nr
         description = item.description or ""
         unit = item.unit or "Stk" # Default only if missing
+        xentral_nr = item.xentral_number
         
         # "Component" is a legacy field for the UI, usually same as description or combined
         component_display = description if description else f"Item {idx+1}"
@@ -103,6 +104,7 @@ def build_bom_tool_block(
                 id=row_id,
                 pos=pos,
                 item_nr=item_nr,
+                xentral_number=xentral_nr,
                 component=component_display, # Kept for safety
                 description=description,
                 quantity=float(item.quantity) if item.quantity is not None else 0.0,
@@ -113,6 +115,7 @@ def build_bom_tool_block(
 
     bom_data = BOMTableData(
         rows=rows, 
+        title=bom.title,
         source_document=source_document,
         preview_image=preview_image
     )
