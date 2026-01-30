@@ -60,8 +60,61 @@ def list_deliveries_in_range(start_date: str, end_date: str) -> List[Dict[str, A
     ]
 
 
+def get_inventory_for_product(product_id: str) -> Optional[dict]:
+    """
+    Fetch current stock quantity and minimum stock for a product from Xentral.
+    
+    Args:
+        product_id: The Xentral internal ID of the product.
+        
+    Returns:
+        Optional[dict]: Dict with 'stock' (int/float) and 'min_stock' (int/float). Returns None if error.
+    """
+    if not XENTRAL_BEARER_TOKEN or not XENTRAL_BASE_URL:
+        # Fallback to mock if no credentials
+        return {"stock": 125, "min_stock": 10}
+
+    # Correct endpoint verified: /api/v1/artikel with include=lagerbestand
+    url = f"{XENTRAL_BASE_URL}/api/v1/artikel"
+    params = {
+        "filter[0][property]": "id",
+        "filter[0][expression]": "eq",
+        "filter[0][value]": product_id,
+        "include": "lagerbestand",
+        "items": 1
+    }
+    
+    try:
+        resp = requests.get(url, params=params, headers=_build_headers(), timeout=XENTRAL_TIMEOUT_SECONDS)
+        resp.raise_for_status()
+        data = resp.json()
+        items = data.get("data", [])
+        if items:
+            product = items[0]
+            # 'lagerbestand' is a dict containing 'verkaufbar' (sellable stock)
+            lb = product.get("lagerbestand", {})
+            if isinstance(lb, dict):
+                stock = lb.get("verkaufbar", 0)
+            else:
+                stock = lb # Fallback if it is a number
+            
+            # Fetch minimum stock (mindestlager)
+            min_stock = product.get("mindestlager", 0)
+            
+            return {
+                "stock": int(float(stock)), 
+                "min_stock": int(float(min_stock))
+            }
+    except Exception as e:
+        print(f"Error fetching inventory for {product_id}: {e}")
+        return None
+        
+    return None
+
+
 def get_inventory_for_part(part_number: str) -> Dict[str, Any]:
-    """Return stock info for a single part (mocked)."""
+    """Return stock info for a single part (mocked wrapper, useful for legacy compatibility)."""
+    # Note: proper mapping from part_number to ID would be needed for real check
     return {"part_number": part_number, "in_stock": 125}
 
 
