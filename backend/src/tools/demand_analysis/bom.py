@@ -291,7 +291,7 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
         min_stock = 0
         
         if xentral_id:
-             stock_info = get_inventory_for_product(str(xentral_id))
+            stock_info = get_inventory_for_product(str(xentral_id))
         elif part_number:
              # Try second pass resolution if dict path failed
              store = ProductInfoStore()
@@ -299,8 +299,7 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
              if match and match.get("id"):
                  xentral_id = match.get("id")
                  stock_info = get_inventory_for_product(str(xentral_id))
-
-        
+                 
         # Handle stock result
         is_enough = False
         stock_display = "Unknown (Error)"
