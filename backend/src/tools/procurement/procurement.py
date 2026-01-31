@@ -26,8 +26,8 @@ print(f"Procurement API is_live={PROCUREMENT_API_IS_LIVE}")
 
 
 def filter_sellers_by_shipping(
-    data: str, target_country_codes: List[str] = ["DE"]
-) -> str:
+    data: dict, target_country_codes: List[str] = ["DE"]
+) -> dict:
     """
     Filters sellers based on their shipping capabilities.
 
@@ -77,8 +77,8 @@ def filter_sellers_by_shipping(
 
 
 def sort_and_filter_by_best_price(
-    data: str, quantity: int = 1, top_x: int = 3, ignore_inventory_level: bool = False
-) -> str:
+    data: dict, quantity: int = 1, top_x: int = 3, ignore_inventory_level: bool = False
+) -> dict:
     """
     Filters the data to find the Top X cheapest solutions for a given quantity.
 
