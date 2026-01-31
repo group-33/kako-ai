@@ -77,7 +77,7 @@ def get_inventory_for_product(product_id: str) -> Optional[dict]:
     # Correct endpoint verified: /api/v1/artikel with include=lagerbestand
     url = f"{XENTRAL_BASE_URL}/api/v1/artikel"
     params = {
-        "filter[0][property]": "id",
+        "filter[0][property]": "nummer",
         "filter[0][expression]": "eq",
         "filter[0][value]": product_id,
         "include": "lagerbestand",
@@ -89,6 +89,7 @@ def get_inventory_for_product(product_id: str) -> Optional[dict]:
         resp.raise_for_status()
         data = resp.json()
         items = data.get("data", [])
+        print(items)
         if items:
             product = items[0]
             # 'lagerbestand' is a dict containing 'verkaufbar' (sellable stock)
@@ -152,6 +153,7 @@ def get_existing_customer_orders() -> List[Dict[str, Any]]:
 
 def get_sales_orders(time_quantity: str, time_unit: str) -> Any:
     """Return sales orders for the given future time window. Real call if creds present, else mock."""
+    #print("hi")
     from_date, to_date = _calculate_dates(time_quantity, time_unit)
     url = f"{XENTRAL_BASE_URL}/api/v1/belege/auftraege"
     params = {
@@ -164,6 +166,7 @@ def get_sales_orders(time_quantity: str, time_unit: str) -> Any:
         "include": "positionen",
         "items": 1000,
     }
+    print(params)
     resp = requests.get(url, params=params, headers=_build_headers(), timeout=XENTRAL_TIMEOUT_SECONDS)
     resp.raise_for_status()
     data = resp.json() if resp.content else {}

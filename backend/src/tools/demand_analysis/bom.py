@@ -172,6 +172,8 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
         "details": []
     }
 
+    print("hi, check feasibility")
+
     # Normalize input to a list of items
     items = []
     parent_product_name = "Unknown Product"
