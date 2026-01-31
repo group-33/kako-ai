@@ -30,7 +30,45 @@ from backend.src.utils import (
     apply_bom_update,
 )
 
-# --- Configure LLM globally ---
+## --- Configure LLM globally ---
+## 1. Save the original request method
+## We patch the class's __call__ method because instance-level patching of __call__ doesn't work for dunder methods,
+## and basic_request appears to be missing in this version of DSPy.
+#LMClass = type(GEMINI_2_5_FLASH)
+#original_call = LMClass.__call__
+#
+## 2. Define the "Spy" function
+#def verbose_call_spy(self, *args, **kwargs):
+#    """
+#    Wraps the LLM request to print the Agent's 'Thoughts' in real-time.
+#    """
+#    # (Optional) Print the Prompt to see what the agent is seeing
+#    prompt_or_messages = kwargs.get("messages") or kwargs.get("prompt") or (args[0] if args else "Unknown")
+#    import pprint
+#    print(f"\n📩 [SENDING PROMPT/MESSAGES]:")
+#    if isinstance(prompt_or_messages, list):
+#        for msg in prompt_or_messages:
+#            print(msg)
+#    else:
+#        print(prompt_or_messages)
+#    print("-" * 20 + "\n")
+#
+#    # Execute the actual API call
+#    completions = original_call(self, *args, **kwargs)
+#    
+#    # Print the Agent's immediate response (The "Thought")
+#    # completions is usually a list of strings or dicts in DSPy
+#    for i, c in enumerate(completions):
+#        # Handle simple string or object response
+#        text = c if isinstance(c, str) else str(c)
+#        print(f"\n🧠 [AGENT THOUGHT]:\n{text}\n{'='*40}")
+#        
+#    return completions
+#
+## 3. Apply the patch
+#print("🕵️♂️ Injection: Real-time Thought Spy activated (Class Level, Kwargs Support).")
+#LMClass.__call__ = verbose_call_spy
+#
 dspy.configure(lm=GEMINI_2_5_FLASH)
 
 app = FastAPI(title="KakoAI")

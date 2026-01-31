@@ -43,8 +43,15 @@ def filter_sellers_by_shipping(
         dict: The filtered data structure.
     """
     print(f"--- [Procurement] Filter Sellers by Shipping (Targets: {target_country_codes}) ---")
+    
+    # Debug: Check data size
+    #import sys
+    #print(f"      [Debug] Data size: {sys.getsizeof(str(data))} bytes")
 
+    #print("      [Debug] Starting deepcopy...")
     filtered_data = copy.deepcopy(data)
+    #print("      [Debug] Deepcopy finished.")
+    
     target_codes = set(code.upper() for code in target_country_codes)
 
     # Helper function to process individual parts
@@ -69,9 +76,13 @@ def filter_sellers_by_shipping(
         return part
 
     if "supMultiMatch" in filtered_data:
-        for match in filtered_data["supMultiMatch"]:
+        matches = filtered_data["supMultiMatch"]
+        #print(f"      [Debug] Processing {len(matches)} matches...")
+        for match in matches:
             if "parts" in match:
                 match["parts"] = [process_part(part) for part in match["parts"]]
+    
+    #print("      [Debug] Filtering complete.")
 
     return filtered_data
 

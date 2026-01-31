@@ -138,4 +138,14 @@ class KakoAgent:
         """Invoke the agent with a natural-language request and return the ReAct prediction."""
         if history is None:
             history = dspy.History(messages=[])
+
         return self.agent(user_query=user_query, history=history)
+        #prediction = self.agent(user_query=user_query, history=history)
+        #print("\n🔍 --- AGENT THOUGHT PROCESS ---")
+        ## n=1 prints the last full interaction (the entire ReAct loop)
+        #try:
+        #    dspy.settings.lm.inspect_history(n=1)
+        #except Exception:
+        #    pass
+        #print("----------------------------------\n")
+        #return prediction
