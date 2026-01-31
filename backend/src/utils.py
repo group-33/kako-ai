@@ -75,29 +75,26 @@ def build_bom_tool_block(
     thread_id: str | None = None,
 ) -> ToolUseBlock:
     # Transform local temp path to served URL path
-    # Transform local temp path to served URL path
-    from backend.src.config import BACKEND_PUBLIC_URL
-
     if source_document:
         if os.path.isabs(source_document):
             temp_dir = tempfile.gettempdir()
             if source_document.startswith(temp_dir):
                 filename = os.path.basename(source_document)
-                source_document = f"{BACKEND_PUBLIC_URL}/files/{filename}"
+                source_document = f"/files/{filename}"
         elif not source_document.startswith("http") and not source_document.startswith("/files/"):
             # Assume it's a raw filename
             filename = os.path.basename(source_document)
-            source_document = f"{BACKEND_PUBLIC_URL}/files/{filename}"
+            source_document = f"/files/{filename}"
 
     if preview_image:
         if os.path.isabs(preview_image):
             temp_dir = tempfile.gettempdir()
             if preview_image.startswith(temp_dir):
                 filename = os.path.basename(preview_image)
-                preview_image = f"{BACKEND_PUBLIC_URL}/files/{filename}"
+                preview_image = f"/files/{filename}"
         elif not preview_image.startswith("http") and not preview_image.startswith("/files/"):
             filename = os.path.basename(preview_image)
-            preview_image = f"{BACKEND_PUBLIC_URL}/files/{filename}"
+            preview_image = f"/files/{filename}"
 
     rows: list[BOMRow] = []
     for idx, item in enumerate(bom.items):
