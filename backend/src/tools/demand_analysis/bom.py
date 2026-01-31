@@ -23,6 +23,8 @@ def bom_check(product_identifier: str) -> str:
 
     The follow-up actions for CASE1/CASE2 are left as simple strings for now.
     """
+    print(f"--- [BOM Check] Verifying product: {str(product_identifier)} ---")
+
     query = (product_identifier or "").strip()
     if not query:
         return "No product identifier provided. Please pass an Artikelnummer or product name."
@@ -164,6 +166,15 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
 
     Returns:
         JSON string report on feasibility.
+        Schema:
+        {
+            "feasible": bool,       # Overall feasibility
+            "missing_items": [],    # List of items with insufficient stock
+            "warnings": [           # List of warnings (e.g. stock low but feasible)
+                {"part": str, "message": str}
+            ],
+            "details": []           # Full line-item details
+        }
     """
     results = {
         "feasible": True,
@@ -172,7 +183,7 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
         "details": []
     }
 
-    print("hi, check feasibility")
+    print(f"--- [Feasibility Check] Checking BOM: {str(bom_input)[:50]}... | Amount: {order_amount} ---")
 
     # Normalize input to a list of items
     items = []

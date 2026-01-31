@@ -5,16 +5,7 @@ from __future__ import annotations
 import dspy
 
 from backend.src.tools.bom_extraction.bom_tool import perform_bom_extraction
-from backend.src.tools.demand_analysis.feasibility import (
-    run_structured_feasibility_check,
-)
 from backend.src.tools.demand_analysis.inventory import (
-    run_full_feasibility_analysis,
-    list_deliveries_in_range,
-    get_inventory_for_part,
-    get_inventory_for_bom,
-    get_pending_procurement_orders,
-    get_existing_customer_orders,
     get_sales_orders,
     get_future_boms,
     get_orders_by_customer,
@@ -22,7 +13,6 @@ from backend.src.tools.demand_analysis.inventory import (
 )
 from backend.src.tools.demand_analysis.bom import (
     bom_check,
-    perform_bom_matching,
     check_feasibility
 )
 from backend.src.tools.procurement.procurement import (
@@ -68,8 +58,9 @@ class KakoAgentSignature(dspy.Signature):
 
     CAPABILITIES & TOOLS:
     - You have access to a comprehensive toolbox for BOM extraction, Demand Analysis, and Procurement.
-    - USE YOUR TOOLS LIBERALLY. If a request involves data retrieval or calculation, always prefer calling a tool over hallucinating using internal knowledge.
-    - Reasoning: Break down complex requests ("Can we fulfill order X?") into steps: check BOM -> check Stock -> check Market.
+    - PRIORITIZE TOOL USAGE: For any request involving data retrieval (stock, BOMs, orders), you should use your tools rather than relying on internal knowledge.
+    - REASONING FIRST: When asked to fulfill an order, consider checking feasibility (`check_feasibility`) or BOM status (`bom_check`) as logical first steps.
+    - Reasoning: Break down complex requests ("Can we fulfill order X?") into steps
 
     LANGUAGE & COMMUNICATION:
     - ALWAYS respond in the same language as the user's request (English or German).
@@ -93,18 +84,10 @@ TOOLBOX = [
     # demand analysis
     bom_check,
     check_feasibility,
-    #perform_bom_matching,
-    #run_full_feasibility_analysis,
-    list_deliveries_in_range,
-    get_inventory_for_part,
-    get_inventory_for_bom,
-    get_pending_procurement_orders,
-    get_existing_customer_orders,
     get_sales_orders,
     get_future_boms,
     get_orders_by_customer,
     get_boms_for_orders,
-    run_structured_feasibility_check,
     # procurement tools
     filter_sellers_by_shipping,
     sort_and_filter_by_best_price,

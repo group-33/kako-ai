@@ -55,6 +55,8 @@ def perform_bom_extraction(file_path: str) -> tuple[RawBillOfMaterials, str] | s
     try:
         # 1. Get the actual file (PDF or Image) - works for both local uploads and remote lookups
         display_path, resolved_filename, is_exact_match = _resolve_local_path(file_path)
+
+        print(f"--- [BOM Extraction] Processing: {file_path} (Resolved: {resolved_filename}) ---")
         
         # If the user asked for a file but we found a fuzzy match remotely, stop and ask.
         # Compare file_path (input) with resolved_filename. 

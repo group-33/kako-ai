@@ -153,7 +153,8 @@ def get_existing_customer_orders() -> List[Dict[str, Any]]:
 
 def get_sales_orders(time_quantity: str, time_unit: str) -> Any:
     """Return sales orders for the given future time window. Real call if creds present, else mock."""
-    #print("hi")
+    print(f"--- [Inventory] Fetching Sales Orders (Next {time_quantity} {time_unit}) ---")
+
     from_date, to_date = _calculate_dates(time_quantity, time_unit)
     url = f"{XENTRAL_BASE_URL}/api/v1/belege/auftraege"
     params = {
@@ -177,6 +178,8 @@ def get_sales_orders(time_quantity: str, time_unit: str) -> Any:
 
 def get_future_boms(time_quantity: str, time_unit: str) -> Dict[str, Any]:
     """Aggregate BOMs for products in upcoming sales orders for a future window."""
+    print(f"--- [Inventory] Get Future BOMs (Next {time_quantity} {time_unit}) ---")
+
     if not XENTRAL_BEARER_TOKEN or not XENTRAL_BASE_URL:
         return {
             "summary": f"[MOCK] No credentials; returning empty BOM list for next {time_quantity} {time_unit}",
@@ -234,6 +237,8 @@ def get_orders_by_customer(customer_id: str, start_date: str = None, end_date: s
         start_date: Start date (YYYY-MM-DD), defaults to 1 month ago.
         end_date: End date (YYYY-MM-DD), defaults to today.
     """
+    print(f"--- [Inventory] Get Orders By Customer: {customer_id} ---")
+
     if not start_date:
         start_date = (datetime.now() - relativedelta(months=1)).strftime("%Y-%m-%d")
     if not end_date:
@@ -272,6 +277,8 @@ def get_boms_for_orders(order_numbers: List[str]) -> Dict[str, Any]:
     Args:
         order_numbers: List of order numbers (Belegnummer, e.g., 'AT-2024-059561').
     """
+    print(f"--- [Inventory] Get BOMs for Orders: {str(order_numbers)} ---")
+
     results = {}
     
     for order_nr in order_numbers:
