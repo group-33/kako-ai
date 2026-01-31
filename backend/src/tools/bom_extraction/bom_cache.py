@@ -18,30 +18,52 @@ class BOMCache:
     """
 
     def __init__(
-        self, path: Optional[str] = None, lock_timeout: int = 10, enabled: bool = True
+        self,
+        path: Optional[str] = None,
+        lock_timeout: int = 10,
+        enabled: bool = True,
+        key_prefix: str = "",
     ):
         self.enabled = bool(enabled)
         self.path = os.path.expanduser(path or "~/.kakoai/bom_cache.pkl")
-        os.makedirs(os.path.dirname(self.path), exist_ok=True)
-        self.lock = FileLock(self.path + ".lock", timeout=lock_timeout)
+        self.key_prefix = key_prefix
+        self.lock = None
+        if self.enabled:
+            dirn = os.path.dirname(self.path)
+            if dirn:
+                os.makedirs(dirn, exist_ok=True)
+            self.lock = FileLock(self.path + ".lock", timeout=lock_timeout)
 
-    def _load(self) -> dict:
+    def _load_unlocked(self) -> dict:
         if not os.path.exists(self.path):
             return {}
+        try:
+            with open(self.path, "rb") as f:
+                return pickle.load(f) or {}
+        except Exception:
+            return {}
+
+    def _load(self) -> dict:
+        if not self.enabled:
+            return {}
         with self.lock:
-            try:
-                with open(self.path, "rb") as f:
-                    return pickle.load(f) or {}
-            except Exception:
-                return {}
+            return self._load_unlocked()
 
     def _atomic_write(self, data: dict):
-        dirn = os.path.dirname(self.path)
+        dirn = os.path.dirname(self.path) or "."
+        if dirn and dirn != ".":
+            os.makedirs(dirn, exist_ok=True)
         fd, tmp = tempfile.mkstemp(dir=dirn)
         os.close(fd)
         with open(tmp, "wb") as f:
             pickle.dump(data, f)
         os.replace(tmp, self.path)
+
+    def _make_key(self, image_path: str) -> str:
+        image_hash = self.compute_image_hash(image_path)
+        if self.key_prefix:
+            return f"{self.key_prefix}:{image_hash}"
+        return image_hash
 
     def _get(self, key: str):
         if not self.enabled:
@@ -52,29 +74,30 @@ class BOMCache:
     def _set(self, key: str, value):
         if not self.enabled:
             return
-        d = self._load()
-        d[key] = value
-        self._atomic_write(d)
+        with self.lock:
+            d = self._load_unlocked()
+            d[key] = value
+            self._atomic_write(d)
 
     def is_in_cache(self, image_path: str) -> bool:
         """Return True if a full BOM for the normalized image is present in the cache."""
         if not self.enabled:
             return False
-        key = self.compute_image_hash(image_path)
+        key = self._make_key(image_path)
         return self._get(key) is not None
 
     def get_full_bom(self, image_path: str):
         """Return the stored full (pre-enrichment) BOM dict for the image, or None."""
         if not self.enabled:
             return None
-        key = self.compute_image_hash(image_path)
+        key = self._make_key(image_path)
         return self._get(key)
 
     def set_full_bom(self, image_path: str, value):
         """Store the full (pre-enrichment) BOM for the normalized image."""
         if not self.enabled:
             return
-        key = self.compute_image_hash(image_path)
+        key = self._make_key(image_path)
         self._set(key, value)
 
     def compute_image_hash(self, image_path: str) -> str:

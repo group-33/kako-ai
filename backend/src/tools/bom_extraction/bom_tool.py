@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import hashlib
 import cv2
 import dspy
 
@@ -14,20 +15,42 @@ from backend.src.tools.bom_extraction.bom_cache import BOMCache
 from backend.src.config import BOM_CACHE_ENABLED, BOM_CACHE_PATH
 
 
-CACHE = BOMCache(path=BOM_CACHE_PATH, enabled=BOM_CACHE_ENABLED)
-
-
 class BOMExtractionSignature(dspy.Signature):
     """Extract a structured BOM from the given technical drawing image.
 
     Ensure you extract the table rows accurately.
-    Also extract the drawing title from the title block if present.
     """
 
     drawing = dspy.InputField(desc="Customer technical drawing as an image.")
     bom: RawBillOfMaterials = dspy.OutputField(
         desc="Structured Bill of Materials extracted from the drawing."
     )
+
+
+def _bom_cache_prefix() -> str:
+    settings = getattr(dspy, "settings", None)
+    lm = getattr(settings, "lm", None) if settings else None
+    model_id = getattr(lm, "model", None) or ""
+    prompt = "\n".join(
+        s
+        for s in [
+            (BOMExtractionSignature.__doc__ or "").strip(),
+            getattr(getattr(BOMExtractionSignature, "drawing", None), "desc", "") or "",
+            getattr(getattr(BOMExtractionSignature, "bom", None), "desc", "") or "",
+        ]
+        if s
+    ).strip()
+    prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest() if prompt else ""
+    if model_id and prompt_hash:
+        return f"{model_id}:{prompt_hash}"
+    return model_id or prompt_hash
+
+
+CACHE = BOMCache(
+    path=BOM_CACHE_PATH,
+    enabled=BOM_CACHE_ENABLED,
+    key_prefix=_bom_cache_prefix(),
+)
 
 
 def _resolve_local_path(file_path: str) -> tuple[str, str, bool]:
@@ -61,16 +84,11 @@ def _prepare_image_for_model(local_path: str) -> str:
     return local_path
 
 
-def perform_bom_extraction(file_path: str) -> tuple[RawBillOfMaterials, str] | str:
+def perform_bom_extraction(file_path: str) -> str | tuple[BillOfMaterials, str]:
     """Extract a BOM from a local path or a remote filename."""
     try:
         # 1. Get the actual file (PDF or Image) - works for both local uploads and remote lookups
         display_path, resolved_filename, is_exact_match = _resolve_local_path(file_path)
-
-        # If the user asked for a file but we found a fuzzy match remotely, stop and ask.
-        # Compare file_path (input) with resolved_filename.
-        # Note: If input was "/tmp/foo.pdf" (upload), is_exact_match is True.
-        # If input was "Drawing123" and we found "Drawing123_v2.pdf", is_exact_match is False.
         if not is_exact_match:
             return f"Did not find drawing '{file_path}'. Did you mean '{resolved_filename}'?"
 
@@ -78,9 +96,8 @@ def perform_bom_extraction(file_path: str) -> tuple[RawBillOfMaterials, str] | s
         model_image_path = _prepare_image_for_model(display_path)
 
         # Check if we already ran extraction for this image, if so skip it
-        if CACHE.is_in_cache(model_image_path):
-            full_bom = CACHE.get_full_bom(model_image_path)
-        else:
+        full_bom = CACHE.get_full_bom(model_image_path)
+        if full_bom is None:
             # 3. Perform the actual extraction
             dspy_image = dspy.Image(url=model_image_path)
             extractor = dspy.Predict(BOMExtractionSignature)
