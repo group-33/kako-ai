@@ -13,35 +13,6 @@ from backend.src.models import BillOfMaterials
 from backend.src.store import BOMStore
 
 
-def _resolve_bom_argument(bom_input: Union[BillOfMaterials, str]) -> Optional[BillOfMaterials]:
-    """Helper to resolve a BOM from an object or an ID string."""
-    if isinstance(bom_input, BillOfMaterials):
-        return bom_input
-    
-    if isinstance(bom_input, str):
-        # 1. Try Store
-        if bom_input.startswith("BOM_"):
-            store = BOMStore()
-            stored = store.get_bom(bom_input)
-            if stored:
-                print(f"--- [Inventory] Resolved BOM from Store: {bom_input} ---")
-                return stored["bom"]
-            else:
-                print(f"--- [Inventory] Error: BOM ID {bom_input} not found in store. ---")
-                return None
-        
-        # 2. Try parsing as JSON (fallback)
-        try:
-            data = json.loads(bom_input)
-            # Basic validation
-            if "items" in data:
-                 # Reconstruct (simplified)
-                 # Note: This is risky, but supports legacy calls
-                 pass
-        except:
-            pass
-            
-    return None
 
 def _build_headers() -> Dict[str, str]:
     """Build authorization headers for Xentral API calls."""
