@@ -22,7 +22,8 @@ from backend.src.tools.demand_analysis.inventory import (
 )
 from backend.src.tools.demand_analysis.bom import (
     bom_check,
-    perform_bom_matching
+    perform_bom_matching,
+    check_feasibility,
 )
 from backend.src.tools.procurement.procurement import (
     filter_sellers_by_shipping,
@@ -93,6 +94,7 @@ TOOLBOX = [
     bom_check,
     #perform_bom_matching,
     run_full_feasibility_analysis,
+    check_feasibility,
     list_deliveries_in_range,
     get_inventory_for_part,
     get_inventory_for_bom,
