@@ -50,6 +50,8 @@ def apply_bom_update(base: BillOfMaterials, update: BOMUpdate) -> BillOfMaterial
         new_item.quantity = override.quantity
         if override.item_nr is not None:
              new_item.item_nr = override.item_nr
+        if override.xentral_number is not None:
+            new_item.xentral_number = override.xentral_number
         if override.description is not None:
             new_item.description = override.description
         if override.unit is not None:

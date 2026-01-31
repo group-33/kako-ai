@@ -77,7 +77,7 @@ def get_inventory_for_product(product_id: str) -> Optional[dict]:
     # Correct endpoint verified: /api/v1/artikel with include=lagerbestand
     url = f"{XENTRAL_BASE_URL}/api/v1/artikel"
     params = {
-        "filter[0][property]": "nummer",
+        "filter[0][property]": "id",
         "filter[0][expression]": "eq",
         "filter[0][value]": product_id,
         "include": "lagerbestand",
