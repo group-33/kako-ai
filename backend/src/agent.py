@@ -104,7 +104,7 @@ class KakoAgentSignature(dspy.Signature):
         desc="The conversation history containing context from previous turns."
     )
     process_result: str = dspy.OutputField(
-        desc="A natural-language summary of the process result and key information, excluding raw structured outputs."
+        desc="The final response. MUST explicitly include specific data points (e.g., exact stock quantities, prices, part numbers) retrieved by tools. Do NOT summarize or omit details; preserve the facts for the conversation history."
     )
 
 
