@@ -5,16 +5,10 @@ import dspy
 import json
 import psycopg2
 
+from backend.src.models import BillOfMaterials
 from backend.src.config import SUPABASE_PASSWORD, DB_HOST, DB_PORT, DB_USER, DB_NAME, SUPABASE_DSN
 from backend.src.models import BillOfMaterials
 from backend.src.tools.demand_analysis.inventory import _fetch_bom_for_product, get_inventory_for_product
-
-LATEST_BOM: BillOfMaterials | None = None
-
-
-def set_latest_bom(bom: BillOfMaterials | None) -> None:
-    global LATEST_BOM
-    LATEST_BOM = bom
 
 
 class BOMCheck(dspy.Signature):
@@ -162,7 +156,7 @@ class ProductInfoStore:
 from pydantic import BaseModel
 from typing import Union
 
-def check_feasibility(bom_input: Union[BillOfMaterials, list, str, tuple], order_amount: int = 1) -> str:
+def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount: int = 1) -> str:
     """
     Check if an order can be fulfilled based on BOM and current inventory.
 
@@ -186,31 +180,41 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str, tuple], order
         "feasible": True,
         "missing_items": [],
         "warnings": [],
-        "details": [],
-        "shortage_summary": "",
+        "details": []
     }
 
-    print(f"--- [Feasibility Check] Checking BOM: {str(bom_input)[:50]}... | Amount: {order_amount} ---")
+    print(f"--- [Feasibility Check] Checking BOM: {bom_input} | Amount: {order_amount} ---")
 
     # Normalize input to a list of items
     items = []
     parent_product_name = "Unknown Product"
 
     # Resolve input to standard list of items
-    if isinstance(bom_input, tuple) and bom_input:
-        bom_input = bom_input[0]
-    if isinstance(bom_input, str) and bom_input in ("__BOM_CONFIRMED__", "__BOM_EXTRACTED__"):
-        if LATEST_BOM is None:
-            return "No confirmed BOM found. Please extract or confirm a BOM first."
-        bom_input = LATEST_BOM
     # Check string first to avoid ambiguity
     if isinstance(bom_input, str):
-        # Fallback to fetching BOM for ID for backward compatibility or direct ID usage
-        fetched = _fetch_bom_for_product(bom_input)
-        if fetched:
-            items = fetched
+        bom_str = bom_input.strip()
+        
+        # Case A: It's a BOM Reference ID from the Store
+        if bom_str.startswith("BOM_"):
+            from backend.src.store import BOMStore
+            store = BOMStore()
+            stored_data = store.get_bom(bom_str)
+            if stored_data:
+                print(f"--- [Feasibility] Retrieved verified BOM from Store: {bom_str} ---")
+                bom_obj = stored_data["bom"]
+                items = bom_obj.items
+                parent_product_name = bom_obj.title
+            else:
+                return json.dumps({"feasible": False, "error": f"BOM ID '{bom_str}' not found in memory. It may have expired."})
+        
+        # Case B: It's a Product ID (Legacy/Direct lookup)
         else:
-            items = [{"xentral_id": bom_input, "quantity": 1, "name": "Single Item"}]
+            # Fallback to fetching BOM for ID for backward compatibility or direct ID usage
+            fetched = _fetch_bom_for_product(bom_input)
+            if fetched:
+                items = fetched
+            else:
+                items = [{"xentral_id": bom_input, "quantity": 1, "name": "Single Item"}]
             
     elif isinstance(bom_input, BillOfMaterials):
         # Use the items directly from the model
@@ -241,8 +245,8 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str, tuple], order
             match_source = "SEARCH"
             
             if pre_resolved_id and pre_resolved_id != "NOT_FOUND":
-                 # Prefer treating this as a product number and resolve to ID below.
-                 part_number = str(pre_resolved_id)
+                 # If we have it, assume it's the internal ID.
+                 xentral_id = pre_resolved_id
                  match_source = "DIRECT"
             else:
                 search_query = item_nr or str(start_pn) or desc
@@ -252,7 +256,6 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str, tuple], order
                 match = store.search(bom_number=str(search_query), bom_desc=desc)
                 
                 xentral_id = match.get("id") if match else None
-                name = desc or (match.get("name_de") if match else "Unknown")
         else:
             # Dictionary input (Legacy path)
             # Default placeholders
@@ -296,7 +299,7 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str, tuple], order
              if match and match.get("id"):
                  xentral_id = match.get("id")
                  stock_info = get_inventory_for_product(str(xentral_id))
-        
+                 
         # Handle stock result
         is_enough = False
         stock_display = "Unknown (Error)"
@@ -337,13 +340,4 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str, tuple], order
             results["feasible"] = False
             results["missing_items"].append(item_status)
             
-    if results["missing_items"]:
-        shortage_lines = []
-        for item in results["missing_items"]:
-            part = item.get("part_number") or item.get("name") or "Unknown part"
-            shortage_lines.append(
-                f"{part}: required {item.get('total_required')}, available {item.get('in_stock')}"
-            )
-        results["shortage_summary"] = "; ".join(shortage_lines)
-
     return json.dumps(results, indent=2)

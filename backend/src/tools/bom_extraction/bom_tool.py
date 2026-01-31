@@ -89,8 +89,25 @@ def perform_bom_extraction(file_path: str) -> tuple[RawBillOfMaterials, str] | s
         # 4. Enrich Data (Database Step)
         # Now we look up the Xentral IDs using the clean extracted data
         enriched_bom = perform_bom_matching(full_bom)
-        print(enriched_bom)
+        
+        # 5. Save to BOM Store (Context)
+        import uuid
+        from backend.src.store import BOMStore
+        
+        bom_id = f"BOM_{uuid.uuid4().hex[:8].upper()}"
+        store = BOMStore()
+        store.save_bom(bom_id, enriched_bom, source_document=resolved_filename)
 
-        return enriched_bom, display_path
+        # Return a summarized text response + ID for the agent to use
+        # RESTORED: Full details for User Visibility and Context Backup
+        summary = (
+            f"BOM extracted successfully from {resolved_filename}.\n"
+            f"Reference ID: {bom_id}\n\n"
+            f"{str(enriched_bom)}\n\n" 
+            f"Use the Reference ID '{bom_id}' for feasibility checks or procurement."
+        )
+        print(f"--- [BOM Extraction] Saved as {bom_id} ---")
+
+        return summary
     except Exception as exc:
         return f"Error extracting BOM: {exc}"

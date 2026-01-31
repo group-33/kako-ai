@@ -20,7 +20,6 @@ from backend.src.models import (
     ToolUseBlock,
     BillOfMaterials,
 )
-from backend.src.tools.demand_analysis import bom as bom_tools
 from backend.src.utils import (
     extract_tool_calls_from_trajectory,
     build_bom_tool_block,
@@ -31,7 +30,45 @@ from backend.src.utils import (
     apply_bom_update,
 )
 
-# --- Configure LLM globally ---
+## --- Configure LLM globally ---
+## 1. Save the original request method
+## We patch the class's __call__ method because instance-level patching of __call__ doesn't work for dunder methods,
+## and basic_request appears to be missing in this version of DSPy.
+#LMClass = type(GEMINI_2_5_FLASH)
+#original_call = LMClass.__call__
+#
+## 2. Define the "Spy" function
+#def verbose_call_spy(self, *args, **kwargs):
+#    """
+#    Wraps the LLM request to print the Agent's 'Thoughts' in real-time.
+#    """
+#    # (Optional) Print the Prompt to see what the agent is seeing
+#    prompt_or_messages = kwargs.get("messages") or kwargs.get("prompt") or (args[0] if args else "Unknown")
+#    import pprint
+#    print(f"\n📩 [SENDING PROMPT/MESSAGES]:")
+#    if isinstance(prompt_or_messages, list):
+#        for msg in prompt_or_messages:
+#            print(msg)
+#    else:
+#        print(prompt_or_messages)
+#    print("-" * 20 + "\n")
+#
+#    # Execute the actual API call
+#    completions = original_call(self, *args, **kwargs)
+#    
+#    # Print the Agent's immediate response (The "Thought")
+#    # completions is usually a list of strings or dicts in DSPy
+#    for i, c in enumerate(completions):
+#        # Handle simple string or object response
+#        text = c if isinstance(c, str) else str(c)
+#        print(f"\n🧠 [AGENT THOUGHT]:\n{text}\n{'='*40}")
+#        
+#    return completions
+#
+## 3. Apply the patch
+#print("🕵️♂️ Injection: Real-time Thought Spy activated (Class Level, Kwargs Support).")
+#LMClass.__call__ = verbose_call_spy
+#
 dspy.configure(lm=GEMINI_2_5_FLASH)
 
 app = FastAPI(title="KakoAI")
@@ -120,7 +157,6 @@ async def run_agent(
         )
 
     file_path = None
-    original_user_query = user_query
     if file:
         try:
             suffix = os.path.splitext(file.filename or "")[1]
@@ -150,12 +186,19 @@ async def run_agent(
                 detail="BOM revision mismatch; please refresh and confirm again.",
             )
         merged = apply_bom_update(stored["bom"], bom_update)
-        bom_tools.set_latest_bom(merged)
+        
+        # 1. Update app state (for UI / History)
         app.state.boms[thread_key] = {
             "bom_id": stored["bom_id"],
             "bom": merged,
             "source_document": stored.get("source_document"),
         }
+        
+        # 2. Update BOMStore (Single Source of Truth for Agent Tools)
+        from backend.src.store import BOMStore
+        BOMStore().save_bom(stored["bom_id"], merged, source_document=stored.get("source_document") or "")
+        print(f"--- [Main] Synced User Edits to BOMStore ID: {stored['bom_id']} ---")
+
         append_to_history(
             history,
             user_query="__BOM_CONFIRMED__",
@@ -175,9 +218,7 @@ async def run_agent(
     with dspy.context(lm=selected_lm):
         prediction = agent(user_query=user_query, history=history)
     
-    content = getattr(prediction, "process_result", None)
-    if content is None or str(content).strip().lower() == "none":
-        content = ""
+    content = getattr(prediction, "process_result", None) or str(prediction)
 
     blocks: list[TextBlock | ToolUseBlock] = []
     if content:
@@ -206,6 +247,7 @@ async def run_agent(
 
         bom: BillOfMaterials | None = None
         src_image_for_preview: str | None = None
+        extracted_id = None  # Capture ID from tool output
 
         if isinstance(observation, tuple):
             # (bom, used_image_path)
@@ -221,14 +263,35 @@ async def run_agent(
             except Exception:
                 pass
         
+        # New: Check for BOM ID in string observation (Hybrid approach)
+        elif isinstance(observation, str) and "Reference ID:" in observation:
+            import re
+            match = re.search(r"Reference ID: (BOM_[A-F0-9]+)", observation)
+            if match:
+                found_id = match.group(1)
+                from backend.src.store import BOMStore
+                store = BOMStore()
+                stored_entry = store.get_bom(found_id)
+                if stored_entry:
+                     bom = stored_entry["bom"]
+                     src_image_for_preview = stored_entry.get("source_document")
+                     extracted_id = found_id  # Use this ID!
+                     print(f"--- [Main] Hydrated BOM UI from Store ID: {found_id} ---")
+        
         if bom is None:
             continue
 
         source = tool_args.get("file_path") or tool_args.get("file") or tool_args.get("filename")
-        bom_id = compute_bom_id(bom, source_document=source)
+        
+        # Use extracted ID if available, otherwise fallback to hash
+        bom_id = extracted_id if extracted_id else compute_bom_id(bom, source_document=source)
+        
         app.state.boms[thread_key] = {"bom_id": bom_id, "bom": bom, "source_document": source}
-        bom_tools.set_latest_bom(bom)
-        append_to_history(history, user_query="__BOM_EXTRACTED__", process_result=bom.model_dump_json())
+        
+        # Inject detailed history so Agent sees the Data AND the ID
+        history_content = f"BOM ID: {bom_id}\nDATA: {bom.model_dump_json()}"
+        append_to_history(history, user_query=f"System: BOM Extraction Completed (ID: {bom_id})", process_result=history_content)
+        
         blocks.append(
             build_bom_tool_block(
                 bom, 
@@ -239,7 +302,7 @@ async def run_agent(
             )
         )
 
-    append_to_history(history, user_query=original_user_query, process_result=content)
+    append_to_history(history, user_query=user_query, process_result=content)
     return AgentResponse(
         response_id=f"msg_{uuid.uuid4()}",
         created_at=datetime.now(timezone.utc),
