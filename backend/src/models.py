@@ -40,6 +40,10 @@ class RawBOMItem(BaseModel):
         description=(
             "The unique identifier, part number, or order code for the item."
             "Look for alphanumeric codes."
+            "CRITICAL EXTRACTION LOGIC: "
+            "1. Analyze the LABEL or HEADER associated with the value. "
+            "2. IF the label implies a physical sub-component (e.g., 'Part No.', 'Cable', 'Plug', 'Contact', 'Housing', 'Nut'), EXTRACT the code. "
+            "3. IF the label implies a system reference, compatibility, or configuration setting (e.g., 'Controller Type', 'Used on', 'Cable Code', 'Project', 'Index'), IGNORE it. "
             "Do not confuse this with the description."
         )
     )
