@@ -183,7 +183,7 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
         "details": []
     }
 
-    print(f"--- [Feasibility Check] Checking BOM: {str(bom_input)[:50]}... | Amount: {order_amount} ---")
+    print(f"--- [Feasibility Check] Checking BOM: {bom_input} | Amount: {order_amount} ---")
 
     # Normalize input to a list of items
     items = []
@@ -192,12 +192,29 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
     # Resolve input to standard list of items
     # Check string first to avoid ambiguity
     if isinstance(bom_input, str):
-        # Fallback to fetching BOM for ID for backward compatibility or direct ID usage
-        fetched = _fetch_bom_for_product(bom_input)
-        if fetched:
-            items = fetched
+        bom_str = bom_input.strip()
+        
+        # Case A: It's a BOM Reference ID from the Store
+        if bom_str.startswith("BOM_"):
+            from backend.src.store import BOMStore
+            store = BOMStore()
+            stored_data = store.get_bom(bom_str)
+            if stored_data:
+                print(f"--- [Feasibility] Retrieved verified BOM from Store: {bom_str} ---")
+                bom_obj = stored_data["bom"]
+                items = bom_obj.items
+                parent_product_name = bom_obj.title
+            else:
+                return json.dumps({"feasible": False, "error": f"BOM ID '{bom_str}' not found in memory. It may have expired."})
+        
+        # Case B: It's a Product ID (Legacy/Direct lookup)
         else:
-            items = [{"xentral_id": bom_input, "quantity": 1, "name": "Single Item"}]
+            # Fallback to fetching BOM for ID for backward compatibility or direct ID usage
+            fetched = _fetch_bom_for_product(bom_input)
+            if fetched:
+                items = fetched
+            else:
+                items = [{"xentral_id": bom_input, "quantity": 1, "name": "Single Item"}]
             
     elif isinstance(bom_input, BillOfMaterials):
         # Use the items directly from the model
@@ -275,14 +292,23 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
         min_stock = 0
         
         if xentral_id:
-            stock_info = get_inventory_for_product(str(xentral_id))
+             print(f"      [Debug] calling get_inventory_for_product('{xentral_id}')")
+             stock_info = get_inventory_for_product(str(xentral_id))
         elif part_number:
              # Try second pass resolution if dict path failed
+             print(f"      [Debug] No xentral_id. Trying second pass for part_number: {part_number}")
              store = ProductInfoStore()
              match = store.search(bom_number=part_number, bom_desc=name)
              if match and match.get("id"):
                  xentral_id = match.get("id")
                  stock_info = get_inventory_for_product(str(xentral_id))
+        
+        # Handle stock result
+        if stock_info is not None:
+             print(f"      [Debug] Result: {stock_info}")
+        else:
+             print(f"      [Debug] Result: ERROR/NONE")
+
         
         # Handle stock result
         is_enough = False

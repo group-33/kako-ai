@@ -216,6 +216,20 @@ async def run_agent(
             except Exception:
                 pass
         
+        # New: Check for BOM ID in string observation (Hybrid approach)
+        elif isinstance(observation, str) and "Reference ID:" in observation:
+            import re
+            match = re.search(r"Reference ID: (BOM_[A-F0-9]+)", observation)
+            if match:
+                found_id = match.group(1)
+                from backend.src.store import BOMStore
+                store = BOMStore()
+                stored_entry = store.get_bom(found_id)
+                if stored_entry:
+                     bom = stored_entry["bom"]
+                     src_image_for_preview = stored_entry.get("source_document")
+                     print(f"--- [Main] Hydrated BOM UI from Store ID: {found_id} ---")
+        
         if bom is None:
             continue
 

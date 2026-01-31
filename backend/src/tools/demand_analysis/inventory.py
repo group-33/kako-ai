@@ -3,12 +3,45 @@ from __future__ import annotations
 
 import requests
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple, Union
 from dateutil.relativedelta import relativedelta
+import json
 
 from backend.src.config import XENTRAL_BEARER_TOKEN, XENTRAL_BASE_URL, XENTRAL_TIMEOUT_SECONDS
 from backend.src.models import BillOfMaterials
+from backend.src.store import BOMStore
 
+
+def _resolve_bom_argument(bom_input: Union[BillOfMaterials, str]) -> Optional[BillOfMaterials]:
+    """Helper to resolve a BOM from an object or an ID string."""
+    if isinstance(bom_input, BillOfMaterials):
+        return bom_input
+    
+    if isinstance(bom_input, str):
+        # 1. Try Store
+        if bom_input.startswith("BOM_"):
+            store = BOMStore()
+            stored = store.get_bom(bom_input)
+            if stored:
+                print(f"--- [Inventory] Resolved BOM from Store: {bom_input} ---")
+                return stored["bom"]
+            else:
+                print(f"--- [Inventory] Error: BOM ID {bom_input} not found in store. ---")
+                return None
+        
+        # 2. Try parsing as JSON (fallback)
+        try:
+            data = json.loads(bom_input)
+            # Basic validation
+            if "items" in data:
+                 # Reconstruct (simplified)
+                 # Note: This is risky, but supports legacy calls
+                 pass
+        except:
+            pass
+            
+    return None
 
 def _build_headers() -> Dict[str, str]:
     """Build authorization headers for Xentral API calls."""
@@ -36,9 +69,13 @@ def _calculate_dates(time_quantity: str, time_unit: str) -> Tuple[str, str]:
 
 
 # --- Public functions --------------------------------------------------------
-def run_full_feasibility_analysis(bom: BillOfMaterials, quantity_required: int) -> Dict[str, Any]:
+def run_full_feasibility_analysis(bom: Union[BillOfMaterials, str], quantity_required: int) -> Dict[str, Any]:
     """Fetch inventory, pending procurement, and existing orders for a BOM (mocked)."""
-    inventory = get_inventory_for_bom(bom)
+    bom_obj = _resolve_bom_argument(bom)
+    if not bom_obj:
+        return {"error": "Invalid BOM input or BOM ID not found."}
+        
+    inventory = get_inventory_for_bom(bom_obj)
     pending = get_pending_procurement_orders()
     existing = get_existing_customer_orders()
     return {
@@ -65,7 +102,7 @@ def get_inventory_for_product(product_id: str) -> Optional[dict]:
     Fetch current stock quantity and minimum stock for a product from Xentral.
     
     Args:
-        product_id: The Xentral internal ID of the product.
+        product_id: The Xentral internal ID of the product OR the product number (Nummer).
         
     Returns:
         Optional[dict]: Dict with 'stock' (int/float) and 'min_stock' (int/float). Returns None if error.
@@ -74,9 +111,46 @@ def get_inventory_for_product(product_id: str) -> Optional[dict]:
         # Fallback to mock if no credentials
         return {"stock": 125, "min_stock": 10}
 
-    # Correct endpoint verified: /api/v1/artikel with include=lagerbestand
-    url = f"{XENTRAL_BASE_URL}/api/v1/artikel"
-    params = {
+    # Helper to parse response data
+    def parse_inventory_data(product_data):
+        # 'lagerbestand' is a dict containing 'verkaufbar' (sellable stock)
+        lb = product_data.get("lagerbestand", {})
+        if isinstance(lb, dict):
+            stock = lb.get("verkaufbar", 0)
+        else:
+            stock = lb # Fallback if it is a number
+        
+        # Fetch minimum stock (mindestlager)
+        min_stock = product_data.get("mindestlager", 0)
+        
+        return {
+            "stock": int(float(stock)), 
+            "min_stock": int(float(min_stock))
+        }
+
+    # Strategy 1: Direct ID Lookup (Most likely for 'product_id')
+    # Endpoint: /api/v1/artikel/{id}
+    url_direct = f"{XENTRAL_BASE_URL}/api/v1/artikel/{product_id}"
+    params_direct = {"include": "lagerbestand"}
+    
+    try:
+        resp = requests.get(url_direct, params=params_direct, headers=_build_headers(), timeout=XENTRAL_TIMEOUT_SECONDS)
+        if resp.status_code == 200:
+             data = resp.json()
+             # Direct ID often returns the object directly or wrapped in data
+             item = data.get("data") if "data" in data else data
+             # If it's a list (rare for ID endpoint but possible), take first
+             if isinstance(item, list) and len(item) > 0:
+                 item = item[0]
+             
+             if isinstance(item, dict) and "id" in item:
+                 return parse_inventory_data(item)
+    except Exception as e:
+        print(f"Debug: Direct ID lookup for {product_id} failed: {e}")
+
+    # Strategy 2: Search by 'nummer' (Fallback if product_id is actually a SKU like 'KAKO-ST-XXX')
+    url_search = f"{XENTRAL_BASE_URL}/api/v1/artikel"
+    params_search = {
         "filter[0][property]": "nummer",
         "filter[0][expression]": "eq",
         "filter[0][value]": product_id,
@@ -85,29 +159,21 @@ def get_inventory_for_product(product_id: str) -> Optional[dict]:
     }
     
     try:
-        resp = requests.get(url, params=params, headers=_build_headers(), timeout=XENTRAL_TIMEOUT_SECONDS)
+        resp = requests.get(url_search, params=params_search, headers=_build_headers(), timeout=XENTRAL_TIMEOUT_SECONDS)
         resp.raise_for_status()
         data = resp.json()
         items = data.get("data", [])
-        print(items)
         if items:
-            product = items[0]
-            # 'lagerbestand' is a dict containing 'verkaufbar' (sellable stock)
-            lb = product.get("lagerbestand", {})
-            if isinstance(lb, dict):
-                stock = lb.get("verkaufbar", 0)
-            else:
-                stock = lb # Fallback if it is a number
+            return parse_inventory_data(items[0])
             
-            # Fetch minimum stock (mindestlager)
-            min_stock = product.get("mindestlager", 0)
-            
-            return {
-                "stock": int(float(stock)), 
-                "min_stock": int(float(min_stock))
-            }
     except Exception as e:
-        print(f"Error fetching inventory for {product_id}: {e}")
+        print(f"Error fetching inventory for {product_id} (Search Strategy): {e}")
+        try:
+             if 'resp' in locals():
+                  print(f"Response Status: {resp.status_code}")
+                  print(f"Response Text: {resp.text[:200]}")
+        except:
+             pass
         return None
         
     return None
@@ -119,12 +185,14 @@ def get_inventory_for_part(part_number: str) -> Dict[str, Any]:
     return {"part_number": part_number, "in_stock": 125}
 
 
-def get_inventory_for_bom(bom: BillOfMaterials) -> Dict[str, Any]:
+def get_inventory_for_bom(bom: Union[BillOfMaterials, str]) -> Dict[str, Any]:
     """Simulate inventory results for all BOM items."""
-    if not bom.items:
+    bom_obj = _resolve_bom_argument(bom)
+    if not bom_obj or not bom_obj.items:
         return {}
-    data = {item.part_number: {"in_stock": 100} for item in bom.items}
-    first_part = bom.items[0].part_number
+    
+    data = {item.part_number: {"in_stock": 100} for item in bom_obj.items}
+    first_part = bom_obj.items[0].part_number
     data[first_part] = {"in_stock": 2}
     return data
 
@@ -332,14 +400,18 @@ def get_boms_for_orders(order_numbers: List[str]) -> Dict[str, Any]:
             
     return results
 
-def xentral_BOM(bom: BillOfMaterials) -> Dict[str, Any]:
+def xentral_BOM(bom: Union[BillOfMaterials, str]) -> Dict[str, Any]:
     """
     Overwrites the BOM for a product in Xentral.
     """
+    bom_obj = _resolve_bom_argument(bom)
+    if not bom_obj:
+         return {"error": "Invalid BOM input or BOM ID not found."}
+
     from backend.src.tools.demand_analysis.bom import ProductInfoStore
     
     store = ProductInfoStore()
-    target_identifier = bom.title or "New Extracted BOM"
+    target_identifier = bom_obj.title or "New Extracted BOM"
 
     # 1. Resolve Parent Product
     parent_match = store.search(target_identifier, target_identifier)
@@ -372,7 +444,7 @@ def xentral_BOM(bom: BillOfMaterials) -> Dict[str, Any]:
     resolved_items = []
     print("   🔍 Resolving Child Parts...")
     
-    for item in bom.items:
+    for item in bom_obj.items:
         child_id = None
         search_key = item.xentral_number or item.item_nr
         
