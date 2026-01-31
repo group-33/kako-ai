@@ -256,7 +256,6 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
                 match = store.search(bom_number=str(search_query), bom_desc=desc)
                 
                 xentral_id = match.get("id") if match else None
-                name = desc or (match.get("name_de") if match else "Unknown")
         else:
             # Dictionary input (Legacy path)
             # Default placeholders
@@ -292,22 +291,14 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
         min_stock = 0
         
         if xentral_id:
-             print(f"      [Debug] calling get_inventory_for_product('{xentral_id}')")
              stock_info = get_inventory_for_product(str(xentral_id))
         elif part_number:
              # Try second pass resolution if dict path failed
-             print(f"      [Debug] No xentral_id. Trying second pass for part_number: {part_number}")
              store = ProductInfoStore()
              match = store.search(bom_number=part_number, bom_desc=name)
              if match and match.get("id"):
                  xentral_id = match.get("id")
                  stock_info = get_inventory_for_product(str(xentral_id))
-        
-        # Handle stock result
-        if stock_info is not None:
-             print(f"      [Debug] Result: {stock_info}")
-        else:
-             print(f"      [Debug] Result: ERROR/NONE")
 
         
         # Handle stock result

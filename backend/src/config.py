@@ -28,6 +28,12 @@ PROCUREMENT_API_CACHE_TTL_MINUTES = 60  # Cache TTL in minutes for procurement A
 XENTRAL_BEARER_TOKEN = os.getenv("XENTRAL_BEARER_TOKEN")
 XENTRAL_BASE_URL = os.getenv("XENTRAL_BASE_URL")
 XENTRAL_TIMEOUT_SECONDS = 10
+
+# --- App Configuration ---
+# Public URL for the backend (used for serving static files to frontend)
+# In production, set this to your https://api.kako.ai domain
+BACKEND_PUBLIC_URL = os.getenv("BACKEND_PUBLIC_URL", "http://127.0.0.1:8000")
+
 SUPABASE_DSN = os.getenv("SUPABASE_DSN")
 SUPABASE_PASSWORD = os.getenv("SUPABASE_PASSWORD")
 

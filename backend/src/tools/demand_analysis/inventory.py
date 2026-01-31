@@ -168,12 +168,6 @@ def get_inventory_for_product(product_id: str) -> Optional[dict]:
             
     except Exception as e:
         print(f"Error fetching inventory for {product_id} (Search Strategy): {e}")
-        try:
-             if 'resp' in locals():
-                  print(f"Response Status: {resp.status_code}")
-                  print(f"Response Text: {resp.text[:200]}")
-        except:
-             pass
         return None
         
     return None
