@@ -50,6 +50,8 @@ def apply_bom_update(base: BillOfMaterials, update: BOMUpdate) -> BillOfMaterial
         new_item.quantity = override.quantity
         if override.item_nr is not None:
              new_item.item_nr = override.item_nr
+        if override.xentral_number is not None:
+             new_item.xentral_number = override.xentral_number
         if override.description is not None:
             new_item.description = override.description
         if override.unit is not None:
@@ -73,17 +75,30 @@ def build_bom_tool_block(
     thread_id: str | None = None,
 ) -> ToolUseBlock:
     # Transform local temp path to served URL path
-    if source_document and os.path.isabs(source_document):
-        temp_dir = tempfile.gettempdir()
-        if source_document.startswith(temp_dir):
-            filename = os.path.basename(source_document)
-            source_document = f"/files/{filename}"
+    # Transform local temp path to served URL path
+    # Hardcoded host for dev environment to correct cross-port iframe loading
+    BACKEND_HOST = "http://127.0.0.1:8000"
 
-    if preview_image and os.path.isabs(preview_image):
-        temp_dir = tempfile.gettempdir()
-        if preview_image.startswith(temp_dir):
+    if source_document:
+        if os.path.isabs(source_document):
+            temp_dir = tempfile.gettempdir()
+            if source_document.startswith(temp_dir):
+                filename = os.path.basename(source_document)
+                source_document = f"{BACKEND_HOST}/files/{filename}"
+        elif not source_document.startswith("http") and not source_document.startswith("/files/"):
+            # Assume it's a raw filename
+            filename = os.path.basename(source_document)
+            source_document = f"{BACKEND_HOST}/files/{filename}"
+
+    if preview_image:
+        if os.path.isabs(preview_image):
+            temp_dir = tempfile.gettempdir()
+            if preview_image.startswith(temp_dir):
+                filename = os.path.basename(preview_image)
+                preview_image = f"{BACKEND_HOST}/files/{filename}"
+        elif not preview_image.startswith("http") and not preview_image.startswith("/files/"):
             filename = os.path.basename(preview_image)
-            preview_image = f"/files/{filename}"
+            preview_image = f"{BACKEND_HOST}/files/{filename}"
 
     rows: list[BOMRow] = []
     for idx, item in enumerate(bom.items):

@@ -148,11 +148,19 @@ async def run_agent(
                 detail="BOM revision mismatch; please refresh and confirm again.",
             )
         merged = apply_bom_update(stored["bom"], bom_update)
+        
+        # 1. Update app state (for UI / History)
         app.state.boms[thread_key] = {
             "bom_id": stored["bom_id"],
             "bom": merged,
             "source_document": stored.get("source_document"),
         }
+        
+        # 2. Update BOMStore (Single Source of Truth for Agent Tools)
+        from backend.src.store import BOMStore
+        BOMStore().save_bom(stored["bom_id"], merged, source_document=stored.get("source_document") or "")
+        print(f"--- [Main] Synced User Edits to BOMStore ID: {stored['bom_id']} ---")
+
         append_to_history(
             history,
             user_query="__BOM_CONFIRMED__",
@@ -201,6 +209,7 @@ async def run_agent(
 
         bom: BillOfMaterials | None = None
         src_image_for_preview: str | None = None
+        extracted_id = None  # Capture ID from tool output
 
         if isinstance(observation, tuple):
             # (bom, used_image_path)
@@ -228,15 +237,23 @@ async def run_agent(
                 if stored_entry:
                      bom = stored_entry["bom"]
                      src_image_for_preview = stored_entry.get("source_document")
+                     extracted_id = found_id  # Use this ID!
                      print(f"--- [Main] Hydrated BOM UI from Store ID: {found_id} ---")
         
         if bom is None:
             continue
 
         source = tool_args.get("file_path") or tool_args.get("file") or tool_args.get("filename")
-        bom_id = compute_bom_id(bom, source_document=source)
+        
+        # Use extracted ID if available, otherwise fallback to hash
+        bom_id = extracted_id if extracted_id else compute_bom_id(bom, source_document=source)
+        
         app.state.boms[thread_key] = {"bom_id": bom_id, "bom": bom, "source_document": source}
-        append_to_history(history, user_query="__BOM_EXTRACTED__", process_result=bom.model_dump_json())
+        
+        # Inject detailed history so Agent sees the Data AND the ID
+        history_content = f"BOM ID: {bom_id}\nDATA: {bom.model_dump_json()}"
+        append_to_history(history, user_query=f"System: BOM Extraction Completed (ID: {bom_id})", process_result=history_content)
+        
         blocks.append(
             build_bom_tool_block(
                 bom, 

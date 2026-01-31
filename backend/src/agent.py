@@ -75,6 +75,12 @@ class KakoAgentSignature(dspy.Signature):
        - If a tool returns a Reference ID, PASS THAT ID to the next tool.
        - DO NOT attempt to reconstruct the JSON data yourself. Use the ID.
     
+    4. BOM EXTRACTION REPORTING:
+       - When `perform_bom_extraction` succeeds, DO NOT list the items in your text response.
+       - The user will see a dedicated Table UI. Redundant text is annoying.
+       - Response format: "Extracted {count} items from {file}. Reference ID: {id}."
+       - Then immediately ask for the next step (Feasibility/Procurement).
+
     - REASONING FIRST: Break down complex requests into steps. For simple requests, stop after the first step.
 
     LANGUAGE & COMMUNICATION:
