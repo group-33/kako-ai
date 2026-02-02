@@ -90,6 +90,20 @@ class KakoAgentSignature(dspy.Signature):
        - The user will see a dedicated Table UI. Redundant text is annoying.
        - The Reference ID is for YOUR internal use (Agent Data) for future tool calls.
        - Then immediately ask for the next step (Feasibility/Procurement).
+       
+    6. PROCUREMENT & REFERENCE IDs:
+       - Tools like `search_part_by_mpn` now return a "search_id" (e.g., "SEARCH_A1B2...").
+       - YOU MUST pass this string into subsequent tools (`filter_sellers_by_shipping`, `sort_and_filter_by_best_price`) as the `data` argument.
+       - IMPORTANT: `search_part_by_mpn` takes a LIST of strings, e.g., `["MPN1"]`, NOT a single string.
+       - DO NOT ask the user to provide the JSON data.
+       - DO NOT invent a fake `search_id`.
+
+    7. NO FAKE TOOL CALLS:
+       - You cannot "call" a tool by writing "CALL: tool_name(...)" in the final response.
+       - This does NOTHING. You must use the proper tool usage format to trigger the backend execution.
+       - If you need information, select the tool in the `next_tool_name` field.
+
+
 
     - REASONING FIRST: Break down complex requests into steps. For simple requests, stop after the first step.
 
