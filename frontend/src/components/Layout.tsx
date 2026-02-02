@@ -5,6 +5,7 @@ import {
     Settings,
     User,
     Plus,
+    Pencil,
     Trash2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,13 +13,17 @@ import { useChatStore } from "@/store/useChatStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useState } from "react";
 
 export function Layout() {
-    const { threads, addThread, deleteThread, fetchThreads } = useChatStore();
+    const { threads, addThread, deleteThread, renameThread, fetchThreads } = useChatStore();
     const { user } = useAuthStore();
     const navigate = useNavigate();
     const location = useLocation();
     const { t } = useTranslation();
+
+    const [editingThreadId, setEditingThreadId] = useState<string | null>(null);
+    const [editingTitle, setEditingTitle] = useState("");
 
     useEffect(() => {
         void fetchThreads();
@@ -35,6 +40,30 @@ export function Layout() {
         await deleteThread(id);
         if (isActive) {
             navigate("/chat");
+        }
+    };
+
+    const startEditing = (thread: { id: string; title: string }) => {
+        setEditingThreadId(thread.id);
+        setEditingTitle(thread.title);
+    };
+
+    const handleRenameSubmit = async (threadId: string) => {
+        if (!editingTitle.trim()) {
+            setEditingThreadId(null);
+            return;
+        }
+        await renameThread(threadId, editingTitle.trim());
+        setEditingThreadId(null);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent, threadId: string) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            void handleRenameSubmit(threadId);
+        } else if (e.key === "Escape") {
+            e.preventDefault();
+            setEditingThreadId(null);
         }
     };
 
@@ -72,6 +101,8 @@ export function Layout() {
 
                     <div className="space-y-1 flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar rounded-xl bg-slate-800/40 border border-slate-800/70 px-2 py-2 mb-3">
                         {threads.map((thread) => {
+                            const isEditing = editingThreadId === thread.id;
+
                             return (
                                 <NavLink
                                     key={thread.id}
@@ -85,22 +116,65 @@ export function Layout() {
                                         )
                                     }
                                 >
-                                    <div className="flex items-center gap-3 overflow-hidden">
+                                    <div className="flex items-center gap-3 overflow-hidden flex-1">
                                         <div className="w-5 flex items-center justify-center shrink-0">
                                             <MessageSquare size={14} className="opacity-70" />
                                         </div>
-                                        <span className="truncate">{thread.title}</span>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                autoFocus
+                                                className="bg-slate-950 text-white px-1 py-0.5 rounded border border-slate-600 w-full outline-none focus:border-sky-500 min-w-0"
+                                                value={editingTitle}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                }}
+                                                onChange={(e) => setEditingTitle(e.target.value)}
+                                                onKeyDown={(e) => handleKeyDown(e, thread.id)}
+                                                onBlur={() => handleRenameSubmit(thread.id)}
+                                            />
+                                        ) : (
+                                            <span
+                                                className="truncate"
+                                                onDoubleClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    startEditing(thread);
+                                                }}
+                                                title={thread.title}
+                                            >
+                                                {thread.title}
+                                            </span>
+                                        )}
                                     </div>
-                                    <button
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            void handleDeleteThread(thread.id);
-                                        }}
-                                        className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 transition-opacity"
-                                    >
-                                        <Trash2 size={12} />
-                                    </button>
+
+                                    {!isEditing && (
+                                        <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    startEditing(thread);
+                                                }}
+                                                className="p-1 hover:text-sky-400 transition-colors mr-1"
+                                                title={t('common.rename', 'Rename')}
+                                            >
+                                                <Pencil size={12} />
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    void handleDeleteThread(thread.id);
+                                                }}
+                                                className="p-1 hover:text-red-400 transition-colors"
+                                                title={t('common.delete', 'Delete')}
+                                            >
+                                                <Trash2 size={12} />
+                                            </button>
+                                        </div>
+                                    )}
                                 </NavLink>
                             );
                         })}
