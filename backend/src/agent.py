@@ -84,9 +84,11 @@ class KakoAgentSignature(dspy.Signature):
          -> ACTION: You MUST re-run the relevant tool to retrieve the fresh data.
     
     5. BOM EXTRACTION REPORTING:
-       - When `perform_bom_extraction` succeeds, DO NOT list the items in your text response.
+       - When `perform_bom_extraction` succeeds, the tool output will provide a "USER_VIEW" and "AGENT_DATA".
+       - RESPONSE RULE: Copy the "USER_VIEW" text exactly ("BOM '{title}' extracted successfully.").
+       - DO NOT listing items or IDs in the text response is CRITICAL.
        - The user will see a dedicated Table UI. Redundant text is annoying.
-       - Response format: "Extracted {count} items from {file}. Reference ID: {id}."
+       - The Reference ID is for YOUR internal use (Agent Data) for future tool calls.
        - Then immediately ask for the next step (Feasibility/Procurement).
 
     - REASONING FIRST: Break down complex requests into steps. For simple requests, stop after the first step.
