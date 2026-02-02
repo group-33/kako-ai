@@ -130,11 +130,13 @@ def perform_bom_extraction(file_path: str) -> str | tuple[BillOfMaterials, str]:
 
         # Return a summarized text response + ID for the agent to use
         # RESTORED: Full details for User Visibility and Context Backup
+        # Return a summarized text response + ID for the agent to use
+        # Split into User View (clean) and Agent Data (context)
+        title = enriched_bom.title or 'Untitled'
         summary = (
-            f"BOM extracted successfully from {resolved_filename}.\n"
-            f"Reference ID: {bom_id}\n\n"
-            f"{str(enriched_bom)}\n\n" 
-            f"Use the Reference ID '{bom_id}' for feasibility checks or procurement."
+            f"USER_VIEW: BOM '{title}' extracted successfully.\n"
+            f"AGENT_DATA: Reference ID: {bom_id}, Source: {resolved_filename}, "
+            f"Title: {title}, Content: {str(enriched_bom)}"
         )
         print(f"--- [BOM Extraction] Saved as {bom_id} ---")
 
