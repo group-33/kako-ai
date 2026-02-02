@@ -25,6 +25,7 @@ type BOMTableArgs = {
   source_document?: string;
   preview_image?: string;
   title?: string;
+  orientation?: "portrait" | "landscape";
   rows: BOMRow[];
 };
 
@@ -285,8 +286,8 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                   if (imgSrc.toLowerCase().endsWith(".pdf")) {
                     return (
                       <iframe
-                        src={imgSrc}
-                        className="w-full aspect-[21/29] border-none"
+                        src={`${imgSrc}#view=Fit`}
+                        className={`w-full border border-slate-800 rounded bg-slate-950 ${args.orientation === "landscape" ? "aspect-[29/23]" : "aspect-[21/31]"}`}
                         title={t("bomTable.sourceAlt")}
                       />
                     );

@@ -5,7 +5,7 @@ import cv2
 import dspy
 
 from backend.src.models import RawBillOfMaterials, BillOfMaterials, BOMItem
-from backend.src.tools.bom_extraction.file_utils import fetch_file_via_ssh, convert_pdf_to_png
+from backend.src.tools.bom_extraction.file_utils import fetch_file_via_ssh, convert_pdf_to_png, get_pdf_orientation
 from backend.src.tools.demand_analysis.bom import perform_bom_matching
 
 
@@ -83,7 +83,8 @@ def perform_bom_extraction(file_path: str) -> tuple[RawBillOfMaterials, str] | s
             
         full_bom = BillOfMaterials(
             items=full_items,
-            title=raw_bom.title
+            title=raw_bom.title,
+            orientation=get_pdf_orientation(display_path)
             )
 
         # 4. Enrich Data (Database Step)

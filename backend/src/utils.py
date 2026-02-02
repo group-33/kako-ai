@@ -128,7 +128,8 @@ def build_bom_tool_block(
         rows=rows, 
         title=bom.title,
         source_document=source_document,
-        preview_image=preview_image
+        preview_image=preview_image,
+        orientation=bom.orientation
     )
     data = bom_data.model_dump()
     if bom_id is None:
