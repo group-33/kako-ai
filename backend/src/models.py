@@ -40,6 +40,10 @@ class RawBOMItem(BaseModel):
         description=(
             "The unique identifier, part number, or order code for the item."
             "Look for alphanumeric codes."
+            "CRITICAL EXTRACTION LOGIC: "
+            "1. Analyze the LABEL or HEADER associated with the value. "
+            "2. IF the label implies a physical sub-component (e.g., 'Part No.', 'Cable', 'Plug', 'Contact', 'Housing', 'Nut'), EXTRACT the code. "
+            "3. IF the label implies a system reference, compatibility, or configuration setting (e.g., 'Controller Type', 'Used on', 'Cable Code', 'Project', 'Index'), IGNORE it. "
             "Do not confuse this with the description."
         )
     )
@@ -71,6 +75,7 @@ class BOMItem(RawBOMItem):
 class BillOfMaterials(BaseModel):
     title: Optional[str] = Field(None, description="The title of the technical drawing, usually found in the title block.")
     items: List[BOMItem] = Field(description="All component line items that make up the BOM.")
+    orientation: str | None = "portrait"
 
 class TextBlock(BaseModel):
     """Standard text response block."""
@@ -97,8 +102,11 @@ class BOMTableData(BaseModel):
     """Payload for the BOM table tool."""
 
     rows: List[BOMRow]
+    title: str | None = None
     source_document: str | None = None
     preview_image: str | None = None
+    orientation: str | None = "portrait"
+    orientation: str | None = "portrait"
 
 
 class ToolUseBlock(BaseModel):
@@ -128,6 +136,7 @@ class BOMUpdate(BaseModel):
     """Set of overrides to apply to the latest extracted BOM."""
 
     bom_id: str
+    title: str | None = None
     overrides: List[BOMOverride]
 
 

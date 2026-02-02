@@ -8,7 +8,7 @@ import psycopg2
 from backend.src.models import BillOfMaterials
 from backend.src.config import SUPABASE_PASSWORD, DB_HOST, DB_PORT, DB_USER, DB_NAME, SUPABASE_DSN
 from backend.src.models import BillOfMaterials
-from backend.src.tools.demand_analysis.inventory import _fetch_bom_for_product, get_inventory_for_product
+from backend.src.tools.demand_analysis.shared import ProductInfoStore
 
 
 class BOMCheck(dspy.Signature):
@@ -23,6 +23,8 @@ def bom_check(product_identifier: str) -> str:
 
     The follow-up actions for CASE1/CASE2 are left as simple strings for now.
     """
+    print(f"--- [BOM Check] Verifying product: {str(product_identifier)} ---")
+
     query = (product_identifier or "").strip()
     if not query:
         return "No product identifier provided. Please pass an Artikelnummer or product name."
@@ -75,81 +77,7 @@ def perform_bom_matching(bom: BillOfMaterials) -> BillOfMaterials:
     return bom
 
 
-class ProductInfoStore:
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(ProductInfoStore, cls).__new__(cls)
-            cls._instance.dsn = SUPABASE_DSN
-        return cls._instance
-
-    def _get_conn(self):
-        return psycopg2.connect(self.dsn)
-    
-    def _normalize(self, text):
-        if not text:
-            return ""
-        return str(text).replace(" ", "").lower()
-
-    def search(self, bom_number, bom_desc):
-        num_raw = str(bom_number).strip()
-        q_num = self._normalize(num_raw)
-        input_len = len(q_num)
-
-        q_desc = str(bom_desc).strip().lower()
-        has_specific_id = (len(q_num) > 0) and (q_num != "0")
-
-        conn = self._get_conn()
-        cursor = conn.cursor()
-
-        if has_specific_id:
-            cursor.execute("""
-            SELECT xentral_id, nummer, name_de
-            FROM xentral_products
-            WHERE
-                (
-                (LENGTH(nummer) > 0 AND STRPOS(%s, REPLACE(LOWER(nummer), ' ', '')) > 0)
-                AND (LENGTH(REPLACE(nummer, ' ', ''))::float / %s::float) > 0.5
-                OR
-                (LENGTH(name_de) > 0 AND STRPOS(%s, REPLACE(LOWER(name_de), ' ', '')) > 0)
-                AND (LENGTH(REPLACE(nummer, ' ', ''))::float / %s::float) > 0.5
-                )
-            ORDER BY LENGTH(nummer) DESC
-            LIMIT 1
-            """, (q_num, input_len, q_num, input_len))
-            row = cursor.fetchone()
-            if row:
-                return {"id": row[0], "nummer": row[1], "name_de": row[2], "_source": "ID_MATCH"}
-            
-            cursor.execute("""
-            SELECT xentral_id, nummer, name_de
-            FROM xentral_products
-            WHERE LOWER(name_de) LIKE %s OR LOWER(beschreibung_de) LIKE %s
-            LIMIT 1
-            """, (f"%{num_raw}%", f"%{num_raw}%"))
-            row = cursor.fetchone()
-            if row:
-                cursor.close()
-                conn.close()
-                return {"id": row[0], "nummer": row[1], "name_de": row[2], "_source": "ID_FOUND_IN_TEXT"}
-            
-        if len(q_desc) > 3:
-                cursor.execute("""
-                    SELECT xentral_id, nummer, name_de 
-                    FROM xentral_products 
-                    WHERE LOWER(name_de) LIKE %s
-                    LIMIT 1
-                """, (f"%{q_desc}%",))
-                row = cursor.fetchone()
-                if row:
-                    cursor.close()
-                    conn.close()
-                    return {"id": row[0], "nummer": row[1], "name_de": row[2], "_source": "TEXT_MATCH"}
-                
-        cursor.close()
-        conn.close()
-        return None
+from backend.src.tools.demand_analysis.shared import ProductInfoStore
 
 from pydantic import BaseModel
 from typing import Union
@@ -164,6 +92,15 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
 
     Returns:
         JSON string report on feasibility.
+        Schema:
+        {
+            "feasible": bool,       # Overall feasibility
+            "missing_items": [],    # List of items with insufficient stock
+            "warnings": [           # List of warnings (e.g. stock low but feasible)
+                {"part": str, "message": str}
+            ],
+            "details": []           # Full line-item details
+        }
     """
     results = {
         "feasible": True,
@@ -172,6 +109,8 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
         "details": []
     }
 
+    print(f"--- [Feasibility Check] Checking BOM: {bom_input} | Amount: {order_amount} ---")
+
     # Normalize input to a list of items
     items = []
     parent_product_name = "Unknown Product"
@@ -179,12 +118,29 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
     # Resolve input to standard list of items
     # Check string first to avoid ambiguity
     if isinstance(bom_input, str):
-        # Fallback to fetching BOM for ID for backward compatibility or direct ID usage
-        fetched = _fetch_bom_for_product(bom_input)
-        if fetched:
-            items = fetched
+        bom_str = bom_input.strip()
+        
+        # Case A: It's a BOM Reference ID from the Store
+        if bom_str.startswith("BOM_"):
+            from backend.src.store import BOMStore
+            store = BOMStore()
+            stored_data = store.get_bom(bom_str)
+            if stored_data:
+                print(f"--- [Feasibility] Retrieved verified BOM from Store: {bom_str} ---")
+                bom_obj = stored_data["bom"]
+                items = bom_obj.items
+                parent_product_name = bom_obj.title
+            else:
+                return json.dumps({"feasible": False, "error": f"BOM ID '{bom_str}' not found in memory. It may have expired."})
+        
+        # Case B: It's a Product ID (Legacy/Direct lookup)
         else:
-            items = [{"xentral_id": bom_input, "quantity": 1, "name": "Single Item"}]
+            # Fallback to fetching BOM for ID for backward compatibility or direct ID usage
+            fetched = _fetch_bom_for_product(bom_input)
+            if fetched:
+                items = fetched
+            else:
+                items = [{"xentral_id": bom_input, "quantity": 1, "name": "Single Item"}]
             
     elif isinstance(bom_input, BillOfMaterials):
         # Use the items directly from the model
@@ -226,7 +182,6 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
                 match = store.search(bom_number=str(search_query), bom_desc=desc)
                 
                 xentral_id = match.get("id") if match else None
-                name = desc or (match.get("name_de") if match else "Unknown")
         else:
             # Dictionary input (Legacy path)
             # Default placeholders
@@ -270,7 +225,7 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
              if match and match.get("id"):
                  xentral_id = match.get("id")
                  stock_info = get_inventory_for_product(str(xentral_id))
-        
+                 
         # Handle stock result
         is_enough = False
         stock_display = "Unknown (Error)"
