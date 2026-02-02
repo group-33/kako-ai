@@ -111,3 +111,35 @@ def convert_pdf_to_png(local_path: str) -> str:
         except Exception as e:
             print(f"Warning: PDF conversion failed: {e}")
     return local_path
+
+
+def get_pdf_orientation(local_path: str) -> str:
+    """
+    Detects if a PDF is landscape or portrait based on the first page.
+    Returns "landscape" or "portrait".
+    """
+    if not local_path.lower().endswith(".pdf"):
+        return "portrait" # Default
+
+    try:
+        # We only need the first page's size, not the full render.
+        # pdf2image.pdfinfo_from_path is lighter but requires poppler-utils (which we have for convert_from_path)
+        # However, convert_from_path(first_page=1, last_page=1) is safer if we want exact dimensions
+        from pdf2image import pdfinfo_from_path
+        info = pdfinfo_from_path(local_path)
+        
+        # Parse Page size: e.g. "595.28 x 841.89 pts (A4)" or just dimensions in dict
+        # pdf2image returns a dict with 'Pages', 'Page size', etc. 
+        # Actually pdfinfo_from_path parses 'pdfinfo' output.
+        # Let's use a simpler heuristic with convert_from_path if unsure about pdfinfo dict structure
+        # But pdfinfo is much faster.
+        # Let's rely on PIL image size from convert_from_path for robustness, capped at 1 page.
+        images = convert_from_path(local_path, first_page=1, last_page=1)
+        if images:
+            w, h = images[0].size
+            if w > h:
+                return "landscape"
+    except Exception as e:
+        print(f"Warning: Orientation detection failed: {e}")
+    
+    return "portrait"

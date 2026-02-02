@@ -25,6 +25,7 @@ type BOMTableArgs = {
   source_document?: string;
   preview_image?: string;
   title?: string;
+  orientation?: "portrait" | "landscape";
   rows: BOMRow[];
 };
 
@@ -35,6 +36,8 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(true);
+  // Add local state for title
+  const [title, setTitle] = useState(args.title || "");
 
   const handleFieldChange = (index: number, field: keyof BOMRow, value: string | number) => {
     const updated = [...data];
@@ -77,6 +80,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
         thread_id: args.thread_id,
         bom_update: {
           bom_id: args.bom_id,
+          title: title, // Send updated title
           overrides: data.map((row) => ({
             item_id: row.id,
             quantity: Number(row.quantity),
@@ -124,7 +128,17 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
         >
           {isOpen ? <ChevronDown size={16} className="text-slate-400" /> : <ChevronRight size={16} className="text-slate-400" />}
           <Box size={16} className="text-sky-500" />
-          <span>{args.title ? `${args.title}` : t("bomTable.title")}</span>
+          {/* Editable Title Input */}
+          <input
+            value={title}
+            onChange={(e) => {
+              e.stopPropagation();
+              setTitle(e.target.value);
+            }}
+            onClick={(e) => e.stopPropagation()} // Prevent toggle when clicking input
+            className="bg-transparent border-none text-slate-200 font-semibold focus:ring-0 placeholder:text-slate-600 min-w-[200px]"
+            placeholder={t("bomTable.title")}
+          />
         </button>
 
         <div className="flex items-center gap-3">
@@ -285,8 +299,8 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                   if (imgSrc.toLowerCase().endsWith(".pdf")) {
                     return (
                       <iframe
-                        src={imgSrc}
-                        className="w-full aspect-[21/29] border-none"
+                        src={`${imgSrc}#view=Fit`}
+                        className={`w-full border border-slate-800 rounded bg-slate-950 ${args.orientation === "landscape" ? "aspect-[29/23]" : "aspect-[21/31]"}`}
                         title={t("bomTable.sourceAlt")}
                       />
                     );
