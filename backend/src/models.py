@@ -136,6 +136,7 @@ class BOMUpdate(BaseModel):
     """Set of overrides to apply to the latest extracted BOM."""
 
     bom_id: str
+    title: str | None = None
     overrides: List[BOMOverride]
 
 

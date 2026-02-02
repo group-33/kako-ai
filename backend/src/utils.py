@@ -63,7 +63,13 @@ def apply_bom_update(base: BillOfMaterials, update: BOMUpdate) -> BillOfMaterial
 
         items.append(new_item)
 
-    return BillOfMaterials(items=items)
+    new_title = update.title if update.title is not None else base.title
+    
+    return BillOfMaterials(
+        items=items,
+        title=new_title,
+        orientation=base.orientation
+    )
 
 
 def build_bom_tool_block(
