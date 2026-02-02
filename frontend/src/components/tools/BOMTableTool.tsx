@@ -1,5 +1,5 @@
 import { makeAssistantToolUI } from "@assistant-ui/react";
-import { Box, Save, ChevronDown, ChevronRight, Download } from "lucide-react";
+import { Box, Save, ChevronDown, ChevronRight, Download, Trash2, Plus } from "lucide-react";
 import { useState } from "react";
 import { exportBOMsFromMessage } from "@/lib/excelExport";
 import { useTranslation } from "react-i18next";
@@ -12,6 +12,7 @@ type BOMRow = {
   id: string;
   pos?: string | number;
   item_nr?: string;
+  xentral_number?: string;
   component: string; // fallback
   description?: string;
   quantity: number;
@@ -22,6 +23,8 @@ type BOMTableArgs = {
   bom_id: string;
   thread_id: string;
   source_document?: string;
+  preview_image?: string;
+  title?: string;
   rows: BOMRow[];
 };
 
@@ -32,6 +35,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(true);
+
   const handleFieldChange = (index: number, field: keyof BOMRow, value: string | number) => {
     const updated = [...data];
     if (updated[index]) {
@@ -40,6 +44,28 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
       setData(updated);
       setIsSaved(false);
     }
+  };
+
+  const handleAddRow = () => {
+    const newRow: BOMRow = {
+      id: `new_${Date.now()}`,
+      pos: data.length + 1,
+      item_nr: "",
+      xentral_number: "",
+      component: "", // description will be used
+      description: "",
+      quantity: 1,
+      unit: "Stk",
+    };
+    setData([...data, newRow]);
+    setIsSaved(false);
+  };
+
+  const handleDeleteRow = (index: number) => {
+    const updated = [...data];
+    updated.splice(index, 1);
+    setData(updated);
+    setIsSaved(false);
   };
 
   const handleSave = async () => {
@@ -55,6 +81,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
             item_id: row.id,
             quantity: Number(row.quantity),
             item_nr: row.item_nr || null,
+            xentral_number: row.xentral_number || null,
             description: row.description || row.component,
             unit: row.unit
           })),
@@ -97,10 +124,22 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
         >
           {isOpen ? <ChevronDown size={16} className="text-slate-400" /> : <ChevronRight size={16} className="text-slate-400" />}
           <Box size={16} className="text-sky-500" />
-          <span>{t("bomTable.title")}</span>
+          <span>{args.title ? `${args.title}` : t("bomTable.title")}</span>
         </button>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={(e) => {
+              e.stopPropagation(); // prevent toggle
+              handleAddRow();
+            }}
+            className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-sky-400 transition-colors px-2 py-1 hover:bg-slate-800/50 rounded"
+            title={t("bomTable.addRowTitle")}
+          >
+            <Plus size={14} />
+            <span>{t("bomTable.addRow")}</span>
+          </button>
+
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -113,14 +152,12 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
             <span>{t("bomTable.export")}</span>
           </button>
 
-          <span className="text-[10px] uppercase tracking-wider font-bold text-sky-400 bg-sky-950/30 px-2 py-1 rounded border border-sky-500/20">
-            {t("bomTable.fullEdit")}
-          </span>
+
         </div>
       </div>
 
       {isOpen && (
-        <div className="animate-in slide-in-from-top-2 duration-200 flex flex-col lg:flex-row border-t border-slate-800">
+        <div className="animate-in slide-in-from-top-2 duration-200 flex flex-col border-t border-slate-800">
 
           <div className="flex-1 min-w-0">
             <div className="overflow-x-auto">
@@ -129,9 +166,11 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                   <tr>
                     <th className="px-3 py-2 font-medium w-12">{t("bomTable.headers.position")}</th>
                     <th className="px-3 py-2 font-medium w-24">{t("bomTable.headers.itemNumber")}</th>
+                    <th className="px-3 py-2 font-medium w-32">{t("bomTable.headers.xentral_number")}</th>
                     <th className="px-3 py-2 font-medium">{t("bomTable.headers.description")}</th>
                     <th className="px-3 py-2 font-medium w-20 text-right">{t("bomTable.headers.quantity")}</th>
                     <th className="px-3 py-2 font-medium w-16">{t("bomTable.headers.unit")}</th>
+                    <th className="px-1 py-2 w-8"></th>
                   </tr>
                 </thead>
                 <tbody className="text-slate-300">
@@ -150,6 +189,15 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                           onChange={(e) => handleFieldChange(i, "item_nr", e.target.value)}
                           className="w-full bg-transparent border-none text-slate-300 focus:ring-0 focus:text-sky-200 placeholder:text-slate-700"
                           placeholder="-"
+                        />
+                      </td>
+
+                      <td className="px-3 py-2">
+                        <input
+                          value={row.xentral_number || ""}
+                          onChange={(e) => handleFieldChange(i, "xentral_number", e.target.value)}
+                          className="w-full bg-transparent border-none text-slate-300 focus:ring-0 focus:text-sky-200 placeholder:text-slate-700"
+                          placeholder="Not Matched"
                         />
                       </td>
 
@@ -178,6 +226,15 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                           onChange={(e) => handleFieldChange(i, "unit", e.target.value)}
                           className="w-12 bg-transparent border-none text-slate-400 text-xs focus:ring-0 focus:text-sky-300 text-center"
                         />
+                      </td>
+                      <td className="px-1 py-1 text-center">
+                        <button
+                          onClick={() => handleDeleteRow(i)}
+                          className="p-1 text-slate-600 hover:text-red-400 hover:bg-red-900/20 rounded transition-colors"
+                          title={t("bomTable.deleteRowTitle")}
+                        >
+                          <Trash2 size={13} />
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -215,25 +272,34 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
             )}
           </div>
 
-          {args.source_document && (
-            <div className="w-full lg:w-1/3 border-t lg:border-t-0 lg:border-l border-slate-800 bg-slate-950/20 p-4 flex flex-col gap-2">
+          {(args.preview_image || args.source_document) && (
+            <div className="w-full border-t border-slate-800 bg-slate-950/20 p-4 flex flex-col gap-2">
               <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
                 {t("bomTable.sourceFile")}
               </span>
               <div className="relative group rounded overflow-hidden border border-slate-800 bg-slate-950 shadow-inner">
-                <img
-                  src={args.source_document.startsWith('/') ? `${BACKEND_BASE_URL}${args.source_document}` : args.source_document}
-                  alt={t("bomTable.sourceAlt")}
-                  className="w-full h-auto object-contain max-h-[400px]"
-                />
-                <a
-                  href={args.source_document.startsWith('/') ? `${BACKEND_BASE_URL}${args.source_document}` : args.source_document}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-medium transition-opacity"
-                >
-                  {t("bomTable.viewOriginal")}
-                </a>
+                {(() => {
+                  const rawSrc = args.preview_image || args.source_document || "";
+                  const imgSrc = rawSrc.startsWith('/') ? `${BACKEND_BASE_URL}${rawSrc}` : rawSrc;
+
+                  if (imgSrc.toLowerCase().endsWith(".pdf")) {
+                    return (
+                      <iframe
+                        src={imgSrc}
+                        className="w-full aspect-[21/29] border-none"
+                        title={t("bomTable.sourceAlt")}
+                      />
+                    );
+                  }
+
+                  return (
+                    <img
+                      src={imgSrc}
+                      alt={t("bomTable.sourceAlt")}
+                      className="w-full h-auto object-contain"
+                    />
+                  );
+                })()}
               </div>
             </div>
           )}

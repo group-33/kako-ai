@@ -1,7 +1,6 @@
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import {
-    LayoutDashboard,
     MessageSquare,
     Settings,
     User,
@@ -44,30 +43,18 @@ export function Layout() {
             <aside className="w-64 bg-slate-900 flex flex-col p-4 border-r border-slate-800 shadow-xl z-10">
                 <div className="flex items-center justify-center mb-8 px-2">
                     <div className="flex items-center justify-center w-full">
-                        <img
-                            src="/kako_logo.jpg"
-                            alt="Kako Elektro GmbH"
-                            className="h-12 w-auto object-contain rounded bg-white p-1"
-                        />
+                        <NavLink to="/">
+                            <img
+                                src="/kako_logo.jpg"
+                                alt="Kako Elektro GmbH"
+                                className="h-12 w-auto object-contain rounded bg-white p-1 hover:brightness-110 transition-all cursor-pointer"
+                            />
+                        </NavLink>
                     </div>
                 </div>
 
                 <nav className="space-y-1 flex-1 min-h-0 flex flex-col">
-                    <div className="mb-2">
-                        <NavLink
-                            to="/"
-                            className={({ isActive }) => cn(
-                                "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 group",
-                                isActive ? "bg-slate-700 text-white shadow-lg shadow-black/20" : "hover:bg-slate-800/50 hover:text-white"
-                            )}
-                            end
-                        >
-                            <div className="w-5 flex items-center justify-center shrink-0">
-                                <LayoutDashboard size={18} />
-                            </div>
-                            <span className="font-medium text-sm">{t('layout.dashboard')}</span>
-                        </NavLink>
-                    </div>
+
 
                     <button
                         onClick={handleNewChat}

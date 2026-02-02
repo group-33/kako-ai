@@ -45,13 +45,15 @@
         }
     },
     "chatPage": {
-        "selectPlaceholder": "Select a workflow or start a new one."
+        "selectPlaceholder": "Select a workflow or start a new one.",
+        "loadingConversation": "Loading conversation..."
     },
     "config": {
         "title": "Configuration",
         "modelSelection": "AI Model Selection",
         "modelDesc": "Choose the LLM that powers the Kako AI agent.",
-        "save": "Settings are saved automatically."
+        "save": "Settings are saved automatically.",
+        "loadingModels": "Loading models..."
     },
     "login": {
         "subtitle": "Generative AI-Powered Copilot for Feasibility & Procurement",
@@ -130,17 +132,25 @@
         },
         "message": {
             "thinking": "Thinking..."
+        },
+        "actionBar": {
+            "copy": "Copy",
+            "refresh": "Refresh"
         }
     },
     "bomTable": {
         "title": "Edit BOM",
         "exportTitle": "Download as Excel",
         "export": "Export",
+        "addRow": "Add Row",
+        "addRowTitle": "Add new row",
+        "deleteRowTitle": "Delete Row",
         "fullEdit": "Full Edit",
         "headers": {
             "position": "Pos.",
             "itemNumber": "Item No.",
             "description": "Description",
+            "xentral_number": "Xentral Nr.",
             "quantity": "Quantity",
             "unit": "Unit"
         },
@@ -179,6 +189,8 @@
         "footer": "The analysis is based on the currently selected supplier options."
     },
     "attachment": {
-        "download": "Download"
+        "download": "Download",
+        "add": "Add Attachment",
+        "remove": "Remove file"
     }
 }

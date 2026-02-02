@@ -28,8 +28,16 @@ PROCUREMENT_API_CACHE_TTL_MINUTES = 60  # Cache TTL in minutes for procurement A
 XENTRAL_BEARER_TOKEN = os.getenv("XENTRAL_BEARER_TOKEN")
 XENTRAL_BASE_URL = os.getenv("XENTRAL_BASE_URL")
 XENTRAL_TIMEOUT_SECONDS = 10
+
+# --- App Configuration ---
+
 SUPABASE_DSN = os.getenv("SUPABASE_DSN")
 SUPABASE_PASSWORD = os.getenv("SUPABASE_PASSWORD")
+
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_USER = os.getenv("DB_USER")
+DB_NAME = os.getenv("DB_NAME")
 
 # --- Gemini model handles ---
 GEMINI_3_PRO = dspy.LM("vertex_ai/gemini-3-pro-preview", **VERTEX_ARGS)

@@ -32,7 +32,45 @@ from backend.src.utils import (
     apply_bom_update,
 )
 
-# --- Configure LLM globally ---
+## --- Configure LLM globally ---
+## 1. Save the original request method
+## We patch the class's __call__ method because instance-level patching of __call__ doesn't work for dunder methods,
+## and basic_request appears to be missing in this version of DSPy.
+#LMClass = type(GEMINI_2_5_FLASH)
+#original_call = LMClass.__call__
+#
+## 2. Define the "Spy" function
+#def verbose_call_spy(self, *args, **kwargs):
+#    """
+#    Wraps the LLM request to print the Agent's 'Thoughts' in real-time.
+#    """
+#    # (Optional) Print the Prompt to see what the agent is seeing
+#    prompt_or_messages = kwargs.get("messages") or kwargs.get("prompt") or (args[0] if args else "Unknown")
+#    import pprint
+#    print(f"\n📩 [SENDING PROMPT/MESSAGES]:")
+#    if isinstance(prompt_or_messages, list):
+#        for msg in prompt_or_messages:
+#            print(msg)
+#    else:
+#        print(prompt_or_messages)
+#    print("-" * 20 + "\n")
+#
+#    # Execute the actual API call
+#    completions = original_call(self, *args, **kwargs)
+#    
+#    # Print the Agent's immediate response (The "Thought")
+#    # completions is usually a list of strings or dicts in DSPy
+#    for i, c in enumerate(completions):
+#        # Handle simple string or object response
+#        text = c if isinstance(c, str) else str(c)
+#        print(f"\n🧠 [AGENT THOUGHT]:\n{text}\n{'='*40}")
+#        
+#    return completions
+#
+## 3. Apply the patch
+#print("🕵️♂️ Injection: Real-time Thought Spy activated (Class Level, Kwargs Support).")
+#LMClass.__call__ = verbose_call_spy
+#
 dspy.configure(lm=GEMINI_2_5_FLASH)
 
 app = FastAPI(title="KakoAI")
@@ -155,21 +193,31 @@ async def run_agent(
                 detail="BOM revision mismatch; please refresh and confirm again.",
             )
         merged = apply_bom_update(stored["bom"], bom_update)
+        
+        # 1. Update app state (for UI / History)
         app.state.boms[thread_key] = {
             "bom_id": stored["bom_id"],
             "bom": merged,
             "source_document": stored.get("source_document"),
         }
+        
+        # 2. Update BOMStore (Single Source of Truth for Agent Tools)
+        from backend.src.store import BOMStore
+        BOMStore().save_bom(stored["bom_id"], merged, source_document=stored.get("source_document") or "")
+        print(f"--- [Main] Synced User Edits to BOMStore ID: {stored['bom_id']} ---")
+
         append_to_history(
             history,
             user_query="__BOM_CONFIRMED__",
             process_result=merged.model_dump_json(),
         )
         if user_query.strip() == "__BOM_CONFIRM__":
+            from backend.src.tools.demand_analysis.inventory import xentral_BOM
+            result = xentral_BOM(merged)
             return AgentResponse(
                 response_id=f"msg_{uuid.uuid4()}",
                 created_at=datetime.now(timezone.utc),
-                blocks=[TextBlock(content="BOM saved.")],
+                blocks=[TextBlock(content=f"BOM Saved to Xentral.\nStats: {result}")],
             )
 
     # Select LM based on request or default
@@ -205,21 +253,62 @@ async def run_agent(
             continue
         if tool_name != "perform_bom_extraction":
             continue
-        bom = observation if isinstance(observation, BillOfMaterials) else None
-        if bom is None and isinstance(observation, dict):
+
+        bom: BillOfMaterials | None = None
+        src_image_for_preview: str | None = None
+        extracted_id = None  # Capture ID from tool output
+
+        if isinstance(observation, tuple):
+            # (bom, used_image_path)
+            bom_obj, used_image = observation
+            if isinstance(bom_obj, BillOfMaterials):
+                bom = bom_obj
+                src_image_for_preview = used_image
+        elif isinstance(observation, BillOfMaterials):
+            bom = observation
+        elif isinstance(observation, dict):
             try:
                 bom = BillOfMaterials.model_validate(observation)
             except Exception:
                 pass
+        
+        # New: Check for BOM ID in string observation (Hybrid approach)
+        elif isinstance(observation, str) and "Reference ID:" in observation:
+            import re
+            match = re.search(r"Reference ID: (BOM_[A-F0-9]+)", observation)
+            if match:
+                found_id = match.group(1)
+                from backend.src.store import BOMStore
+                store = BOMStore()
+                stored_entry = store.get_bom(found_id)
+                if stored_entry:
+                     bom = stored_entry["bom"]
+                     src_image_for_preview = stored_entry.get("source_document")
+                     extracted_id = found_id  # Use this ID!
+                     print(f"--- [Main] Hydrated BOM UI from Store ID: {found_id} ---")
+        
         if bom is None:
             continue
 
-        source = tool_args.get("file_path") or tool_args.get("filename")
-        bom_id = compute_bom_id(bom, source_document=source)
+        source = tool_args.get("file_path") or tool_args.get("file") or tool_args.get("filename")
+        
+        # Use extracted ID if available, otherwise fallback to hash
+        bom_id = extracted_id if extracted_id else compute_bom_id(bom, source_document=source)
+        
         app.state.boms[thread_key] = {"bom_id": bom_id, "bom": bom, "source_document": source}
-        append_to_history(history, user_query="__BOM_EXTRACTED__", process_result=bom.model_dump_json())
+        
+        # Inject detailed history so Agent sees the Data AND the ID
+        history_content = f"BOM ID: {bom_id}\nDATA: {bom.model_dump_json()}"
+        append_to_history(history, user_query=f"System: BOM Extraction Completed (ID: {bom_id})", process_result=history_content)
+        
         blocks.append(
-            build_bom_tool_block(bom, source_document=source, bom_id=bom_id, thread_id=thread_key)
+            build_bom_tool_block(
+                bom, 
+                source_document=source, 
+                preview_image=src_image_for_preview, 
+                bom_id=bom_id, 
+                thread_id=thread_key
+            )
         )
 
     append_to_history(history, user_query=user_query, process_result=content)

@@ -15,11 +15,11 @@ SSH_USER = os.getenv("SSH_USER")
 SSH_PASS = os.getenv("SSH_PASS")
 REMOTE_DIR = os.getenv("REMOTE_DIR")
 
-def fetch_file_via_ssh(filename: str) -> str:
+def fetch_file_via_ssh(filename: str) -> tuple[str, str, bool]:
     """Fetch a file from a remote SSH host into a local temp file.
 
-    If SSH access is not configured via environment variables, a clear error
-    is raised instead of attempting to connect to localhost.
+    Returns:
+        (local_path, remote_filename, is_exact_match)
     """
     if not SSH_HOST or not SSH_USER or not REMOTE_DIR:
         raise RuntimeError(
@@ -80,8 +80,20 @@ def fetch_file_via_ssh(filename: str) -> str:
         with SCPClient(ssh.get_transport()) as scp:
             print(f"Downloading: {remote_path}")
             scp.get(remote_path, local_path)
-            
-        return local_path
+        
+        # Determine if it was an exact match (ignoring case maybe, but file systems are picky)
+        # We'll treat case-insensitive equality as "exact enough" for valid files
+        is_exact = (filename.lower() == best_filename.lower()) or (filename.lower() in best_filename.lower() and score == 100) # Strict exactness usually implies score 100
+        
+        # Actually, let's just trust string equality for "Exact".
+        # If user asked for "Drawing-123" and we found "Drawing-123.pdf", that's usually considered exact in this tool context? 
+        # But `filename` input might not have extension.
+        # Let's say: if input is contained in output with high score, or equals.
+        # Simplest: if filename.lower().strip() == best_filename.lower().strip() (ignoring extension if user omitted it?)
+        # Let's stick to strict equality check for "Exact" vs "Did you mean".
+        is_exact = filename == best_filename
+        
+        return local_path, best_filename, is_exact
         
     finally:
         ssh.close()

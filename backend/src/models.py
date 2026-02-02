@@ -18,7 +18,7 @@ class BOMItem(BaseModel):
 class BillOfMaterials(BaseModel):
     items: List[BOMItem] = Field(description="All component line items that make up the BOM.")
 """
-class BOMItem(BaseModel):
+class RawBOMItem(BaseModel):
     part_number: int = Field(
         "1",
         description=(
@@ -40,6 +40,10 @@ class BOMItem(BaseModel):
         description=(
             "The unique identifier, part number, or order code for the item."
             "Look for alphanumeric codes."
+            "CRITICAL EXTRACTION LOGIC: "
+            "1. Analyze the LABEL or HEADER associated with the value. "
+            "2. IF the label implies a physical sub-component (e.g., 'Part No.', 'Cable', 'Plug', 'Contact', 'Housing', 'Nut'), EXTRACT the code. "
+            "3. IF the label implies a system reference, compatibility, or configuration setting (e.g., 'Controller Type', 'Used on', 'Cable Code', 'Project', 'Index'), IGNORE it. "
             "Do not confuse this with the description."
         )
     )
@@ -57,9 +61,20 @@ class BOMItem(BaseModel):
         )
     )
 
-class BillOfMaterials(BaseModel):
-    items: List[BOMItem] = Field(description="All component line items that make up the BOM.")
+class RawBillOfMaterials(BaseModel):
+    title: Optional[str] = Field(None, description="The title of the technical drawing, usually found in the title block.")
+    items: List[RawBOMItem] = Field(description="All component line items that make up the BOM.")
 
+class BOMItem(RawBOMItem):
+    """Inherits raw data and adds Xentral ERP fields."""
+    xentral_number: Optional[str] = Field(
+        None, 
+        description="The internal database ID of the product in Xentral."
+    )
+
+class BillOfMaterials(BaseModel):
+    title: Optional[str] = Field(None, description="The title of the technical drawing, usually found in the title block.")
+    items: List[BOMItem] = Field(description="All component line items that make up the BOM.")
 
 class TextBlock(BaseModel):
     """Standard text response block."""
@@ -74,6 +89,7 @@ class BOMRow(BaseModel):
     id: str
     pos: str | int | None = None
     item_nr: str | None = None
+    xentral_number: str | None = None
     component: str  # Kept for backward compat (will map to description usually)
     description: str | None = None
     quantity: float
@@ -85,7 +101,9 @@ class BOMTableData(BaseModel):
     """Payload for the BOM table tool."""
 
     rows: List[BOMRow]
+    title: str | None = None
     source_document: str | None = None
+    preview_image: str | None = None
 
 
 class ToolUseBlock(BaseModel):
@@ -105,6 +123,7 @@ class BOMOverride(BaseModel):
     item_id: str
     quantity: float
     item_nr: str | None = None
+    xentral_number: str | None = None
     description: str | None = None
     unit: str | None = None
     component: str | None = None # Deprecated but kept for safety
@@ -124,6 +143,8 @@ class AgentRequest(BaseModel):
     thread_id: str | None = None
     model_id: str | None = None
     bom_update: BOMUpdate | None = None
+
+    model_config = {'protected_namespaces': ()}
 
 
 class AgentResponse(BaseModel):
