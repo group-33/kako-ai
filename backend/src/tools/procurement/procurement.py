@@ -37,7 +37,7 @@ def filter_sellers_by_shipping(
 
     Args:
         data (dict | str): The full JSON data dictionary or a 'SEARCH_ID' string.
-        target_country_codes (list): A list of strings (e.g. ["DE", "US"]).
+        target_country_codes (list): A list of strings (e.g., ["DE", "US"]).
 
     Returns:
         dict | str: The filtered data structure or a new 'SEARCH_ID' (if input was ID).
