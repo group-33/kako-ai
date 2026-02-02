@@ -141,7 +141,10 @@
     "bomTable": {
         "title": "Stückliste bearbeiten",
         "exportTitle": "Als Excel herunterladen",
-        "export": "Export",
+        "export": "Exportieren",
+        "addRow": "Zeile hinzufügen",
+        "addRowTitle": "Neue Zeile hinzufügen",
+        "deleteRowTitle": "Zeile löschen",
         "fullEdit": "Vollbearbeitung",
         "headers": {
             "position": "Pos.",

@@ -142,6 +142,9 @@
         "title": "Edit BOM",
         "exportTitle": "Download as Excel",
         "export": "Export",
+        "addRow": "Add Row",
+        "addRowTitle": "Add new row",
+        "deleteRowTitle": "Delete Row",
         "fullEdit": "Full Edit",
         "headers": {
             "position": "Pos.",

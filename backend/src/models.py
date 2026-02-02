@@ -101,6 +101,7 @@ class BOMTableData(BaseModel):
     """Payload for the BOM table tool."""
 
     rows: List[BOMRow]
+    title: str | None = None
     source_document: str | None = None
     preview_image: str | None = None
 

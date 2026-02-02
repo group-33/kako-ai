@@ -1,5 +1,5 @@
 import { makeAssistantToolUI } from "@assistant-ui/react";
-import { Box, Save, ChevronDown, ChevronRight, Download } from "lucide-react";
+import { Box, Save, ChevronDown, ChevronRight, Download, Trash2, Plus } from "lucide-react";
 import { useState } from "react";
 import { exportBOMsFromMessage } from "@/lib/excelExport";
 import { useTranslation } from "react-i18next";
@@ -24,6 +24,7 @@ type BOMTableArgs = {
   thread_id: string;
   source_document?: string;
   preview_image?: string;
+  title?: string;
   rows: BOMRow[];
 };
 
@@ -34,6 +35,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(true);
+
   const handleFieldChange = (index: number, field: keyof BOMRow, value: string | number) => {
     const updated = [...data];
     if (updated[index]) {
@@ -42,6 +44,28 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
       setData(updated);
       setIsSaved(false);
     }
+  };
+
+  const handleAddRow = () => {
+    const newRow: BOMRow = {
+      id: `new_${Date.now()}`,
+      pos: data.length + 1,
+      item_nr: "",
+      xentral_number: "",
+      component: "", // description will be used
+      description: "",
+      quantity: 1,
+      unit: "Stk",
+    };
+    setData([...data, newRow]);
+    setIsSaved(false);
+  };
+
+  const handleDeleteRow = (index: number) => {
+    const updated = [...data];
+    updated.splice(index, 1);
+    setData(updated);
+    setIsSaved(false);
   };
 
   const handleSave = async () => {
@@ -100,10 +124,22 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
         >
           {isOpen ? <ChevronDown size={16} className="text-slate-400" /> : <ChevronRight size={16} className="text-slate-400" />}
           <Box size={16} className="text-sky-500" />
-          <span>{t("bomTable.title")}</span>
+          <span>{args.title ? `${args.title}` : t("bomTable.title")}</span>
         </button>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={(e) => {
+              e.stopPropagation(); // prevent toggle
+              handleAddRow();
+            }}
+            className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-sky-400 transition-colors px-2 py-1 hover:bg-slate-800/50 rounded"
+            title={t("bomTable.addRowTitle")}
+          >
+            <Plus size={14} />
+            <span>{t("bomTable.addRow")}</span>
+          </button>
+
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -134,6 +170,7 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                     <th className="px-3 py-2 font-medium">{t("bomTable.headers.description")}</th>
                     <th className="px-3 py-2 font-medium w-20 text-right">{t("bomTable.headers.quantity")}</th>
                     <th className="px-3 py-2 font-medium w-16">{t("bomTable.headers.unit")}</th>
+                    <th className="px-1 py-2 w-8"></th>
                   </tr>
                 </thead>
                 <tbody className="text-slate-300">
@@ -189,6 +226,15 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
                           onChange={(e) => handleFieldChange(i, "unit", e.target.value)}
                           className="w-12 bg-transparent border-none text-slate-400 text-xs focus:ring-0 focus:text-sky-300 text-center"
                         />
+                      </td>
+                      <td className="px-1 py-1 text-center">
+                        <button
+                          onClick={() => handleDeleteRow(i)}
+                          className="p-1 text-slate-600 hover:text-red-400 hover:bg-red-900/20 rounded transition-colors"
+                          title={t("bomTable.deleteRowTitle")}
+                        >
+                          <Trash2 size={13} />
+                        </button>
                       </td>
                     </tr>
                   ))}

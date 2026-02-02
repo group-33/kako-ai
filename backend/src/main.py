@@ -205,10 +205,12 @@ async def run_agent(
             process_result=merged.model_dump_json(),
         )
         if user_query.strip() == "__BOM_CONFIRM__":
+            from backend.src.tools.demand_analysis.inventory import xentral_BOM
+            result = xentral_BOM(merged)
             return AgentResponse(
                 response_id=f"msg_{uuid.uuid4()}",
                 created_at=datetime.now(timezone.utc),
-                blocks=[TextBlock(content="BOM saved.")],
+                blocks=[TextBlock(content=f"BOM Saved to Xentral.\nStats: {result}")],
             )
 
     # Select LM based on request or default
