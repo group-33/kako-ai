@@ -3,11 +3,12 @@ from backend.src.models import BillOfMaterials
 
 class BOMStore:
     _instance = None
-    _boms: Dict[str, Any] = {}
+    _instance = None
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(BOMStore, cls).__new__(cls)
+            cls._instance._boms = {}
         return cls._instance
 
     def save_bom(self, bom_id: str, bom: BillOfMaterials, source_document: str = ""):
@@ -29,11 +30,12 @@ class BOMStore:
 class ProcurementStore:
     """Store for caching large procurement API results to avoid passing them to LLM."""
     _instance = None
-    _searches: Dict[str, Any] = {}
+    _instance = None
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(ProcurementStore, cls).__new__(cls)
+            cls._instance._searches = {}
         return cls._instance
 
     def save_search_result(self, data: Any) -> str:
