@@ -61,3 +61,7 @@ MODEL_OPTIONS = [
     {"id": "gemini-3-pro", "name": "Gemini 3 Pro (Preview)", "provider": "Google"},
     {"id": "gemini-1.5-pro", "name": "Gemini 1.5 Pro", "provider": "Google"},
 ]
+
+# --- BOM cache configuration ---
+BOM_CACHE_ENABLED = os.getenv("BOM_CACHE_ENABLED", "true").lower() in ("1", "true", "yes")
+BOM_CACHE_PATH = os.getenv("BOM_CACHE_PATH", os.path.expanduser("~/.kakoai/bom_cache.pkl"))
