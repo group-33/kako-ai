@@ -323,7 +323,7 @@ def xentral_BOM(bom: BillOfMaterials) -> Dict[str, Any]:
     """
     
     store = ProductInfoStore()
-    target_identifier = bom.title or "New Extracted BOM"
+    target_identifier = bom.title
 
     # 1. Resolve Parent Product
     parent_match = store.search(target_identifier, target_identifier)
@@ -333,24 +333,24 @@ def xentral_BOM(bom: BillOfMaterials) -> Dict[str, Any]:
     if parent_match:
         parent_id = str(parent_match.get("id"))
         final_number = parent_match.get("nummer")
-        print(f"   ✅ Found Parent in DB: {final_number} (ID: {parent_id})")
+        print(f"Found Parent in DB: {final_number} (ID: {parent_id})")
     else:
         # Fallback: Live API Check
-        print(f"   🔎 SQL Miss. Checking Live API for '{target_identifier}'...")
+        print(f"SQL Miss. Checking Live API for '{target_identifier}'...")
         api_id, api_num = _get_id_from_api_by_name(target_identifier)
         
         if api_id:
             parent_id = api_id
             final_number = api_num
-            print(f"   ✅ Found Parent via Live API: {final_number} (ID: {parent_id})")
+            print(f" Found Parent via Live API: {final_number} (ID: {parent_id})")
         else:
-            print(f"   ✨ Parent not found. Creating '{target_identifier}'...")
+            print(f" Parent not found. Creating '{target_identifier}'...")
             new_id, new_num = _create_product(name=target_identifier)
             if not new_id:
                 return {"error": f"Failed to create product '{target_identifier}'."}
             parent_id = str(new_id)
             final_number = new_num
-            print(f"   ✅ Created New Product: {final_number} (ID: {parent_id})")
+            print(f" Created New Product: {final_number} (ID: {parent_id})")
     
     # 2. Resolve Child Items
     resolved_items = []
@@ -367,7 +367,7 @@ def xentral_BOM(bom: BillOfMaterials) -> Dict[str, Any]:
         
         # B. Live API Fallback
         if not child_id and search_key:
-            print(f"      ⚠️ SQL Miss for '{search_key}'. Trying Live API...")
+            print(f"SQL Miss for '{search_key}'. Trying Live API...")
             child_id = _get_id_from_api_by_number(search_key)
             if child_id:
                 print(f"      ✅ Resolved via Live API: ID {child_id}")
@@ -379,14 +379,14 @@ def xentral_BOM(bom: BillOfMaterials) -> Dict[str, Any]:
                 "item_nr": item.item_nr
             })
         else:
-            print(f"      ❌ FAILED to resolve part: {item.item_nr} / {item.description}")
+            print(f"FAILED to resolve part: {item.item_nr} / {item.description}")
     
 
     created_count = 0
     errors = []
     
     if not resolved_items:
-        print("   ⚠️ Warning: No valid child parts found. BOM will be empty.")
+        print("Warning: No valid child parts found. BOM will be empty.")
 
     for r_item in resolved_items:
         # Using V1 Creation Logic
