@@ -36,11 +36,11 @@ def filter_sellers_by_shipping(
        contain the countries present in the target_country_codes.
 
     Args:
-        data (dict): The full JSON data dictionary.
+        data (dict | str): The full JSON data dictionary or a 'SEARCH_ID' string.
         target_country_codes (list): A list of strings (e.g., ["DE", "US"]).
 
     Returns:
-        dict: The filtered data structure.
+        dict | str: The filtered data structure or a new 'SEARCH_ID' (if input was ID).
     """
     print(f"--- [Procurement] Filter Sellers by Shipping (Targets: {target_country_codes}) ---")
     
@@ -48,9 +48,18 @@ def filter_sellers_by_shipping(
     #import sys
     #print(f"      [Debug] Data size: {sys.getsizeof(str(data))} bytes")
 
-    #print("      [Debug] Starting deepcopy...")
-    filtered_data = copy.deepcopy(data)
-    #print("      [Debug] Deepcopy finished.")
+    # Handle Search ID input
+    is_id_mode = isinstance(data, str) and data.startswith("SEARCH_")
+    if is_id_mode:
+        from backend.src.store import ProcurementStore
+        store = ProcurementStore()
+        resolved_data = store.get_search_result(data)
+        if not resolved_data:
+            return json.dumps({"error": f"Invalid or expired Search ID: {data}"})
+        # Use resolved data for processing
+        filtered_data = copy.deepcopy(resolved_data)
+    else:
+        filtered_data = copy.deepcopy(data)
     
     target_codes = set(code.upper() for code in target_country_codes)
 
@@ -77,12 +86,19 @@ def filter_sellers_by_shipping(
 
     if "supMultiMatch" in filtered_data:
         matches = filtered_data["supMultiMatch"]
-        #print(f"      [Debug] Processing {len(matches)} matches...")
         for match in matches:
             if "parts" in match:
                 match["parts"] = [process_part(part) for part in match["parts"]]
     
-    #print("      [Debug] Filtering complete.")
+    if is_id_mode:
+        new_id = store.save_search_result(filtered_data)
+        return json.dumps({
+            "status": "success",
+            "search_id": new_id,
+            "previous_id": data,
+            "operation": "filter_shipping",
+            "summary": "Filtered sellers by shipping."
+        })
 
     return filtered_data
 
@@ -94,17 +110,27 @@ def sort_and_filter_by_best_price(
     Filters the data to find the Top X cheapest solutions for a given quantity.
 
     Args:
-        data (dict): The full API JSON response.
+        data (dict | str): The full API JSON response or a 'SEARCH_ID' string.
         quantity (int): The required number of parts to purchase.
         top_x (int): The number of top results to keep.
         ignore_inventory_level (bool): If True, allows combining partial inventory from multiple sellers.
 
     Returns:
-        dict: A deep copy of the data containing only the best sellers/offers/prices.
+        dict | str: A deep copy of the data containing only the best sellers or a new 'SEARCH_ID'.
     """
     print(f"--- [Procurement] Filter Best Price (Qty: {quantity}, Top: {top_x}) ---")
 
-    result_data = copy.deepcopy(data)
+    # Handle Search ID input
+    is_id_mode = isinstance(data, str) and data.startswith("SEARCH_")
+    if is_id_mode:
+        from backend.src.store import ProcurementStore
+        store = ProcurementStore()
+        resolved_data = store.get_search_result(data)
+        if not resolved_data:
+            return json.dumps({"error": f"Invalid or expired Search ID: {data}"})
+        result_data = copy.deepcopy(resolved_data)
+    else:
+        result_data = copy.deepcopy(data)
 
     def get_valid_price_tier(prices, target_qty):
         """
@@ -196,6 +222,17 @@ def sort_and_filter_by_best_price(
         for match in result_data["supMultiMatch"]:
             if "parts" in match:
                 match["parts"] = [process_part(part) for part in match["parts"]]
+    
+    if is_id_mode:
+        new_id = store.save_search_result(result_data)
+        return json.dumps({
+            "status": "success",
+            "search_id": new_id,
+            "previous_id": data,
+            "operation": "sort_by_best_price",
+            "summary": "Sorted and filtered best prices.",
+            "instruction": "ID updated. Use 'optimize_order' if you need a final procurement plan, OR return this summary to the user."
+        })
 
     return result_data
 
@@ -266,7 +303,25 @@ def search_part_by_mpn(
     if errors and not combined_results["supMultiMatch"]:
         return json.dumps({"error": "Failed to fetch parts", "details": errors})
 
-    return json.dumps(combined_results)
+    # Cache the full result and return a lightweight handle
+    from backend.src.store import ProcurementStore
+    store = ProcurementStore()
+    search_id = store.save_search_result(combined_results)
+    
+    # Create a human-readable summary
+    summary_parts = []
+    for match in combined_results.get("supMultiMatch", []):
+         for part in match.get("parts", []):
+             summary_parts.append(f"{part.get('mpn')} ({part.get('manufacturer', {}).get('name')})")
+             
+    summary_text = f"Found {len(summary_parts)} parts: {', '.join(summary_parts[:5])}..." if summary_parts else "No parts found."
+    
+    return json.dumps({
+        "status": "success",
+        "search_id": search_id,
+        "summary": summary_text,
+        "instruction": "Pass this 'search_id' to filter_sellers or sort_and_filter tools."
+    })
 
 
 def find_alternatives(
@@ -311,6 +366,15 @@ def find_alternatives(
                     "original_search": original_data,
                 }
             )
+
+        # Resolve Search ID if present
+        if original_data.get("search_id"):
+            from backend.src.store import ProcurementStore
+            store = ProcurementStore()
+            resolved_data = store.get_search_result(original_data["search_id"])
+            if not resolved_data:
+                return json.dumps({"error": f"Invalid Search ID returned: {original_data['search_id']}"})
+            original_data = resolved_data
 
         # Extract original part data
         parts = original_data.get("supMultiMatch", [])
@@ -386,6 +450,15 @@ def optimize_order(parts_list: List[Dict]) -> str:
 
     if "error" in search_data:
         return json.dumps({"error": "Failed to search parts", "details": search_data})
+
+    # Resolve Search ID if present
+    if search_data.get("search_id"):
+        from backend.src.store import ProcurementStore
+        store = ProcurementStore()
+        resolved_data = store.get_search_result(search_data["search_id"])
+        if not resolved_data:
+            return json.dumps({"error": f"Invalid Search ID returned: {search_data['search_id']}"})
+        search_data = resolved_data
 
     result = {
         "summary": {
