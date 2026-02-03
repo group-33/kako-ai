@@ -246,6 +246,15 @@ def _extract_procurement_items(payload: object) -> list[dict] | None:
     if not data or data.get("error"):
         return None
 
+    if data.get("search_id"):
+        from backend.src.store import ProcurementStore
+        store = ProcurementStore()
+        # Retrieve the cached result to build the UI
+        full_result = store.get_search_result(data.get("search_id"))
+        if full_result:
+            # Recursive call with re-hydrated data
+            return _extract_procurement_items(full_result)
+
     if data.get("supMultiMatch"):
         return _build_procurement_items_from_sup_multi_match(data)
     if data.get("parts") and data.get("summary"):
