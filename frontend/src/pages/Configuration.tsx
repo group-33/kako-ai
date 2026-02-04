@@ -1,8 +1,19 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Cpu } from "lucide-react";
+import { Check, Cpu, RotateCcw } from "lucide-react";
 import { useChatStore } from "@/store/useChatStore";
 import { cn } from "@/lib/utils";
+import { useMetricsStore } from "@/store/useMetricsStore";
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 type ModelOption = {
     id: string;
@@ -17,6 +28,7 @@ const BACKEND_BASE_URL =
 export default function Configuration() {
     const { t } = useTranslation();
     const { modelId, setModelId } = useChatStore();
+    const resetMetrics = useMetricsStore(s => s.resetMetrics);
     const [models, setModels] = useState<ModelOption[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -103,6 +115,49 @@ export default function Configuration() {
                             <div className="col-span-2 text-center py-8 text-slate-500">{t('config.loadingModels')}</div>
                         )}
                     </div>
+                </div>
+
+                <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 shadow-sm">
+                    <div className="flex items-start gap-4 mb-6">
+                        <div className="w-10 h-10 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center shrink-0">
+                            <RotateCcw size={20} />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-semibold text-white">{t('config.metrics.title')}</h2>
+                            <p className="text-slate-400 text-sm mt-1 max-w-2xl">{t('config.metrics.description')}</p>
+                        </div>
+                    </div>
+
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <button className="px-4 py-2 rounded-lg border border-red-500/20 bg-red-500/10 text-red-300 hover:bg-red-500/20 transition-colors text-sm font-semibold">
+                                {t('config.metrics.resetAction')}
+                            </button>
+                        </DialogTrigger>
+                        <DialogContent className="border-slate-800 bg-slate-950 text-slate-100">
+                            <DialogHeader>
+                                <DialogTitle>{t('config.metrics.resetTitle')}</DialogTitle>
+                                <DialogDescription className="text-slate-400">
+                                    {t('config.metrics.resetDescription')}
+                                </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <button className="px-4 py-2 rounded-lg border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-colors text-sm font-semibold">
+                                        {t('config.metrics.resetCancel')}
+                                    </button>
+                                </DialogClose>
+                                <DialogClose asChild>
+                                    <button
+                                        onClick={resetMetrics}
+                                        className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-500 transition-colors text-sm font-semibold"
+                                    >
+                                        {t('config.metrics.resetConfirm')}
+                                    </button>
+                                </DialogClose>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
 
             </div>

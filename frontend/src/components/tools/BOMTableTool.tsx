@@ -1,8 +1,9 @@
 import { makeAssistantToolUI } from "@assistant-ui/react";
 import { Box, Save, ChevronDown, ChevronRight, Download, Trash2, Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { exportBOMsFromMessage } from "@/lib/excelExport";
 import { useTranslation } from "react-i18next";
+import { useMetricsStore } from "@/store/useMetricsStore";
 
 const BACKEND_BASE_URL =
   (import.meta as ImportMeta & { env: { VITE_BACKEND_URL?: string } }).env
@@ -31,6 +32,8 @@ type BOMTableArgs = {
 
 const BOMTable = ({ args }: { args: BOMTableArgs }) => {
   const { t } = useTranslation();
+  const registerBom = useMetricsStore(s => s.registerBom);
+  const updateBomEdits = useMetricsStore(s => s.updateBomEdits);
   const [data, setData] = useState(args.rows);
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -38,15 +41,68 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
   const [isOpen, setIsOpen] = useState(true);
   // Add local state for title
   const [title, setTitle] = useState(args.title || "");
+  const initialRowsRef = useRef<BOMRow[]>(args.rows);
+
+  useEffect(() => {
+    const clonedRows = args.rows.map(row => ({ ...row }));
+    initialRowsRef.current = clonedRows.map(row => ({ ...row }));
+    setData(clonedRows);
+    setTitle(args.title || "");
+  }, [args.bom_id, args.rows, args.title]);
+
+  useEffect(() => {
+    registerBom(args.bom_id, args.rows.length);
+  }, [args.bom_id, args.rows.length, registerBom]);
+
+  const computeChangedRows = (initialRows: BOMRow[], currentRows: BOMRow[]) => {
+    const normalize = (row: BOMRow) => ({
+      item_nr: row.item_nr ?? "",
+      xentral_number: row.xentral_number ?? "",
+      description: (row.description ?? row.component ?? "").trim(),
+      quantity: Number(row.quantity) || 0,
+      unit: (row.unit ?? "").trim(),
+    });
+
+    const initialMap = new Map(initialRows.map(row => [row.id, normalize(row)]));
+    const currentMap = new Map(currentRows.map(row => [row.id, normalize(row)]));
+
+    let changed = 0;
+    for (const [id, current] of currentMap.entries()) {
+      const initial = initialMap.get(id);
+      if (!initial) {
+        changed += 1;
+        continue;
+      }
+      if (
+        current.item_nr !== initial.item_nr ||
+        current.xentral_number !== initial.xentral_number ||
+        current.description !== initial.description ||
+        current.quantity !== initial.quantity ||
+        current.unit !== initial.unit
+      ) {
+        changed += 1;
+      }
+    }
+
+    for (const id of initialMap.keys()) {
+      if (!currentMap.has(id)) {
+        changed += 1;
+      }
+    }
+
+    const total = Math.max(initialRows.length, currentRows.length);
+    return { changed, total };
+  };
 
   const handleFieldChange = (index: number, field: keyof BOMRow, value: string | number) => {
-    const updated = [...data];
-    if (updated[index]) {
-      // @ts-expect-error - dynamic assignment
-      updated[index][field] = value;
-      setData(updated);
-      setIsSaved(false);
-    }
+    setData(prev => {
+      if (!prev[index]) return prev;
+      const updated = prev.map((row, i) =>
+        i === index ? { ...row, [field]: value } : row
+      );
+      return updated;
+    });
+    setIsSaved(false);
   };
 
   const handleAddRow = () => {
@@ -60,14 +116,12 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
       quantity: 1,
       unit: "Stk",
     };
-    setData([...data, newRow]);
+    setData(prev => [...prev, newRow]);
     setIsSaved(false);
   };
 
   const handleDeleteRow = (index: number) => {
-    const updated = [...data];
-    updated.splice(index, 1);
-    setData(updated);
+    setData(prev => prev.filter((_, i) => i !== index));
     setIsSaved(false);
   };
 
@@ -107,6 +161,8 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
         return;
       }
       setIsSaved(true);
+      const { changed, total } = computeChangedRows(initialRowsRef.current, data);
+      updateBomEdits(args.bom_id, changed, total || 0);
       console.log("Server responded: Success", await res.json());
     } catch (e) {
       console.error("Save failed", e);
