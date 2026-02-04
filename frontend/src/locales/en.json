@@ -186,7 +186,7 @@
     },
     "costAnalysis": {
         "title": "Cost analysis",
-        "footer": "The analysis is based on the currently selected supplier options."
+        "footer": "The analysis is based on the lowest available supplier options (MOQ applied)."
     },
     "attachment": {
         "download": "Download",

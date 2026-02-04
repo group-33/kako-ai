@@ -186,7 +186,7 @@
     },
     "costAnalysis": {
         "title": "Kostenanalyse",
-        "footer": "Die Analyse basiert auf den aktuell ausgewählten Lieferantenoptionen."
+        "footer": "Die Analyse basiert auf den günstigsten verfügbaren Lieferantenoptionen (MOQ berücksichtigt)."
     },
     "attachment": {
         "download": "Herunterladen",
