@@ -25,7 +25,7 @@
             }
         },
         "stats": {
-            "activeProjects": "Aktive Machbarkeitsprüfungen",
+            "feasibilityChecks": "Machbarkeitsprüfungen",
             "bomsProcessed": "Stücklisten Extrahiert",
             "procurementSpend": "Beschaffungsausgaben (geschätzt)",
             "compliance": "Compliance",
@@ -57,10 +57,10 @@
         "loadingModels": "Modelle werden geladen...",
         "metrics": {
             "title": "Metriken",
-            "description": "Setzt Stücklisten-, Genauigkeits- und Beschaffungsmetriken zurück.",
+            "description": "Setzt Machbarkeits-, Stücklisten-, Genauigkeits- und Beschaffungsmetriken zurück.",
             "resetAction": "Metriken zurücksetzen",
             "resetTitle": "Metriken zurücksetzen?",
-            "resetDescription": "Dies löscht BOM-Anzahl, Genauigkeit und Beschaffungsausgaben auf diesem Gerät. Das kann nicht rückgängig gemacht werden.",
+            "resetDescription": "Dies löscht Machbarkeitsprüfungen, BOM-Anzahl, Genauigkeit und Beschaffungsausgaben auf diesem Gerät. Das kann nicht rückgängig gemacht werden.",
             "resetCancel": "Abbrechen",
             "resetConfirm": "Zurücksetzen"
         }

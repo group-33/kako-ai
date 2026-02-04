@@ -25,7 +25,7 @@
             }
         },
         "stats": {
-            "activeProjects": "Active Feasibility Checks",
+            "feasibilityChecks": "Feasibility Checks",
             "bomsProcessed": "BOMs Extracted",
             "procurementSpend": "Procurement Spend (est.)",
             "compliance": "Compliance",
@@ -57,10 +57,10 @@
         "loadingModels": "Loading models...",
         "metrics": {
             "title": "Metrics",
-            "description": "Reset BOM extraction, accuracy, and procurement spend metrics.",
+            "description": "Reset feasibility, BOM extraction, accuracy, and procurement spend metrics.",
             "resetAction": "Reset metrics",
             "resetTitle": "Reset metrics?",
-            "resetDescription": "This clears BOM counts, accuracy, and procurement spend on this device. It cannot be undone.",
+            "resetDescription": "This clears feasibility checks, BOM counts, accuracy, and procurement spend on this device. It cannot be undone.",
             "resetCancel": "Cancel",
             "resetConfirm": "Reset"
         }

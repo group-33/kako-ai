@@ -20,7 +20,7 @@ export default function Dashboard() {
     const navigate = useNavigate();
     const { threads, addThread, setDraft } = useChatStore();
     const { user } = useAuthStore();
-    const { bomIds, bomStats, procurementSpendEur, procurementOrdersByMonth } = useMetricsStore();
+    const { bomIds, bomStats, procurementSpendEur, procurementOrdersByMonth, feasibilityChecks, feasibilityChecksByWeek } = useMetricsStore();
     const { t, i18n } = useTranslation();
 
     const handleAction = async (actionType: 'extract' | 'search') => {
@@ -51,10 +51,8 @@ export default function Dashboard() {
         return start;
     };
     const weekStart = getWeekStart();
-    const updatedThisWeek = threads.filter((thread) => {
-        const updatedAt = new Date(thread.date);
-        return !Number.isNaN(updatedAt.getTime()) && updatedAt >= weekStart;
-    }).length;
+    const weekKey = `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, "0")}-${String(weekStart.getDate()).padStart(2, "0")}`;
+    const feasibilityThisWeek = feasibilityChecksByWeek[weekKey] || 0;
 
     const bomsExtracted = Object.keys(bomIds).length;
     const { editedRowsTotal, rowsTotal } = Object.values(bomStats).reduce(
@@ -144,7 +142,12 @@ export default function Dashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <StatCard icon={<FileText size={20} />} label={t('dashboard.stats.activeProjects')} value={threads.length.toString()} trend={t('dashboard.stats.weekTrend', { count: updatedThisWeek })} />
+                    <StatCard
+                        icon={<FileText size={20} />}
+                        label={t('dashboard.stats.feasibilityChecks')}
+                        value={feasibilityChecks.toString()}
+                        trend={t('dashboard.stats.weekTrend', { count: feasibilityThisWeek })}
+                    />
                     <StatCard
                         icon={<Activity size={20} />}
                         label={t('dashboard.stats.bomsProcessed')}
