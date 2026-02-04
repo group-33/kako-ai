@@ -3,7 +3,6 @@ from backend.src.models import BillOfMaterials
 
 class BOMStore:
     _instance = None
-    _instance = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -29,7 +28,6 @@ class BOMStore:
 
 class ProcurementStore:
     """Store for caching large procurement API results to avoid passing them to LLM."""
-    _instance = None
     _instance = None
 
     def __new__(cls):

@@ -107,22 +107,22 @@
             "createBom": {
                 "title": "Machbarkeitsprüfung",
                 "label": "für 500 Einheiten",
-                "action": "Können wir einen neuen Auftrag über 500 Einheiten von X erfüllen?"
+                "action": "Können wir einen neuen Auftrag über [500 Einheiten von X] erfüllen?"
             },
             "checkInventory": {
                 "title": "Zeige Stücklisten",
                 "label": "fällig in 2 Monaten",
-                "action": "Zeige alle Stücklisten für Aufträge der nächsten 2 Monate mit Beschaffungsempfehlungen."
+                "action": "Zeige alle Stücklisten für Aufträge der nächsten [2 Monate] mit Beschaffungsempfehlungen."
             },
             "optimizeProcurement": {
                 "title": "Materialbedarf",
                 "label": "nächste 3 Wochen",
-                "action": "Welche Menge welcher Materialien benötigen wir für alle Aufträge der nächsten 3 Wochen?"
+                "action": "Welche Menge welcher Materialien benötigen wir für alle Aufträge der nächsten [3 Wochen]?"
             },
             "compareSuppliers": {
                 "title": "Stückliste extrahieren",
                 "label": "aus Kundenzeichnung",
-                "action": "Extrahiere Stückliste aus dieser Kundenzeichnung."
+                "action": "Extrahiere Stückliste aus [Kundenzeichnung]."
             }
         },
         "composer": {

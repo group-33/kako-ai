@@ -16,7 +16,7 @@ import {
   useAssistantState,
 } from "@assistant-ui/react";
 
-import type { FC } from "react";
+import type { FC, RefObject } from "react";
 import { useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -35,11 +35,14 @@ import { useChatStore } from "@/store/useChatStore";
 
 import { useTranslation } from "react-i18next";
 
-const Composer: FC<{ threadId: string; initialDraft?: string }> = ({ threadId, initialDraft }) => {
+const Composer: FC<{ threadId: string; initialDraft?: string; textareaRef: RefObject<HTMLTextAreaElement> }> = ({
+  threadId,
+  initialDraft,
+  textareaRef,
+}) => {
   const { t } = useTranslation();
   const api = useAssistantApi();
-  const appliedDraftRef = useRef(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const lastAppliedDraftRef = useRef<string | null>(null);
   const composerText = useAssistantState(({ composer }) => composer.text);
   const setDraft = useChatStore(s => s.setDraft);
   const storedDraft = useChatStore(s => s.drafts[threadId]);
@@ -49,7 +52,7 @@ const Composer: FC<{ threadId: string; initialDraft?: string }> = ({ threadId, i
   const effectiveDraft = storedDraft ?? initialDraft;
 
   useEffect(() => {
-    appliedDraftRef.current = false;
+    lastAppliedDraftRef.current = null;
     lastSavedRef.current = null;
     prevComposerTextRef.current = "";
     hasInitializedRef.current = false;
@@ -59,9 +62,12 @@ const Composer: FC<{ threadId: string; initialDraft?: string }> = ({ threadId, i
     if (!effectiveDraft) return;
 
     const applyDraft = () => {
-      if (appliedDraftRef.current) return;
+      if (lastAppliedDraftRef.current === effectiveDraft) return;
       const currentText = api.composer().getState().text;
-      if (currentText.trim()) return;
+      const hasText = currentText.trim().length > 0;
+      const canReplace =
+        lastAppliedDraftRef.current && currentText === lastAppliedDraftRef.current;
+      if (hasText && !canReplace) return;
       api.composer().setText(effectiveDraft);
       requestAnimationFrame(() => {
         const textarea = textareaRef.current;
@@ -73,7 +79,7 @@ const Composer: FC<{ threadId: string; initialDraft?: string }> = ({ threadId, i
           textarea.setSelectionRange(start, end + 1);
         }
       });
-      appliedDraftRef.current = true;
+      lastAppliedDraftRef.current = effectiveDraft;
     };
 
     const timeoutId = window.setTimeout(applyDraft, 0);
@@ -183,6 +189,7 @@ const VirtualMessageList: FC = () => {
 };
 
 export const Thread: FC<{ threadId: string; initialDraft?: string }> = ({ threadId, initialDraft }) => {
+  const composerTextareaRef = useRef<HTMLTextAreaElement>(null);
   return (
     <ThreadPrimitive.Root
       className="aui-root aui-thread-root @container flex h-full flex-col bg-transparent"
@@ -205,9 +212,9 @@ export const Thread: FC<{ threadId: string; initialDraft?: string }> = ({ thread
         <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mx-auto mt-2 flex w-full max-w-(--thread-max-width) flex-col gap-4 overflow-visible rounded-t-3xl bg-[#090e20] pb-4 md:pb-6">
           <ThreadScrollToBottom />
           <ThreadPrimitive.If empty>
-            <ThreadSuggestions />
+            <ThreadSuggestions threadId={threadId} textareaRef={composerTextareaRef} />
           </ThreadPrimitive.If>
-          <Composer threadId={threadId} initialDraft={initialDraft} />
+          <Composer threadId={threadId} initialDraft={initialDraft} textareaRef={composerTextareaRef} />
         </ThreadPrimitive.ViewportFooter>
       </ThreadPrimitive.Viewport>
     </ThreadPrimitive.Root>
@@ -246,8 +253,31 @@ const ThreadWelcome: FC = () => {
   );
 };
 
-const ThreadSuggestions: FC = () => {
+const ThreadSuggestions: FC<{ threadId: string; textareaRef: RefObject<HTMLTextAreaElement> }> = ({
+  threadId,
+  textareaRef,
+}) => {
   const { t } = useTranslation();
+  const api = useAssistantApi();
+  const setDraft = useChatStore(s => s.setDraft);
+  const isDisabled = useAssistantState(({ thread }) => thread.isDisabled);
+  const handleSuggestionClick = (prompt: string) => {
+    if (isDisabled) return;
+    api.composer().setText(prompt);
+    setDraft(threadId, prompt);
+    requestAnimationFrame(() => {
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+      const start = prompt.indexOf("[");
+      const end = prompt.indexOf("]");
+      textarea.focus();
+      if (start !== -1 && end > start) {
+        textarea.setSelectionRange(start, end + 1);
+      } else {
+        textarea.setSelectionRange(prompt.length, prompt.length);
+      }
+    });
+  };
   return (
     <div className="aui-thread-welcome-suggestions grid w-full @md:grid-cols-2 gap-2 pb-4">
       {[
@@ -277,24 +307,20 @@ const ThreadSuggestions: FC = () => {
           className="aui-thread-welcome-suggestion-display fade-in slide-in-from-bottom-4 @md:nth-[n+3]:block nth-[n+3]:hidden animate-in fill-mode-both duration-300 ease-out"
           style={{ animationDelay: `${index * 50}ms` }}
         >
-          <ThreadPrimitive.Suggestion
-            prompt={suggestedAction.action}
-            send
-            asChild
+          <Button
+            variant="ghost"
+            className="aui-thread-welcome-suggestion h-auto w-full flex-1 @md:flex-col flex-wrap items-start justify-start gap-1 rounded-2xl border border-slate-800 bg-slate-900/50 px-5 py-4 text-left text-sm hover:bg-slate-800 hover:border-indigo-500/30 transition-all shadow-sm"
+            aria-label={suggestedAction.action}
+            onClick={() => handleSuggestionClick(suggestedAction.action)}
+            disabled={isDisabled}
           >
-            <Button
-              variant="ghost"
-              className="aui-thread-welcome-suggestion h-auto w-full flex-1 @md:flex-col flex-wrap items-start justify-start gap-1 rounded-2xl border border-slate-800 bg-slate-900/50 px-5 py-4 text-left text-sm hover:bg-slate-800 hover:border-indigo-500/30 transition-all shadow-sm"
-              aria-label={suggestedAction.action}
-            >
-              <span className="aui-thread-welcome-suggestion-text-1 font-medium text-slate-200">
-                {suggestedAction.title}
-              </span>
-              <span className="aui-thread-welcome-suggestion-text-2 text-slate-500">
-                {suggestedAction.label}
-              </span>
-            </Button>
-          </ThreadPrimitive.Suggestion>
+            <span className="aui-thread-welcome-suggestion-text-1 font-medium text-slate-200">
+              {suggestedAction.title}
+            </span>
+            <span className="aui-thread-welcome-suggestion-text-2 text-slate-500">
+              {suggestedAction.label}
+            </span>
+          </Button>
         </div>
       ))}
     </div>

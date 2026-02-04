@@ -106,7 +106,6 @@ class BOMTableData(BaseModel):
     source_document: str | None = None
     preview_image: str | None = None
     orientation: str | None = "portrait"
-    orientation: str | None = "portrait"
 
 
 class ToolUseBlock(BaseModel):
