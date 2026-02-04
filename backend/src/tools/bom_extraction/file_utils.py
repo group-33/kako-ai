@@ -96,24 +96,36 @@ def get_pdf_orientation(local_path: str) -> str:
         return "portrait" # Default
 
     try:
-        # We only need the first page's size, not the full render.
-        # pdf2image.pdfinfo_from_path is lighter but requires poppler-utils (which we have for convert_from_path)
-        # However, convert_from_path(first_page=1, last_page=1) is safer if we want exact dimensions
-        from pdf2image import pdfinfo_from_path
-        info = pdfinfo_from_path(local_path)
+        from pypdf import PdfReader
         
-        # Parse Page size: e.g. "595.28 x 841.89 pts (A4)" or just dimensions in dict
-        # pdf2image returns a dict with 'Pages', 'Page size', etc. 
-        # Actually pdfinfo_from_path parses 'pdfinfo' output.
-        # Let's use a simpler heuristic with convert_from_path if unsure about pdfinfo dict structure
-        # But pdfinfo is much faster.
-        # Let's rely on PIL image size from convert_from_path for robustness, capped at 1 page.
-        images = convert_from_path(local_path, first_page=1, last_page=1)
-        if images:
-            w, h = images[0].size
-            if w > h:
-                return "landscape"
+        reader = PdfReader(local_path)
+        if not reader.pages:
+            return "portrait"
+            
+        page = reader.pages[0]
+        
+        # 1. Get Physical Dimensions (MediaBox)
+        # MediaBox is usually [0, 0, width, height] but can be arbitrary rect.
+        # We need absolute width/height.
+        mbox = page.mediabox
+        width = float(mbox.width)
+        height = float(mbox.height)
+        
+        # 2. Check for Rotation
+        # Some PDFs are physically portrait but have /Rotate 90 -> visual Landscape.
+        # Rotation is usually 0, 90, 180, 270.
+        # If 90 or 270, we must swap width and height.
+        rotation = page.get("/Rotate", 0)
+        rotation = int(rotation) % 360
+        
+        if rotation in (90, 270):
+             width, height = height, width
+             
+        # 3. Decision
+        if width > height:
+            return "landscape"
+            
     except Exception as e:
-        print(f"Warning: Orientation detection failed: {e}")
+        print(f"Warning: Orientation detection failed (pypdf): {e}")
     
     return "portrait"
