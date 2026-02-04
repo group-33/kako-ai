@@ -13,13 +13,15 @@ import {
 } from "lucide-react";
 import { useChatStore } from "@/store/useChatStore";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useMetricsStore } from "@/store/useMetricsStore";
 import { useTranslation } from "react-i18next";
 
 export default function Dashboard() {
     const navigate = useNavigate();
     const { threads, addThread, setDraft } = useChatStore();
     const { user } = useAuthStore();
-    const { t } = useTranslation();
+    const { bomIds, bomStats, procurementSpendEur, procurementOrdersByMonth } = useMetricsStore();
+    const { t, i18n } = useTranslation();
 
     const handleAction = async (actionType: 'extract' | 'search') => {
         let initialMessage = "";
@@ -53,6 +55,29 @@ export default function Dashboard() {
         const updatedAt = new Date(thread.date);
         return !Number.isNaN(updatedAt.getTime()) && updatedAt >= weekStart;
     }).length;
+
+    const bomsExtracted = Object.keys(bomIds).length;
+    const { editedRowsTotal, rowsTotal } = Object.values(bomStats).reduce(
+        (acc, stat) => {
+            acc.editedRowsTotal += stat.editedRows;
+            acc.rowsTotal += stat.totalRows;
+            return acc;
+        },
+        { editedRowsTotal: 0, rowsTotal: 0 }
+    );
+    const rawAccuracy = rowsTotal > 0 ? (1 - editedRowsTotal / rowsTotal) * 100 : 100;
+    const accuracy = Math.max(0, Math.min(100, rawAccuracy));
+    const accuracyFormatter = new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 1 });
+    const accuracyDisplay = accuracyFormatter.format(accuracy);
+    const currencyFormatter = new Intl.NumberFormat(i18n.language, {
+        style: "currency",
+        currency: "EUR",
+        maximumFractionDigits: 0,
+    });
+    const spendDisplay = currencyFormatter.format(procurementSpendEur);
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const ordersThisMonth = procurementOrdersByMonth[monthKey] || 0;
 
     return (
         <div className="h-full overflow-y-auto p-8 relative z-0">
@@ -120,8 +145,18 @@ export default function Dashboard() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <StatCard icon={<FileText size={20} />} label={t('dashboard.stats.activeProjects')} value={threads.length.toString()} trend={t('dashboard.stats.weekTrend', { count: updatedThisWeek })} />
-                    <StatCard icon={<Activity size={20} />} label={t('dashboard.stats.bomsProcessed')} value="12" trend={t('dashboard.stats.successRate')} />
-                    <StatCard icon={<TrendingUp size={20} />} label={t('dashboard.stats.totalSavings')} value="€1,240" trend={t('dashboard.stats.viaOptimization')} />
+                    <StatCard
+                        icon={<Activity size={20} />}
+                        label={t('dashboard.stats.bomsProcessed')}
+                        value={bomsExtracted.toString()}
+                        trend={t('dashboard.stats.successRate', { value: accuracyDisplay })}
+                    />
+                    <StatCard
+                        icon={<TrendingUp size={20} />}
+                        label={t('dashboard.stats.procurementSpend')}
+                        value={spendDisplay}
+                        trend={t('dashboard.stats.procurementOrdersThisMonth', { count: ordersThisMonth })}
+                    />
                     <StatCard icon={<ShieldCheck size={20} />} label={t('dashboard.stats.compliance')} value="100%" trend={t('dashboard.stats.rohsVerified')} />
                 </div>
 

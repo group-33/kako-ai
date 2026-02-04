@@ -27,11 +27,12 @@
         "stats": {
             "activeProjects": "Active Feasibility Checks",
             "bomsProcessed": "BOMs Extracted",
-            "totalSavings": "Procurement Savings",
+            "procurementSpend": "Procurement Spend (est.)",
             "compliance": "Compliance",
             "weekTrend": "+{{count}} this week",
-            "successRate": "98% accuracy",
-            "viaOptimization": "via optimization",
+            "successRate": "{{value}}% accuracy",
+            "procurementOrdersThisMonth_one": "{{count}} order this month",
+            "procurementOrdersThisMonth_other": "{{count}} orders this month",
             "rohsVerified": "RoHS verified"
         },
         "recentProjects": {
@@ -53,7 +54,16 @@
         "modelSelection": "AI Model Selection",
         "modelDesc": "Choose the LLM that powers the Kako AI agent.",
         "save": "Settings are saved automatically.",
-        "loadingModels": "Loading models..."
+        "loadingModels": "Loading models...",
+        "metrics": {
+            "title": "Metrics",
+            "description": "Reset BOM extraction, accuracy, and procurement spend metrics.",
+            "resetAction": "Reset metrics",
+            "resetTitle": "Reset metrics?",
+            "resetDescription": "This clears BOM counts, accuracy, and procurement spend on this device. It cannot be undone.",
+            "resetCancel": "Cancel",
+            "resetConfirm": "Reset"
+        }
     },
     "login": {
         "subtitle": "Generative AI-Powered Copilot for Feasibility & Procurement",

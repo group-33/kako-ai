@@ -27,11 +27,12 @@
         "stats": {
             "activeProjects": "Aktive Machbarkeitsprüfungen",
             "bomsProcessed": "Stücklisten Extrahiert",
-            "totalSavings": "Beschaffungseinsparung",
+            "procurementSpend": "Beschaffungsausgaben (geschätzt)",
             "compliance": "Compliance",
             "weekTrend": "+{{count}} diese Woche",
-            "successRate": "98% Genauigkeit",
-            "viaOptimization": "durch Optimierung",
+            "successRate": "{{value}}% Genauigkeit",
+            "procurementOrdersThisMonth_one": "{{count}} Bestellung diesen Monat",
+            "procurementOrdersThisMonth_other": "{{count}} Bestellungen diesen Monat",
             "rohsVerified": "RoHS verifiziert"
         },
         "recentProjects": {
@@ -53,7 +54,16 @@
         "modelSelection": "KI-Modell Auswahl",
         "modelDesc": "Wähle das LLM, das den Kako AI Agenten antreibt.",
         "save": "Einstellungen werden automatisch gespeichert.",
-        "loadingModels": "Modelle werden geladen..."
+        "loadingModels": "Modelle werden geladen...",
+        "metrics": {
+            "title": "Metriken",
+            "description": "Setzt Stücklisten-, Genauigkeits- und Beschaffungsmetriken zurück.",
+            "resetAction": "Metriken zurücksetzen",
+            "resetTitle": "Metriken zurücksetzen?",
+            "resetDescription": "Dies löscht BOM-Anzahl, Genauigkeit und Beschaffungsausgaben auf diesem Gerät. Das kann nicht rückgängig gemacht werden.",
+            "resetCancel": "Abbrechen",
+            "resetConfirm": "Zurücksetzen"
+        }
     },
     "login": {
         "subtitle": "Generativer KI-Copilot für Machbarkeit & Beschaffung",
