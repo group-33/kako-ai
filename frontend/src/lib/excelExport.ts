@@ -117,6 +117,6 @@ export const exportBOMsFromMessage = (threadId: string, currentBomId: string) =>
     });
 
     // Download File
-    const filename = `KAkoAI_Export_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    const filename = `KakoAI_Export_${new Date().toISOString().slice(0, 10)}.xlsx`;
     XLSX.writeFile(wb, filename);
 };

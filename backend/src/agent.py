@@ -84,10 +84,26 @@ class KakoAgentSignature(dspy.Signature):
          -> ACTION: You MUST re-run the relevant tool to retrieve the fresh data.
     
     5. BOM EXTRACTION REPORTING:
-       - When `perform_bom_extraction` succeeds, DO NOT list the items in your text response.
+       - When `perform_bom_extraction` succeeds, the tool output will provide a "USER_VIEW" and "AGENT_DATA".
+       - RESPONSE RULE: Copy the "USER_VIEW" text exactly ("BOM '{title}' extracted successfully.").
+       - DO NOT listing items or IDs in the text response is CRITICAL.
        - The user will see a dedicated Table UI. Redundant text is annoying.
-       - Response format: "Extracted {count} items from {file}. Reference ID: {id}."
+       - The Reference ID is for YOUR internal use (Agent Data) for future tool calls.
        - Then immediately ask for the next step (Feasibility/Procurement).
+       
+    6. PROCUREMENT & REFERENCE IDs:
+       - Tools like `search_part_by_mpn` now return a "search_id" (e.g., "SEARCH_A1B2...").
+       - YOU MUST pass this string into subsequent tools (`filter_sellers_by_shipping`, `sort_and_filter_by_best_price`) as the `data` argument.
+       - IMPORTANT: `search_part_by_mpn` takes a LIST of strings, e.g., `["MPN1"]`, NOT a single string.
+       - DO NOT ask the user to provide the JSON data.
+       - DO NOT invent a fake `search_id`.
+
+    7. NO FAKE TOOL CALLS:
+       - You cannot "call" a tool by writing "CALL: tool_name(...)" in the final response.
+       - This does NOTHING. You must use the proper tool usage format to trigger the backend execution.
+       - If you need information, select the tool in the `next_tool_name` field.
+
+
 
     - REASONING FIRST: Break down complex requests into steps. For simple requests, stop after the first step.
 
