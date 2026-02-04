@@ -9,6 +9,7 @@ from backend.src.models import RawBillOfMaterials, BillOfMaterials, BOMItem
 from backend.src.tools.bom_extraction.file_utils import (
     fetch_file_via_ssh,
     convert_pdf_to_png,
+    get_pdf_orientation,
 )
 from backend.src.tools.demand_analysis.bom import perform_bom_matching
 from backend.src.tools.bom_extraction.bom_cache import BOMCache
@@ -111,7 +112,11 @@ def perform_bom_extraction(file_path: str) -> str | tuple[BillOfMaterials, str]:
                 full_item = BOMItem(**raw_item.dict())
                 full_items.append(full_item)
 
-            full_bom = BillOfMaterials(items=full_items, title=raw_bom.title)
+            full_bom = BillOfMaterials(
+                items=full_items, 
+                title=raw_bom.title,
+                orientation=get_pdf_orientation(display_path)
+            )
 
             # Persist the full (pre-enrichment) BOM so future runs can skip the LLM
             CACHE.set_full_bom(model_image_path, full_bom)
