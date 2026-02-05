@@ -20254,6 +20254,1575 @@
           }
         ]
       }
+    },
+    "f72a4f0562b70903bc895d0618e9fc0bbe8e0e3b4a0460b4833d96fbae7e0b1d": {
+      "timestamp": "2026-02-05T18:37:13.454625",
+      "data": {
+        "supMultiMatch": [
+          {
+            "hits": 1,
+            "parts": [
+              {
+                "id": "161985907",
+                "name": "TE Connectivity AKUA012NN00400100000",
+                "mpn": "AKUA012NN00400100000",
+                "genericMpn": "AKUA012",
+                "manufacturer": {
+                  "id": "3790",
+                  "name": "TE Connectivity",
+                  "aliases": [
+                    "TYCO",
+                    "Tyco Electronics",
+                    "TE CONN",
+                    "TYC",
+                    "TE CONNECT",
+                    "TE CONNECTIVITY LTD",
+                    "TE Connectivity Aerospace Defense and Marine",
+                    "TYCO ELECTRONICS CORPORATION",
+                    "TE Connectivity Measurement Specialties",
+                    "TYCO ELECTRO",
+                    "TYCO ELEC",
+                    "TYCO ELECTRONICS CORP",
+                    "TYCO ELECTRONIC",
+                    "TE Connectivity Passive Product",
+                    "TE Application Tooling",
+                    "TYCO ELECT",
+                    "TYCO ELE",
+                    "TE CONNECTIVITY (TYCO)",
+                    "TE CONNECTIVITY SENSORS",
+                    "TE SENSOR SOLUTIONS",
+                    "TE CONNECTIV",
+                    "TE (Tyco)",
+                    "TE Connectivity Solutions GmbH",
+                    "TE Connectivity /CGS Brand",
+                    "TYCO POWER SYSTEMS",
+                    "Tyco Electronics",
+                    "TE",
+                    "TE Connectivty"
+                  ],
+                  "displayFlag": "",
+                  "homepageUrl": "http://www.te.com/",
+                  "slug": "te-connectivity",
+                  "isVerified": true,
+                  "isDistributorApi": false,
+                  "isOctocartSupported": false
+                },
+                "manufacturerUrl": "https://octopart.com/opatz8j6/b1?t=6XFnByPR7TiPODDYdQ8wNzfty7JSonllDQbXc26eQny4FM71QNrPNenVX2dy2WHRMoerlW772heywJmiQ7yPcHk1TsvbvosmUvMOrQjs7csFqNbQcn2XCWmCHYFxlIfkS7Wk-lc0qRgpeN3scWg7ZoNjd1D_Z3Zfh9RkynHzmj-T376Suvilz45q0xEPw8vo9LAFzKQEII_AJSt8PIDTXPK6mtEYQey7ueWzLDppcEkL7mEAjClFEK2lmValipFKYJEYrQ",
+                "documentCollections": [
+                  {
+                    "name": "IHS",
+                    "documents": [
+                      {
+                        "name": "Datasheet",
+                        "url": "https://datasheet.octopart.com/AKUA012NN00400100000-TE-Connectivity-datasheet-184808934.pdf"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "TE Connectivity",
+                    "documents": [
+                      {
+                        "name": "Datasheet",
+                        "url": "https://datasheet.octopart.com/AKUA012NN00400100000-TE-Connectivity-datasheet-155358194.pdf"
+                      },
+                      {
+                        "name": "Datasheet",
+                        "url": "https://datasheet.octopart.com/AKUA012NN00400100000-TE-Connectivity-datasheet-151947093.pdf"
+                      }
+                    ]
+                  }
+                ],
+                "shortDescription": "Circular Connector, 12 Contact(s), Zinc Alloy",
+                "descriptions": [
+                  {
+                    "text": "Circular Connector, 12 Contact(s), Zinc Alloy"
+                  },
+                  {
+                    "text": "Standard Circular Connectors, Cable-to-Cable, 12 Position, Signal, Cable Mount (Free-Hanging), Electrodeposited Nickel, Zinc Alloy, PBT GF"
+                  },
+                  {
+                    "text": "623 EXTENSION, SPEEDTEC"
+                  }
+                ],
+                "images": [
+                  {
+                    "url": "https://sigma.octopart.com/151947094/image/TE-Connectivity-AKUA012NN00400100000.png"
+                  }
+                ],
+                "specs": [
+                  {
+                    "attribute": {
+                      "id": "975",
+                      "name": "China RoHS",
+                      "group": "Compliance"
+                    },
+                    "value": "Non-Compliant",
+                    "valueType": "text",
+                    "displayValue": "Non-Compliant"
+                  },
+                  {
+                    "attribute": {
+                      "id": "910",
+                      "name": "Lifecycle Status",
+                      "group": "Supply Chain"
+                    },
+                    "value": "Production",
+                    "valueType": "text",
+                    "displayValue": "Production (Last Updated: 2 weeks ago)"
+                  },
+                  {
+                    "attribute": {
+                      "id": "942",
+                      "name": "Manufacturer Lifecycle Status",
+                      "group": "Supply Chain"
+                    },
+                    "value": "ACTIVE",
+                    "valueType": "text",
+                    "displayValue": "ACTIVE (Last Updated: 2 weeks ago)"
+                  },
+                  {
+                    "attribute": {
+                      "id": "849",
+                      "name": "Max Operating Temperature",
+                      "group": "Technical"
+                    },
+                    "value": "130",
+                    "valueType": "float",
+                    "displayValue": "130 \u00b0C"
+                  },
+                  {
+                    "attribute": {
+                      "id": "456",
+                      "name": "Min Operating Temperature",
+                      "group": "Technical"
+                    },
+                    "value": "-20",
+                    "valueType": "float",
+                    "displayValue": "-20 \u00b0C"
+                  },
+                  {
+                    "attribute": {
+                      "id": "329",
+                      "name": "Number of Pins",
+                      "group": "Physical"
+                    },
+                    "value": "12",
+                    "valueType": "integer",
+                    "displayValue": "12"
+                  },
+                  {
+                    "attribute": {
+                      "id": "733",
+                      "name": "Number of Ports",
+                      "group": "Technical"
+                    },
+                    "value": "1",
+                    "valueType": "integer",
+                    "displayValue": "1"
+                  },
+                  {
+                    "attribute": {
+                      "id": "481",
+                      "name": "Number of Positions",
+                      "group": "Technical"
+                    },
+                    "value": "12",
+                    "valueType": "integer",
+                    "displayValue": "12"
+                  },
+                  {
+                    "attribute": {
+                      "id": "610",
+                      "name": "RoHS",
+                      "group": "Compliance"
+                    },
+                    "value": "Compliant",
+                    "valueType": "text",
+                    "displayValue": "Compliant"
+                  },
+                  {
+                    "attribute": {
+                      "id": "636",
+                      "name": "Shell Finish",
+                      "group": "Physical"
+                    },
+                    "value": "Nickel",
+                    "valueType": "text",
+                    "displayValue": "Nickel"
+                  },
+                  {
+                    "attribute": {
+                      "id": "831",
+                      "name": "Shielding",
+                      "group": "Technical"
+                    },
+                    "value": "Yes",
+                    "valueType": "text",
+                    "displayValue": "Yes"
+                  },
+                  {
+                    "attribute": {
+                      "id": "457",
+                      "name": "Voltage Rating",
+                      "group": "Technical"
+                    },
+                    "value": "160",
+                    "valueType": "float",
+                    "displayValue": "160 V"
+                  }
+                ],
+                "octopartUrl": "https://octopart.com/part/te-connectivity-1/AKUA012NN00400100000",
+                "companionProducts": [],
+                "category": {
+                  "id": "6339",
+                  "parentId": "4364",
+                  "name": "Circular Connectors",
+                  "path": "/electronic-parts/connectors/circular-connectors"
+                },
+                "series": null,
+                "bestImage": {
+                  "url": "https://sigma.octopart.com/151947094/image/TE-Connectivity-AKUA012NN00400100000.png"
+                },
+                "bestDatasheet": {
+                  "name": "Datasheet",
+                  "url": "http://datasheet.octopart.com/AKUA012NN00400100000-TE-Connectivity-datasheet-184808934.pdf"
+                },
+                "referenceDesigns": [],
+                "counts": {
+                  "companion_products": 0,
+                  "datasheets": 3,
+                  "descriptions": 3,
+                  "images": 1,
+                  "reference_designs": 0,
+                  "similar_parts": 0,
+                  "specs": 12
+                },
+                "medianPrice1000": {
+                  "quantity": 1000,
+                  "price": 17.3795,
+                  "currency": "USD",
+                  "convertedPrice": 14.726780017500001,
+                  "convertedCurrency": "EUR",
+                  "conversionRate": 0.847365
+                },
+                "totalAvail": 0,
+                "avgAvail": 0,
+                "sellers": [
+                  {
+                    "company": {
+                      "id": "459",
+                      "name": "DigiKey",
+                      "aliases": [
+                        "Digi",
+                        "Digi-Key Corp",
+                        "Digi-Key Evaluation Boards",
+                        "Digi-Key Kit",
+                        "Digi-Key/Cree",
+                        "Digi-Key Electronics",
+                        "DIGI-KEY CORPORATION",
+                        "DIGIWISE",
+                        "Digikey"
+                      ],
+                      "displayFlag": "US",
+                      "homepageUrl": "http://www.digikey.com",
+                      "slug": "digikey",
+                      "isVerified": false,
+                      "isDistributorApi": true,
+                      "isOctocartSupported": true
+                    },
+                    "country": "US",
+                    "offers": [
+                      {
+                        "id": "Acsp1FvAdt0b1O/DcvmfORmk",
+                        "sku": "2452-AKUA012NN00400100000-ND",
+                        "eligibleRegion": "",
+                        "inventoryLevel": 0,
+                        "moq": 40,
+                        "prices": [
+                          {
+                            "quantity": 40,
+                            "price": 17.3795,
+                            "currency": "USD",
+                            "convertedPrice": 14.726780017500001,
+                            "convertedCurrency": "EUR",
+                            "conversionRate": 0.847365
+                          }
+                        ],
+                        "clickUrl": "https://octopart.com/opatz8j6/a1?t=Rk0XsSguMpSeGs8urbpE_JJsoN8ANFXjftG5wHTb6Ztt5clSLDN5M1cdN3BqN04pUm5JIHO1UcXwM9hpUaQkvFlb3YbMYd9kD9yZjRhAwYglzlqEqB_Sf8mqznnkSAg6qs6TyJhmC4WExqLyHunhUj2WhI8LCdxUBxwk2gw9j2N6Tn72C1n4fRCROwdTYIbUvpWRWg_2r9D40V0vT12aTkXWtB-dTJaU7hhFmseEYHgi7RFWfVkbyN2LRPChqUfi7bUZ-KyGh9cDcDd5soOExWmmQc2Y",
+                        "updated": "2026-02-05T13:36:17.000Z",
+                        "factoryLeadDays": 189,
+                        "onOrderQuantity": null,
+                        "factoryPackQuantity": null,
+                        "orderMultiple": null,
+                        "multipackQuantity": null
+                      }
+                    ],
+                    "isAuthorized": true,
+                    "isBroker": false,
+                    "shipsToCountries": [
+                      {
+                        "name": "Algeria",
+                        "countryCode": "DZ",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Angola",
+                        "countryCode": "AO",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Benin",
+                        "countryCode": "BJ",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Botswana",
+                        "countryCode": "BW",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Burkina Faso",
+                        "countryCode": "BF",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Burundi",
+                        "countryCode": "BI",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Cameroon",
+                        "countryCode": "CM",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Cabo Verde",
+                        "countryCode": "CV",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Central African Republic",
+                        "countryCode": "CF",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Chad",
+                        "countryCode": "TD",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Comoros",
+                        "countryCode": "KM",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "DR Congo",
+                        "countryCode": "CD",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Congo Republic",
+                        "countryCode": "CG",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Ivory Coast",
+                        "countryCode": "CI",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Djibouti",
+                        "countryCode": "DJ",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Egypt",
+                        "countryCode": "EG",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Equatorial Guinea",
+                        "countryCode": "GQ",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Eritrea",
+                        "countryCode": "ER",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Ethiopia",
+                        "countryCode": "ET",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Gabon",
+                        "countryCode": "GA",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Gambia",
+                        "countryCode": "GM",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Ghana",
+                        "countryCode": "GH",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Guinea",
+                        "countryCode": "GN",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Guinea-Bissau",
+                        "countryCode": "GW",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Kenya",
+                        "countryCode": "KE",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Lesotho",
+                        "countryCode": "LS",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Liberia",
+                        "countryCode": "LR",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Libya",
+                        "countryCode": "LY",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Madagascar",
+                        "countryCode": "MG",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Malawi",
+                        "countryCode": "MW",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Mali",
+                        "countryCode": "ML",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Mauritania",
+                        "countryCode": "MR",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Mauritius",
+                        "countryCode": "MU",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Mayotte",
+                        "countryCode": "YT",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Morocco",
+                        "countryCode": "MA",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Mozambique",
+                        "countryCode": "MZ",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Namibia",
+                        "countryCode": "NA",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Niger",
+                        "countryCode": "NE",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Nigeria",
+                        "countryCode": "NG",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "R\u00e9union",
+                        "countryCode": "RE",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Rwanda",
+                        "countryCode": "RW",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Saint Helena",
+                        "countryCode": "SH",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "S\u00e3o Tom\u00e9 and Pr\u00edncipe",
+                        "countryCode": "ST",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Senegal",
+                        "countryCode": "SN",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Seychelles",
+                        "countryCode": "SC",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Sierra Leone",
+                        "countryCode": "SL",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Somalia",
+                        "countryCode": "SO",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "South Africa",
+                        "countryCode": "ZA",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Sudan",
+                        "countryCode": "SD",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Eswatini",
+                        "countryCode": "SZ",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Tanzania",
+                        "countryCode": "TZ",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Togo",
+                        "countryCode": "TG",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Tunisia",
+                        "countryCode": "TN",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Uganda",
+                        "countryCode": "UG",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Western Sahara",
+                        "countryCode": "EH",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Zambia",
+                        "countryCode": "ZM",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Zimbabwe",
+                        "countryCode": "ZW",
+                        "continentCode": "AF"
+                      },
+                      {
+                        "name": "Anguilla",
+                        "countryCode": "AI",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Antigua and Barbuda",
+                        "countryCode": "AG",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Aruba",
+                        "countryCode": "AW",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Bahamas",
+                        "countryCode": "BS",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Barbados",
+                        "countryCode": "BB",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Belize",
+                        "countryCode": "BZ",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Bermuda",
+                        "countryCode": "BM",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "British Virgin Islands",
+                        "countryCode": "VG",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Canada",
+                        "countryCode": "CA",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Cayman Islands",
+                        "countryCode": "KY",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Costa Rica",
+                        "countryCode": "CR",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Cuba",
+                        "countryCode": "CU",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Dominica",
+                        "countryCode": "DM",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Dominican Republic",
+                        "countryCode": "DO",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "El Salvador",
+                        "countryCode": "SV",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Greenland",
+                        "countryCode": "GL",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Grenada",
+                        "countryCode": "GD",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Guadeloupe",
+                        "countryCode": "GP",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Guatemala",
+                        "countryCode": "GT",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Haiti",
+                        "countryCode": "HT",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Honduras",
+                        "countryCode": "HN",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Jamaica",
+                        "countryCode": "JM",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Martinique",
+                        "countryCode": "MQ",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Mexico",
+                        "countryCode": "MX",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Montserrat",
+                        "countryCode": "MS",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Netherlands Antilles",
+                        "countryCode": "AN",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Nicaragua",
+                        "countryCode": "NI",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Panama",
+                        "countryCode": "PA",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Puerto Rico",
+                        "countryCode": "PR",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Saint Barth\u00e9lemy",
+                        "countryCode": "BL",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "St Kitts and Nevis",
+                        "countryCode": "KN",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Saint Lucia",
+                        "countryCode": "LC",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Saint Martin",
+                        "countryCode": "MF",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Saint Pierre and Miquelon",
+                        "countryCode": "PM",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "St Vincent and Grenadines",
+                        "countryCode": "VC",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Trinidad and Tobago",
+                        "countryCode": "TT",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "Turks and Caicos Islands",
+                        "countryCode": "TC",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "United States",
+                        "countryCode": "US",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "U.S. Virgin Islands",
+                        "countryCode": "VI",
+                        "continentCode": "NA"
+                      },
+                      {
+                        "name": "American Samoa",
+                        "countryCode": "AS",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Australia",
+                        "countryCode": "AU",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Cook Islands",
+                        "countryCode": "CK",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Fiji",
+                        "countryCode": "FJ",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "French Polynesia",
+                        "countryCode": "PF",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Guam",
+                        "countryCode": "GU",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Kiribati",
+                        "countryCode": "KI",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Marshall Islands",
+                        "countryCode": "MH",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Micronesia",
+                        "countryCode": "FM",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Nauru",
+                        "countryCode": "NR",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "New Caledonia",
+                        "countryCode": "NC",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "New Zealand",
+                        "countryCode": "NZ",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Niue",
+                        "countryCode": "NU",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Norfolk Island",
+                        "countryCode": "NF",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Northern Mariana Islands",
+                        "countryCode": "MP",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Palau",
+                        "countryCode": "PW",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Papua New Guinea",
+                        "countryCode": "PG",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Pitcairn Islands",
+                        "countryCode": "PN",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Samoa",
+                        "countryCode": "WS",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Solomon Islands",
+                        "countryCode": "SB",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Tokelau",
+                        "countryCode": "TK",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Tonga",
+                        "countryCode": "TO",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Tuvalu",
+                        "countryCode": "TV",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "U.S. Minor Outlying Islands",
+                        "countryCode": "UM",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Vanuatu",
+                        "countryCode": "VU",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Wallis and Futuna",
+                        "countryCode": "WF",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Antarctica",
+                        "countryCode": "AQ",
+                        "continentCode": "AN"
+                      },
+                      {
+                        "name": "Bouvet Island",
+                        "countryCode": "BV",
+                        "continentCode": "AN"
+                      },
+                      {
+                        "name": "French Southern Territories",
+                        "countryCode": "TF",
+                        "continentCode": "AN"
+                      },
+                      {
+                        "name": "Heard Island and McDonald Islands",
+                        "countryCode": "HM",
+                        "continentCode": "AN"
+                      },
+                      {
+                        "name": "South Georgia and South Sandwich Islands",
+                        "countryCode": "GS",
+                        "continentCode": "AN"
+                      },
+                      {
+                        "name": "Afghanistan",
+                        "countryCode": "AF",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Azerbaijan",
+                        "countryCode": "AZ",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Bahrain",
+                        "countryCode": "BH",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Bangladesh",
+                        "countryCode": "BD",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Bhutan",
+                        "countryCode": "BT",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "British Indian Ocean Territory",
+                        "countryCode": "IO",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Brunei",
+                        "countryCode": "BN",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Cambodia",
+                        "countryCode": "KH",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "China",
+                        "countryCode": "CN",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Christmas Island",
+                        "countryCode": "CX",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Cocos (Keeling) Islands",
+                        "countryCode": "CC",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Cyprus",
+                        "countryCode": "CY",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Georgia",
+                        "countryCode": "GE",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Hong Kong",
+                        "countryCode": "HK",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "India",
+                        "countryCode": "IN",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Indonesia",
+                        "countryCode": "ID",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Iran",
+                        "countryCode": "IR",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Iraq",
+                        "countryCode": "IQ",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Israel",
+                        "countryCode": "IL",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Japan",
+                        "countryCode": "JP",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Jordan",
+                        "countryCode": "JO",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "North Korea",
+                        "countryCode": "KP",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "South Korea",
+                        "countryCode": "KR",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Kuwait",
+                        "countryCode": "KW",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Laos",
+                        "countryCode": "LA",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Lebanon",
+                        "countryCode": "LB",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Macao",
+                        "countryCode": "MO",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Malaysia",
+                        "countryCode": "MY",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Maldives",
+                        "countryCode": "MV",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Mongolia",
+                        "countryCode": "MN",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Myanmar",
+                        "countryCode": "MM",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Nepal",
+                        "countryCode": "NP",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Oman",
+                        "countryCode": "OM",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Pakistan",
+                        "countryCode": "PK",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Palestine",
+                        "countryCode": "PS",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Philippines",
+                        "countryCode": "PH",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Qatar",
+                        "countryCode": "QA",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Saudi Arabia",
+                        "countryCode": "SA",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Singapore",
+                        "countryCode": "SG",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Sri Lanka",
+                        "countryCode": "LK",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Syria",
+                        "countryCode": "SY",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Taiwan",
+                        "countryCode": "TW",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Tajikistan",
+                        "countryCode": "TJ",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Thailand",
+                        "countryCode": "TH",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Timor-Leste",
+                        "countryCode": "TL",
+                        "continentCode": "OC"
+                      },
+                      {
+                        "name": "Turkmenistan",
+                        "countryCode": "TM",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "United Arab Emirates",
+                        "countryCode": "AE",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Uzbekistan",
+                        "countryCode": "UZ",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Vietnam",
+                        "countryCode": "VN",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "Yemen",
+                        "countryCode": "YE",
+                        "continentCode": "AS"
+                      },
+                      {
+                        "name": "\u00c5land",
+                        "countryCode": "AX",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Albania",
+                        "countryCode": "AL",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Andorra",
+                        "countryCode": "AD",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Austria",
+                        "countryCode": "AT",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Belgium",
+                        "countryCode": "BE",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Bosnia and Herzegovina",
+                        "countryCode": "BA",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Bulgaria",
+                        "countryCode": "BG",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Croatia",
+                        "countryCode": "HR",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Czechia",
+                        "countryCode": "CZ",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Denmark",
+                        "countryCode": "DK",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Estonia",
+                        "countryCode": "EE",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Faroe Islands",
+                        "countryCode": "FO",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Finland",
+                        "countryCode": "FI",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "France",
+                        "countryCode": "FR",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Germany",
+                        "countryCode": "DE",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Gibraltar",
+                        "countryCode": "GI",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Greece",
+                        "countryCode": "GR",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Guernsey",
+                        "countryCode": "GG",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Vatican City",
+                        "countryCode": "VA",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Hungary",
+                        "countryCode": "HU",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Iceland",
+                        "countryCode": "IS",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Ireland",
+                        "countryCode": "IE",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Isle of Man",
+                        "countryCode": "IM",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Italy",
+                        "countryCode": "IT",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Jersey",
+                        "countryCode": "JE",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Latvia",
+                        "countryCode": "LV",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Liechtenstein",
+                        "countryCode": "LI",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Lithuania",
+                        "countryCode": "LT",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Luxembourg",
+                        "countryCode": "LU",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "North Macedonia",
+                        "countryCode": "MK",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Malta",
+                        "countryCode": "MT",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Moldova",
+                        "countryCode": "MD",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Monaco",
+                        "countryCode": "MC",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Montenegro",
+                        "countryCode": "ME",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Netherlands",
+                        "countryCode": "NL",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Norway",
+                        "countryCode": "NO",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Poland",
+                        "countryCode": "PL",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Portugal",
+                        "countryCode": "PT",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Romania",
+                        "countryCode": "RO",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "San Marino",
+                        "countryCode": "SM",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Serbia",
+                        "countryCode": "RS",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Slovakia",
+                        "countryCode": "SK",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Slovenia",
+                        "countryCode": "SI",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Spain",
+                        "countryCode": "ES",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Svalbard and Jan Mayen",
+                        "countryCode": "SJ",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Sweden",
+                        "countryCode": "SE",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Switzerland",
+                        "countryCode": "CH",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "United Kingdom",
+                        "countryCode": "GB",
+                        "continentCode": "EU"
+                      },
+                      {
+                        "name": "Argentina",
+                        "countryCode": "AR",
+                        "continentCode": "SA"
+                      },
+                      {
+                        "name": "Bolivia",
+                        "countryCode": "BO",
+                        "continentCode": "SA"
+                      },
+                      {
+                        "name": "Brazil",
+                        "countryCode": "BR",
+                        "continentCode": "SA"
+                      },
+                      {
+                        "name": "Chile",
+                        "countryCode": "CL",
+                        "continentCode": "SA"
+                      },
+                      {
+                        "name": "Colombia",
+                        "countryCode": "CO",
+                        "continentCode": "SA"
+                      },
+                      {
+                        "name": "Ecuador",
+                        "countryCode": "EC",
+                        "continentCode": "SA"
+                      },
+                      {
+                        "name": "Falkland Islands",
+                        "countryCode": "FK",
+                        "continentCode": "SA"
+                      },
+                      {
+                        "name": "French Guiana",
+                        "countryCode": "GF",
+                        "continentCode": "SA"
+                      },
+                      {
+                        "name": "Guyana",
+                        "countryCode": "GY",
+                        "continentCode": "SA"
+                      },
+                      {
+                        "name": "Paraguay",
+                        "countryCode": "PY",
+                        "continentCode": "SA"
+                      },
+                      {
+                        "name": "Peru",
+                        "countryCode": "PE",
+                        "continentCode": "SA"
+                      },
+                      {
+                        "name": "Suriname",
+                        "countryCode": "SR",
+                        "continentCode": "SA"
+                      },
+                      {
+                        "name": "Uruguay",
+                        "countryCode": "UY",
+                        "continentCode": "SA"
+                      },
+                      {
+                        "name": "Venezuela",
+                        "countryCode": "VE",
+                        "continentCode": "SA"
+                      },
+                      {
+                        "name": "Ukraine",
+                        "countryCode": "UA",
+                        "continentCode": "EU"
+                      }
+                    ]
+                  },
+                  {
+                    "company": {
+                      "id": "11613",
+                      "name": "TTI Europe",
+                      "aliases": [
+                        "TTI"
+                      ],
+                      "displayFlag": "DE",
+                      "homepageUrl": "http://www.ttieurope.com",
+                      "slug": "tti-europe",
+                      "isVerified": false,
+                      "isDistributorApi": false,
+                      "isOctocartSupported": false
+                    },
+                    "country": "DE",
+                    "offers": [
+                      {
+                        "id": "bJzBUtVXwrkIPBzgac3as9Pj",
+                        "sku": "AKUA012NN00400100000",
+                        "eligibleRegion": "11",
+                        "inventoryLevel": 0,
+                        "moq": 40,
+                        "prices": [
+                          {
+                            "quantity": 40,
+                            "price": 14.03,
+                            "currency": "EUR",
+                            "convertedPrice": 14.03,
+                            "convertedCurrency": "EUR",
+                            "conversionRate": 1
+                          },
+                          {
+                            "quantity": 80,
+                            "price": 13.88,
+                            "currency": "EUR",
+                            "convertedPrice": 13.88,
+                            "convertedCurrency": "EUR",
+                            "conversionRate": 1
+                          }
+                        ],
+                        "clickUrl": "https://octopart.com/opatz8j6/a1?t=IjhJETuPMqvFoF_p_RWngqRVGJrQCUMl5S6kKH1tLP3-H6zJSTgL9tMm_qEHxFTUVpsLWWxgN43ZraaL_H1eVFJn3a3h_CPVWomiR7EIABDVIwvKoQWkWqmvizBn4rJjUktPZc8xQ1RWfru4a_wrOhGJo9j4WQe7P0wg_htQ0AOAwvtPbHsbyoUDzM_Yq9AEmTN82BDdg_xmPTnW_UUPuZu3Rzs5LHq_6mKN2Cm37qsYrpC2d1ywKeb-7J-qKEviz3apLD5LNiltrbURi5nf1igbu4sVr9Y",
+                        "updated": "2026-02-05T06:43:49.000Z",
+                        "factoryLeadDays": null,
+                        "onOrderQuantity": null,
+                        "factoryPackQuantity": null,
+                        "orderMultiple": null,
+                        "multipackQuantity": null
+                      }
+                    ],
+                    "isAuthorized": true,
+                    "isBroker": false,
+                    "shipsToCountries": []
+                  }
+                ],
+                "estimatedFactoryLeadDays": 189,
+                "akaMpns": []
+              }
+            ]
+          }
+        ]
+      }
     }
   }
 }

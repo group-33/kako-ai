@@ -42,16 +42,19 @@ def filter_sellers_by_shipping(
     Returns:
         dict | str: The filtered data structure or a new 'SEARCH_ID' (if input was ID).
     """
-    print(f"--- [Procurement] Filter Sellers by Shipping (Targets: {target_country_codes}) ---")
-    
+    print(
+        f"--- [Procurement] Filter Sellers by Shipping (Targets: {target_country_codes}) ---"
+    )
+
     # Debug: Check data size
-    #import sys
-    #print(f"      [Debug] Data size: {sys.getsizeof(str(data))} bytes")
+    # import sys
+    # print(f"      [Debug] Data size: {sys.getsizeof(str(data))} bytes")
 
     # Handle Search ID input
     is_id_mode = isinstance(data, str) and data.startswith("SEARCH_")
     if is_id_mode:
         from backend.src.store import ProcurementStore
+
         store = ProcurementStore()
         resolved_data = store.get_search_result(data)
         if not resolved_data:
@@ -60,7 +63,7 @@ def filter_sellers_by_shipping(
         filtered_data = copy.deepcopy(resolved_data)
     else:
         filtered_data = copy.deepcopy(data)
-    
+
     target_codes = set(code.upper() for code in target_country_codes)
 
     # Helper function to process individual parts
@@ -89,22 +92,27 @@ def filter_sellers_by_shipping(
         for match in matches:
             if "parts" in match:
                 match["parts"] = [process_part(part) for part in match["parts"]]
-    
+
     if is_id_mode:
         new_id = store.save_search_result(filtered_data)
-        return json.dumps({
-            "status": "success",
-            "search_id": new_id,
-            "previous_id": data,
-            "operation": "filter_shipping",
-            "summary": "Filtered sellers by shipping."
-        })
+        return json.dumps(
+            {
+                "status": "success",
+                "search_id": new_id,
+                "previous_id": data,
+                "operation": "filter_shipping",
+                "summary": "Filtered sellers by shipping.",
+            }
+        )
 
     return filtered_data
 
 
 def sort_and_filter_by_best_price(
-    data: dict | str, quantity: int = 1, top_x: int = 3, ignore_inventory_level: bool = False
+    data: dict | str,
+    quantity: int = 1,
+    top_x: int = 3,
+    ignore_inventory_level: bool = False,
 ) -> dict:
     """
     Filters the data to find the Top X cheapest solutions for a given quantity.
@@ -124,6 +132,7 @@ def sort_and_filter_by_best_price(
     is_id_mode = isinstance(data, str) and data.startswith("SEARCH_")
     if is_id_mode:
         from backend.src.store import ProcurementStore
+
         store = ProcurementStore()
         resolved_data = store.get_search_result(data)
         if not resolved_data:
@@ -222,17 +231,19 @@ def sort_and_filter_by_best_price(
         for match in result_data["supMultiMatch"]:
             if "parts" in match:
                 match["parts"] = [process_part(part) for part in match["parts"]]
-    
+
     if is_id_mode:
         new_id = store.save_search_result(result_data)
-        return json.dumps({
-            "status": "success",
-            "search_id": new_id,
-            "previous_id": data,
-            "operation": "sort_by_best_price",
-            "summary": "Sorted and filtered best prices.",
-            "instruction": "ID updated. Use 'optimize_order' if you need a final procurement plan, OR return this summary to the user."
-        })
+        return json.dumps(
+            {
+                "status": "success",
+                "search_id": new_id,
+                "previous_id": data,
+                "operation": "sort_by_best_price",
+                "summary": "Sorted and filtered best prices.",
+                "instruction": "ID updated. Use 'optimize_order' if you need a final procurement plan, OR return this summary to the user.",
+            }
+        )
 
     return result_data
 
@@ -247,8 +258,8 @@ def search_part_by_mpn(
     Search for electronic parts by their Manufacturer Part Numbers (MPNs).
     Returns detailed part information including pricing, availability, and seller options.
 
-    IMPORTANT: Use the EXACT 'item_nr' or 'Part Number' found in the conversation history 
-    or BOM data. Do NOT attempt to translate or guess a manufacturer MPN if a 
+    IMPORTANT: Use the EXACT 'item_nr' or 'Part Number' found in the conversation history
+    or BOM data. Do NOT attempt to translate or guess a manufacturer MPN if a
     specific number is already provided in the context.
 
     API QUOTA WARNING: Each MPN searched consumes API quota. Keep part_limit LOW (1-5).
@@ -258,7 +269,7 @@ def search_part_by_mpn(
     The quantity parameter helps understand which price breaks apply.
 
     Args:
-        mpns: List of Manufacturer Part Numbers to search (e.g., ["STM32F407VGT6", "LM324N"])
+        mpns: List of Manufacturer Part Numbers to search (e.g., ["STM32F407VGT6", "LM324N"] or ["AKUA012NN00400100000"])
         quantity: Quantity needed per part (default: 1)
         part_limit: Number of parts to return per MPN (default: 1). Use 1 unless you need multiple alternatives from the same MPN. Higher values consume more API quota.
         apply_country_filter: Filters results to only show sellers shipping to Germany (DE). KEEP AS True (default). Only set to False if international shipping information is required, which is basically never the case.
@@ -270,8 +281,11 @@ def search_part_by_mpn(
     Example:
         search_part_by_mpn(["STM32F407VGT6"], quantity=100)  # Returns 1 part per MPN
         search_part_by_mpn(["STM32F407VGT6"], quantity=100, part_limit=5)  # More expensive!
+        search_part_by_mpn(["AKUA012NN00400100000"])  # Example with a different MPN
     """
-    print(f"--- [Procurement] Search By MPN: {str(mpns)[:50]}... (Qty: {quantity}) ---")
+    print(
+        f"--- [Procurement] Search By MPN: {str(mpns)[:50]}... (Qty: {quantity})... (Limit: {part_limit}) ---"
+    )
 
     if not mpns or not isinstance(mpns, list):
         return json.dumps({"error": "Input must be a non-empty list of MPN strings."})
@@ -281,7 +295,7 @@ def search_part_by_mpn(
 
     for mpn in mpns:
         # Clean MPN to ensure cache consistency
-        clean_mpn = mpn.strip()
+        clean_mpn = mpn.strip().upper().replace(" ", "")
 
         variables = {
             "country": "DE",
@@ -309,23 +323,32 @@ def search_part_by_mpn(
 
     # Cache the full result and return a lightweight handle
     from backend.src.store import ProcurementStore
+
     store = ProcurementStore()
     search_id = store.save_search_result(combined_results)
-    
+
     # Create a human-readable summary
     summary_parts = []
     for match in combined_results.get("supMultiMatch", []):
-         for part in match.get("parts", []):
-             summary_parts.append(f"{part.get('mpn')} ({part.get('manufacturer', {}).get('name')})")
-             
-    summary_text = f"Found {len(summary_parts)} parts: {', '.join(summary_parts[:5])}..." if summary_parts else "No parts found."
-    
-    return json.dumps({
-        "status": "success",
-        "search_id": search_id,
-        "summary": summary_text,
-        "instruction": "Pass this 'search_id' to filter_sellers or sort_and_filter tools."
-    })
+        for part in match.get("parts", []):
+            summary_parts.append(
+                f"{part.get('mpn')} ({part.get('manufacturer', {}).get('name')})"
+            )
+
+    summary_text = (
+        f"Found {len(summary_parts)} parts: {', '.join(summary_parts[:5])}..."
+        if summary_parts
+        else "No parts found."
+    )
+
+    return json.dumps(
+        {
+            "status": "success",
+            "search_id": search_id,
+            "summary": summary_text,
+            "instruction": "Pass this 'search_id' to filter_sellers or sort_and_filter tools.",
+        }
+    )
 
 
 def find_alternatives(
@@ -374,10 +397,15 @@ def find_alternatives(
         # Resolve Search ID if present
         if original_data.get("search_id"):
             from backend.src.store import ProcurementStore
+
             store = ProcurementStore()
             resolved_data = store.get_search_result(original_data["search_id"])
             if not resolved_data:
-                return json.dumps({"error": f"Invalid Search ID returned: {original_data['search_id']}"})
+                return json.dumps(
+                    {
+                        "error": f"Invalid Search ID returned: {original_data['search_id']}"
+                    }
+                )
             original_data = resolved_data
 
         # Extract original part data
@@ -440,7 +468,7 @@ def optimize_order(parts_list: List[Dict]) -> str:
         optimize_order([{"mpn": "STM32F407VGT6", "quantity": 100}, {"mpn": "LM324N", "quantity": 50}])
     """
     print(f"--- [Procurement] Optimize Order (Items: {len(parts_list)}) ---")
-    
+
     if not parts_list or not isinstance(parts_list, list):
         return json.dumps({"error": "Input must be a non-empty list of parts"})
 
@@ -458,10 +486,13 @@ def optimize_order(parts_list: List[Dict]) -> str:
     # Resolve Search ID if present
     if search_data.get("search_id"):
         from backend.src.store import ProcurementStore
+
         store = ProcurementStore()
         resolved_data = store.get_search_result(search_data["search_id"])
         if not resolved_data:
-            return json.dumps({"error": f"Invalid Search ID returned: {search_data['search_id']}"})
+            return json.dumps(
+                {"error": f"Invalid Search ID returned: {search_data['search_id']}"}
+            )
         search_data = resolved_data
 
     result = {

@@ -70,7 +70,9 @@ def decodeJWT(token):
 
 
 class NexarClient:
-    def __init__(self, id, secret, is_live=True, enable_caching=True, cache_ttl_minutes=5256000) -> None:
+    def __init__(
+        self, id, secret, is_live=True, enable_caching=True, cache_ttl_minutes=5256000
+    ) -> None:
         self.id = id
         self.secret = secret
         self.is_live = is_live
@@ -104,6 +106,9 @@ class NexarClient:
             with open(self.persistent_cache_file, "r") as f:
                 return json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
+            print(
+                "WARNING: Persistent cache file not found or invalid. Starting with empty cache."
+            )
             return {}
 
     def _save_persistent_cache(self):
@@ -141,18 +146,22 @@ class NexarClient:
                         # Check if entry follows new format with timestamp
                         if "timestamp" in cached_entry and "data" in cached_entry:
                             try:
-                                stored_time = datetime.fromisoformat(cached_entry["timestamp"])
-                                age_minutes = (datetime.now() - stored_time).total_seconds() / 60
+                                stored_time = datetime.fromisoformat(
+                                    cached_entry["timestamp"]
+                                )
+                                age_minutes = (
+                                    datetime.now() - stored_time
+                                ).total_seconds() / 60
                                 if age_minutes < self.cache_ttl_minutes:
                                     is_outdated = False
                             except ValueError:
-                                pass # invalid date format, treat as outdated
-                        
+                                pass  # invalid date format, treat as outdated
+
                         # If not outdated, return cached data
                         if not is_outdated:
                             return cached_entry["data"]
                         # If outdated, fall through to the API request below
-                    
+
                     else:
                         # Return data immediately, ignoring timestamp
                         return cached_entry["data"]
@@ -206,10 +215,7 @@ class NexarClient:
             if query_hash not in self.persistent_cache:
                 self.persistent_cache[query_hash] = {}
 
-            cache_entry = {
-                "timestamp": datetime.now().isoformat(),
-                "data": data
-            }
+            cache_entry = {"timestamp": datetime.now().isoformat(), "data": data}
 
             self.persistent_cache[query_hash][variables_hash] = cache_entry
             self._save_persistent_cache()
