@@ -35,7 +35,11 @@ import { useChatStore } from "@/store/useChatStore";
 
 import { useTranslation } from "react-i18next";
 
-const Composer: FC<{ threadId: string; initialDraft?: string; textareaRef: RefObject<HTMLTextAreaElement> }> = ({
+const Composer: FC<{ 
+  threadId: string; 
+  initialDraft?: string; 
+  textareaRef: RefObject<HTMLTextAreaElement | null> // Added | null
+}> = ({
   threadId,
   initialDraft,
   textareaRef,
@@ -253,7 +257,10 @@ const ThreadWelcome: FC = () => {
   );
 };
 
-const ThreadSuggestions: FC<{ threadId: string; textareaRef: RefObject<HTMLTextAreaElement> }> = ({
+const ThreadSuggestions: FC<{ 
+  threadId: string; 
+  textareaRef: RefObject<HTMLTextAreaElement | null> // Added | null
+}> = ({
   threadId,
   textareaRef,
 }) => {
