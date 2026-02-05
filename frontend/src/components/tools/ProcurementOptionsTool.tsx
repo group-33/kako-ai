@@ -3,6 +3,7 @@ import { ShoppingCart, Package, Check, Trophy, Timer } from "lucide-react";
 import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { useMetricsStore } from "@/store/useMetricsStore";
 
 type SupplierOption = {
     supplier: string;
@@ -38,6 +39,7 @@ const ProcurementTable = ({ data }: { data: ProcurementData }) => {
 
 const ItemCard = ({ item }: { item: ProcurementItem }) => {
     const { t, i18n } = useTranslation();
+    const addProcurementOrder = useMetricsStore(s => s.addProcurementOrder);
     const [sortBy, setSortBy] = useState<SortKey>("price");
     const [selectedKey, setSelectedKey] = useState<string | null>(null);
     const bestPrice = item.options.length
@@ -86,6 +88,14 @@ const ItemCard = ({ item }: { item: ProcurementItem }) => {
             style: "currency",
             currency: currency || "EUR",
         }).format(value);
+
+    const handleOrderClick = (option: SupplierOption) => {
+        if ((option.currency || "EUR").toUpperCase() !== "EUR") return;
+        const perUnit = Number(option.price_per_unit);
+        const minQty = Number(option.min_order_quantity || 1);
+        if (!Number.isFinite(perUnit) || !Number.isFinite(minQty)) return;
+        addProcurementOrder(perUnit * minQty);
+    };
 
     return (
         <div className="border rounded-xl overflow-hidden bg-white shadow-sm font-sans ring-1 ring-slate-200">
@@ -204,6 +214,7 @@ const ItemCard = ({ item }: { item: ProcurementItem }) => {
                         href={selectedOption.link}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => handleOrderClick(selectedOption)}
                         className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all shadow-sm"
                     >
                         <ShoppingCart size={14} />

@@ -25,13 +25,14 @@
             }
         },
         "stats": {
-            "activeProjects": "Active Feasibility Checks",
+            "feasibilityChecks": "Feasibility Checks",
             "bomsProcessed": "BOMs Extracted",
-            "totalSavings": "Procurement Savings",
+            "procurementSpend": "Procurement Spend (est.)",
             "compliance": "Compliance",
             "weekTrend": "+{{count}} this week",
-            "successRate": "98% accuracy",
-            "viaOptimization": "via optimization",
+            "successRate": "{{value}}% accuracy",
+            "procurementOrdersThisMonth_one": "{{count}} order this month",
+            "procurementOrdersThisMonth_other": "{{count}} orders this month",
             "rohsVerified": "RoHS verified"
         },
         "recentProjects": {
@@ -53,7 +54,16 @@
         "modelSelection": "AI Model Selection",
         "modelDesc": "Choose the LLM that powers the Kako AI agent.",
         "save": "Settings are saved automatically.",
-        "loadingModels": "Loading models..."
+        "loadingModels": "Loading models...",
+        "metrics": {
+            "title": "Metrics",
+            "description": "Reset feasibility, BOM extraction, accuracy, and procurement spend metrics.",
+            "resetAction": "Reset metrics",
+            "resetTitle": "Reset metrics?",
+            "resetDescription": "This clears feasibility checks, BOM counts, accuracy, and procurement spend on this device. It cannot be undone.",
+            "resetCancel": "Cancel",
+            "resetConfirm": "Reset"
+        }
     },
     "login": {
         "subtitle": "Generative AI-Powered Copilot for Feasibility & Procurement",
@@ -107,22 +117,22 @@
             "createBom": {
                 "title": "Feasibility Check",
                 "label": "for 500 units",
-                "action": "Can we fulfill a new order for 500 units of X?"
+                "action": "Can we fulfill a new order for [500 units of X]?"
             },
             "checkInventory": {
                 "title": "Show BOMs",
                 "label": "due in next 2 months",
-                "action": "Show me all BOMs belonging to orders due in the next 2 months and provide purchase recommendations."
+                "action": "Show me all BOMs belonging to orders due in the next [2 months] and provide purchase recommendations."
             },
             "optimizeProcurement": {
                 "title": "Material Requirements",
                 "label": "for next 3 weeks",
-                "action": "What amount of which materials do we need to satisfy all orders for the next 3 weeks?"
+                "action": "What amount of which materials do we need to satisfy all orders for the next [3 weeks]?"
             },
             "compareSuppliers": {
                 "title": "Extract BOM",
                 "label": "from customer drawing",
-                "action": "Extract BOM from this customer specification drawing."
+                "action": "Extract BOM from [customer specification drawing]."
             }
         },
         "composer": {
@@ -186,7 +196,7 @@
     },
     "costAnalysis": {
         "title": "Cost analysis",
-        "footer": "The analysis is based on the currently selected supplier options."
+        "footer": "The analysis is based on the lowest available supplier options (MOQ applied)."
     },
     "attachment": {
         "download": "Download",

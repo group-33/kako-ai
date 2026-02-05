@@ -3,6 +3,7 @@ import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { BOMTableTool } from "./tools/BOMTableTool";
 import { ProcurementOptionsTool } from "./tools/ProcurementOptionsTool";
 import { CostAnalysisTool } from "./tools/CostAnalysisTool";
+import { FeasibilityMetricTool } from "./tools/FeasibilityMetricTool";
 import { useBackendRuntime } from "@/runtime/backendRuntime";
 
 import { useAssistantState } from "@assistant-ui/react";
@@ -32,6 +33,7 @@ export const Chat = memo(function Chat({ threadId, initialDraft }: { threadId: s
         <BOMTableTool />
         <ProcurementOptionsTool />
         <CostAnalysisTool />
+        <FeasibilityMetricTool />
 
         <Thread threadId={threadId} initialDraft={initialDraft} />
       </div>

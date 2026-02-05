@@ -242,6 +242,7 @@ async def run_agent(
         "find_alternatives",
         "optimize_order",
     }
+    feasibility_tools = {"check_feasibility", "bom_check"}
     for tool_name, tool_args, observation in extract_tool_calls_from_trajectory(trajectory):
         if tool_name in procurement_tools:
             procurement_block = build_procurement_tool_block(observation)
@@ -250,6 +251,14 @@ async def run_agent(
             cost_block = build_cost_analysis_tool_block(observation)
             if cost_block is not None:
                 blocks.append(cost_block)
+            continue
+        if tool_name in feasibility_tools:
+            blocks.append(
+                ToolUseBlock(
+                    tool_name="track_feasibility_check",
+                    data={"event_id": f"FEAS_{uuid.uuid4().hex[:12].upper()}", "tool": tool_name},
+                )
+            )
             continue
         if tool_name != "perform_bom_extraction":
             continue
