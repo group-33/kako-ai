@@ -6,6 +6,14 @@
         "configuration": "Einstellungen",
         "profile": "Profil"
     },
+    "common": {
+        "delete": "Löschen",
+        "rename": "Umbenennen",
+        "cancel": "Abbrechen",
+        "save": "Speichern",
+        "edit": "Bearbeiten",
+        "confirm": "Bestätigen"
+    },
     "dashboard": {
         "welcome": "Willkommen zurück, {{name}}.",
         "subheading": "Automatisierung von Workflows für Machbarkeitsprognosen und optimale Beschaffung.",
