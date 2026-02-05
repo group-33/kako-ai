@@ -144,9 +144,19 @@ class KakoAgentSignature(dspy.Signature):
     #    desc="Step-by-step plan. You MUST explicitly quote the exact Part Number from the history here to ensure data fidelity."
     #)
     process_result: str = dspy.OutputField(
-        desc="The final response. MUST explicitly include specific data points (e.g., exact stock quantities, prices, part numbers) retrieved by tools. Do NOT summarize or omit details; preserve the facts for the conversation history in dictionary form." 
+        desc="The final response. MUST explicitly include specific data points (e.g., exact stock quantities, prices, part numbers) retrieved by tools. Do NOT summarize or omit details; preserve the facts for the conversation history." 
     )
 
+class KakoPlanner(dspy.Signature):
+    """Extract the EXACT user query required data from history."""
+    history = dspy.InputField()
+    query = dspy.InputField()
+    # This field forces the model to commit to a string before tools are visible
+    data = dspy.OutputField(desc="The exact data that is required by the user query.")
+    context = dspy.OutputField(desc=
+                                "Additional Information (Quantity of items, helpful tips, constraints, ...) To support the user query."
+                                    )
+    #action = dspy.OutputField(desc="Which specific process is being requested.")
 
 TOOLBOX = [
     perform_bom_extraction,
@@ -170,7 +180,8 @@ class KakoAgent:
     """Thin wrapper around the unified ReAct agent."""
 
     def __init__(self) -> None:
-        self.agent = dspy.ReAct(KakoAgentSignature, tools=TOOLBOX)
+        self.data = dspy.ChainOfThought(KakoPlanner)
+        self.agent = dspy.ReAct(KakoAgentSignature, tools=TOOLBOX, max_iters=1)
            
     def __call__(
         self, user_query: str, history: dspy.History | None = None
@@ -178,15 +189,23 @@ class KakoAgent:
         """Invoke the agent with a natural-language request and return the ReAct prediction."""
         if history is None:
             history = dspy.History(messages=[])
-        print("history: ", history)
+        #print("history: ", history)
 
-        #return self.compiled_agent(user_query=user_query, history=history)
-        prediction = self.agent(user_query=user_query, history=history)
-        print("\n🔍 --- AGENT THOUGHT PROCESS ---")
+        extract = self.data(history=history, query=user_query)
+
+        locked_query = (f"{user_query}. You MUST use this data: {extract.data}"
+                        f"and additional information: {extract.context}")
+        #print(locked_query)
+
+        #prediction = self.agent(user_query=locked_query, history=history)
+
+        return self.agent(user_query=locked_query, history=history)
+        #prediction = self.agent(user_query=user_query, history=history)
+        #print("\n🔍 --- AGENT THOUGHT PROCESS ---")
         ## n=1 prints the last full interaction (the entire ReAct loop)
-        try:
-            dspy.settings.lm.inspect_history(n=1)
-        except Exception:
-            pass
-        print("----------------------------------\n")
-        return prediction
+        #try:
+        #    dspy.settings.lm.inspect_history(n=1)
+        #except Exception:
+        #    pass
+        #print("----------------------------------\n")
+        #return prediction
