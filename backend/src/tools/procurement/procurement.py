@@ -26,7 +26,7 @@ print(f"Procurement API is_live={PROCUREMENT_API_IS_LIVE}")
 
 
 def filter_sellers_by_shipping(
-    data: dict, target_country_codes: List[str] = ["DE"]
+    data: dict | str, target_country_codes: List[str] = ["DE"]
 ) -> dict:
     """
     Filters sellers based on their shipping capabilities.
@@ -104,7 +104,7 @@ def filter_sellers_by_shipping(
 
 
 def sort_and_filter_by_best_price(
-    data: dict, quantity: int = 1, top_x: int = 3, ignore_inventory_level: bool = False
+    data: dict | str, quantity: int = 1, top_x: int = 3, ignore_inventory_level: bool = False
 ) -> dict:
     """
     Filters the data to find the Top X cheapest solutions for a given quantity.
@@ -246,6 +246,10 @@ def search_part_by_mpn(
     """
     Search for electronic parts by their Manufacturer Part Numbers (MPNs).
     Returns detailed part information including pricing, availability, and seller options.
+
+    IMPORTANT: Use the EXACT 'item_nr' or 'Part Number' found in the conversation history 
+    or BOM data. Do NOT attempt to translate or guess a manufacturer MPN if a 
+    specific number is already provided in the context.
 
     API QUOTA WARNING: Each MPN searched consumes API quota. Keep part_limit LOW (1-5).
     Searching 10 MPNs with part_limit=5 uses 50 API calls.

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import dspy
+from dspy import Example
+from dspy.teleprompt import BootstrapFewShot
 
 from backend.src.tools.bom_extraction.bom_tool import perform_bom_extraction
 from backend.src.tools.demand_analysis.inventory import (
@@ -22,6 +24,7 @@ from backend.src.tools.procurement.procurement import (
     find_alternatives,
     optimize_order,
 )
+#("Can we fulfill this order?", "Procure parts for project Y")
 
 
 class KakoAgentSignature(dspy.Signature):
@@ -66,8 +69,7 @@ class KakoAgentSignature(dspy.Signature):
        - Execute ONLY the requested tool.
        - DO NOT autonomously proceed to the next logical step (e.g., do NOT check feasibility after extraction unless asked).
        - Report the result and ASK the user if they want to proceed.
-    
-    2. COMPLEX GOALS ("Can we fulfill this order?", "Procure parts for project Y"):
+    2. COMPLEX GOALS:
        - You MAY chain multiple tools (Extract -> Feasibility -> Procurement) to answer the high-level question.
     
     3. CONTEXT PASSING & ANTI-REDUNDANCY:
@@ -102,10 +104,29 @@ class KakoAgentSignature(dspy.Signature):
        - You cannot "call" a tool by writing "CALL: tool_name(...)" in the final response.
        - This does NOTHING. You must use the proper tool usage format to trigger the backend execution.
        - If you need information, select the tool in the `next_tool_name` field.
+    
+    8. CRITICAL - HISTORY RETRIEVAL PROTOCOL:
+    - Your memory is the `history` field. It contains previous tool outputs and IDs.
+    - BEFORE you plan a tool call, you MUST perform a "History Scan":
+      1.  Does the user's request refer to a "missing part", "this item", or "the BOM"?
+      2.  If YES, you MUST explicitly quote the exact ID or Part Number from the `history` in your `reasoning` step.
+      3.  ONLY after quoting it can you use it in a tool.
+    - FAILURE MODE: If you catch yourself inventing an ID (e.g., "123-456") or saying "I don't have context," STOP. Look at the history again. The data is there.
 
-
+    9. STRICT DATA FIDELITY (ANTI-HALLUCINATION):
+    - NEVER 'translate' or guess a Manufacturer Part Number (MPN).
+    - If the history contains an item number like 'A KU A 012...', you MUST use that exact string for 'search_part_by_mpn'.
+    - You are strictly forbidden from using internal knowledge to substitute an ID from history with a different number (e.g., do NOT use '5034800800' if it is not in the text).
 
     - REASONING FIRST: Break down complex requests into steps. For simple requests, stop after the first step.
+
+    MANDATORY THOUGHT STRUCTURE:
+    Every time you generate a 'thought', you MUST follow this pattern:
+    1. VERBATIM CHECK: Write 'Searching for: [Exact string from history]'.
+    2. VALIDATION: Confirm this string has NOT been truncated or changed from the BOM.
+    3. ACTION: State which tool you will use.
+    
+    If you fail to write the 'VERBATIM CHECK' in your thought, you are hallucinating.
 
     LANGUAGE & COMMUNICATION:
     - ALWAYS respond in the same language as the user's request (English or German).
@@ -119,8 +140,11 @@ class KakoAgentSignature(dspy.Signature):
     history: dspy.History = dspy.InputField(
         desc="The conversation history containing context from previous turns."
     )
+    #reasoning: str = dspy.OutputField(
+    #    desc="Step-by-step plan. You MUST explicitly quote the exact Part Number from the history here to ensure data fidelity."
+    #)
     process_result: str = dspy.OutputField(
-        desc="The final response. MUST explicitly include specific data points (e.g., exact stock quantities, prices, part numbers) retrieved by tools. Do NOT summarize or omit details; preserve the facts for the conversation history."
+        desc="The final response. MUST explicitly include specific data points (e.g., exact stock quantities, prices, part numbers) retrieved by tools. Do NOT summarize or omit details; preserve the facts for the conversation history in dictionary form." 
     )
 
 
@@ -147,21 +171,22 @@ class KakoAgent:
 
     def __init__(self) -> None:
         self.agent = dspy.ReAct(KakoAgentSignature, tools=TOOLBOX)
-
+           
     def __call__(
         self, user_query: str, history: dspy.History | None = None
     ) -> dspy.Prediction:
         """Invoke the agent with a natural-language request and return the ReAct prediction."""
         if history is None:
             history = dspy.History(messages=[])
+        print("history: ", history)
 
-        return self.agent(user_query=user_query, history=history)
-        #prediction = self.agent(user_query=user_query, history=history)
-        #print("\n🔍 --- AGENT THOUGHT PROCESS ---")
+        #return self.compiled_agent(user_query=user_query, history=history)
+        prediction = self.agent(user_query=user_query, history=history)
+        print("\n🔍 --- AGENT THOUGHT PROCESS ---")
         ## n=1 prints the last full interaction (the entire ReAct loop)
-        #try:
-        #    dspy.settings.lm.inspect_history(n=1)
-        #except Exception:
-        #    pass
-        #print("----------------------------------\n")
-        #return prediction
+        try:
+            dspy.settings.lm.inspect_history(n=1)
+        except Exception:
+            pass
+        print("----------------------------------\n")
+        return prediction

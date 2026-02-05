@@ -6,6 +6,14 @@
         "configuration": "Configuration",
         "profile": "Profile"
     },
+    "common": {
+        "delete": "Delete",
+        "rename": "Rename",
+        "cancel": "Cancel",
+        "save": "Save",
+        "edit": "Edit",
+        "confirm": "Confirm"
+    },
     "dashboard": {
         "welcome": "Welcome back, {{name}}.",
         "subheading": "Automating workflows for feasibility projections and optimal procurement.",
