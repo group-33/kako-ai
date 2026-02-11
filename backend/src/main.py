@@ -252,8 +252,17 @@ async def run_agent(
             process_result=merged.model_dump_json(),
         )
         if user_query.strip() == "__BOM_CONFIRM__":
-            from backend.src.tools.demand_analysis.inventory import xentral_BOM
-            result = xentral_BOM(merged)
+            if is_mock_user_context.get():
+                result = {
+                    "status": "completed (MOCK)",
+                    "parent_product_number": f"MOCK-{merged.title}",
+                    "entries_created": len(merged.items),
+                    "errors": ["(Mock Mode: No data sent to Xentral)"]
+                }
+            else:
+                from backend.src.tools.demand_analysis.inventory import xentral_BOM
+                result = xentral_BOM(merged)
+
             return AgentResponse(
                 response_id=f"msg_{uuid.uuid4()}",
                 created_at=datetime.now(timezone.utc),

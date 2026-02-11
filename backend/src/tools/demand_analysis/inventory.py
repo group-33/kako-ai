@@ -10,6 +10,8 @@ from backend.src.config import XENTRAL_BEARER_TOKEN, XENTRAL_BASE_URL, XENTRAL_T
 from backend.src.models import BillOfMaterials
 from backend.src.store import BOMStore
 from backend.src.tools.demand_analysis.shared import ProductInfoStore
+from backend.src.auth_context import is_current_user_mock
+from backend.src.tools.demand_analysis import mock_data
 
 
 
@@ -50,6 +52,9 @@ def get_inventory_for_product(product_id: str) -> Optional[dict]:
     Returns:
         Optional[dict]: Dict with 'stock' (int/float) and 'min_stock' (int/float). Returns None if error.
     """
+    if is_current_user_mock():
+        return mock_data.get_mock_inventory(product_id)
+
     if not XENTRAL_BEARER_TOKEN or not XENTRAL_BASE_URL:
         # Fallback to mock if no credentials
         return {"stock": 125, "min_stock": 10}
@@ -118,6 +123,9 @@ def get_inventory_for_product(product_id: str) -> Optional[dict]:
 
 def get_sales_orders(time_quantity: str, time_unit: str) -> Any:
     """Return sales orders for the given future time window. Real call if creds present, else mock."""
+    if is_current_user_mock():
+        return mock_data.get_mock_sales_orders(time_quantity, time_unit)
+
     print(f"--- [Inventory] Fetching Sales Orders (Next {time_quantity} {time_unit}) ---")
 
     from_date, to_date = _calculate_dates(time_quantity, time_unit)
@@ -143,6 +151,9 @@ def get_sales_orders(time_quantity: str, time_unit: str) -> Any:
 
 def get_future_boms(time_quantity: str, time_unit: str) -> Dict[str, Any]:
     """Aggregate BOMs for products in upcoming sales orders for a future window."""
+    if is_current_user_mock():
+        return mock_data.get_mock_future_boms(time_quantity, time_unit)
+
     print(f"--- [Inventory] Get Future BOMs (Next {time_quantity} {time_unit}) ---")
 
     if not XENTRAL_BEARER_TOKEN or not XENTRAL_BASE_URL:
@@ -202,6 +213,9 @@ def get_orders_by_customer(customer_id: str, start_date: str = None, end_date: s
         start_date: Start date (YYYY-MM-DD), defaults to 1 month ago.
         end_date: End date (YYYY-MM-DD), defaults to today.
     """
+    if is_current_user_mock():
+        return mock_data.get_mock_orders_by_customer(customer_id)
+
     print(f"--- [Inventory] Get Orders By Customer: {customer_id} ---")
 
     if not start_date:
@@ -242,6 +256,9 @@ def get_boms_for_orders(order_numbers: List[str]) -> Dict[str, Any]:
     Args:
         order_numbers: List of order numbers (Belegnummer, e.g., 'AT-2024-059561').
     """
+    if is_current_user_mock():
+        return mock_data.get_mock_boms_for_orders(order_numbers)
+
     print(f"--- [Inventory] Get BOMs for Orders: {str(order_numbers)} ---")
 
     results = {}
@@ -321,6 +338,15 @@ def xentral_BOM(bom: BillOfMaterials) -> Dict[str, Any]:
     """
     Overwrites the BOM for a product in Xentral.
     """
+    if is_current_user_mock():
+       return {
+           "status": "completed (MOCK)",
+           "parent_product_number": f"MOCK-{bom.title}",
+           "parent_product_id": "MOCK-ID-999",
+           "entries_deleted": 0,
+           "entries_created": len(bom.items),
+           "errors": []
+       }
     
     store = ProductInfoStore()
     target_identifier = bom.title or "New Extracted BOM"
