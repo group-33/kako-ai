@@ -8,6 +8,7 @@ import type {
 } from "@assistant-ui/react";
 import type { ReadonlyJSONObject } from "assistant-stream/utils";
 import { useChatStore } from "@/store/useChatStore";
+import { supabase } from "@/lib/supabase";
 
 type TextBlock = { type: "text"; content: string };
 type ToolUseBlock = { type: "tool_use"; tool_name: string; data: unknown };
@@ -99,6 +100,12 @@ export const useBackendRuntime = (threadIdParam?: string) => {
             thread_id: threadId,
             model_id: modelId,
           });
+        }
+
+        const session = await supabase.auth.getSession();
+        const token = session.data.session?.access_token;
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
         }
 
         response = await fetch(`${BACKEND_BASE_URL}/agent`, {
