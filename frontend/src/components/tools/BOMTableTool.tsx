@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { exportBOMsFromMessage } from "@/lib/excelExport";
 import { useTranslation } from "react-i18next";
 import { useMetricsStore } from "@/store/useMetricsStore";
+import { supabase } from "@/lib/supabase";
 
 const BACKEND_BASE_URL =
   (import.meta as ImportMeta & { env: { VITE_BACKEND_URL?: string } }).env
@@ -148,9 +149,20 @@ const BOMTable = ({ args }: { args: BOMTableArgs }) => {
 
       console.log("Saving BOM Update Payload:", payload);
 
+      // Get current session token
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
       const res = await fetch(`${BACKEND_BASE_URL}/agent`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify(payload),
       });
 
