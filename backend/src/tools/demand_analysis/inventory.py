@@ -150,7 +150,14 @@ def get_sales_orders(time_quantity: str, time_unit: str) -> Any:
 
 
 def get_future_boms(time_quantity: str, time_unit: str) -> Dict[str, Any]:
-    """Aggregate BOMs for products in upcoming sales orders for a future window."""
+    """
+    Aggregate BOMs for products in upcoming sales orders for a future window.
+     Args:
+        time_quantity (str): The user specified time quantity.
+        time_unit (str): The unit of time specified by the user.
+    Returns:
+        dict | str: A deep dictionary containing information on the bom's due in the user specified time frame.
+    """
     if is_current_user_mock():
         return mock_data.get_mock_future_boms(time_quantity, time_unit)
 

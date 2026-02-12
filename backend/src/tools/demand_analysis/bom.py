@@ -93,7 +93,7 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
     Check if an order can be fulfilled based on BOM and current inventory.
 
     Args:
-        bom_input: either a BOM structure (list of items), a product ID (str), or a dict with item details.
+        bom_input: either a BOM structure (list of items), a product ID (str), or a list with item details.
         order_amount: number of parent products ordered.
 
     Returns:
