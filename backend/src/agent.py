@@ -181,7 +181,7 @@ class KakoAgent:
 
     def __init__(self) -> None:
         self.data = dspy.ChainOfThought(KakoPlanner)
-        self.agent = dspy.ReAct(KakoAgentSignature, tools=TOOLBOX, max_iters=1)
+        self.agent = dspy.ReAct(KakoAgentSignature, tools=TOOLBOX)
            
     def __call__(
         self, user_query: str, history: dspy.History | None = None
@@ -195,17 +195,18 @@ class KakoAgent:
 
         locked_query = (f"{user_query}. You MUST use this data: {extract.data}"
                         f"and additional information: {extract.context}")
+        #print("\n --- Locked Query --- ")
         #print(locked_query)
 
         #prediction = self.agent(user_query=locked_query, history=history)
 
         return self.agent(user_query=locked_query, history=history)
-        #prediction = self.agent(user_query=user_query, history=history)
-        #print("\n🔍 --- AGENT THOUGHT PROCESS ---")
+       # prediction = self.agent(user_query=user_query, history=history)
+       # print("\n🔍 --- AGENT THOUGHT PROCESS ---")
         ## n=1 prints the last full interaction (the entire ReAct loop)
-        #try:
-        #    dspy.settings.lm.inspect_history(n=1)
-        #except Exception:
-        #    pass
-        #print("----------------------------------\n")
-        #return prediction
+       # try:
+       #     dspy.settings.lm.inspect_history(n=1)
+       # except Exception:
+       #     pass
+       # print("----------------------------------\n")
+       # return prediction

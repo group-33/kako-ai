@@ -13,7 +13,12 @@ from fastapi.staticfiles import StaticFiles
 import tempfile
 import os
 
-from backend.src.config import GEMINI_2_5_FLASH, AVAILABLE_MODELS, MODEL_OPTIONS
+import os
+import jwt
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+from backend.src.config import GEMINI_2_5_FLASH, AVAILABLE_MODELS, MODEL_OPTIONS, SUPABASE_JWT_SECRET
+from backend.src.auth_context import is_mock_user_context
 from backend.src.agent import KakoAgent
 from backend.src.models import (
     AgentRequest,
@@ -127,6 +132,47 @@ def _get_history_for_thread(thread_id: str | None) -> dspy.History:
     return history
 
 
+security = HTTPBearer()
+
+async def verify_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Verify the Supabase JWT and set the mock user context.
+    """
+    token = credentials.credentials
+    
+    # Default to False
+    is_mock_user_context.set(False)
+
+    if not SUPABASE_JWT_SECRET:
+        # If no secret configured, skip verification (Dev mode safety)
+        print("Warning: SUPABASE_JWT_SECRET not set. Skipping token verification.")
+        return
+
+    try:
+        # Decode without verification first to check alg, or just verify if we know it's HS256
+        # Supabase usually uses HS256 with the JWT Secret
+        # Supabase usually uses HS256 with the JWT Secret
+        # "aud" is usually "authenticated"
+        payload = jwt.decode(token, SUPABASE_JWT_SECRET, algorithms=["HS256"], options={"verify_exp": True}, audience="authenticated")
+        
+        app_metadata = payload.get("app_metadata", {})
+        is_mock = app_metadata.get("is_mock_user", False)
+        
+        is_mock_user_context.set(bool(is_mock))
+        if is_mock:
+            print(f"--- [Auth] Mock User Detected: {payload.get('email')} ---")
+
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError as e:
+        print(f"Auth Error: {e}")
+        raise HTTPException(status_code=401, detail="Invalid authentication token")
+    except Exception as e:
+        print(f"Auth Unexpected Error: {e}")
+        # specific failsafe
+        pass
+
+
 @app.post("/agent", response_model=AgentResponse)
 async def run_agent(
         request: Request,
@@ -137,6 +183,7 @@ async def run_agent(
         model_id: str | None = Form(default=None),
         file: UploadFile | None = File(default=None),
         agent: KakoAgent = Depends(get_agent),
+        _: None = Depends(verify_user),
 ) -> AgentResponse:
     """Unified agent endpoint returning blocks the frontend can render.
 
@@ -213,7 +260,9 @@ async def run_agent(
         )
         if user_query.strip() == "__BOM_CONFIRM__":
             from backend.src.tools.demand_analysis.inventory import xentral_BOM
+            # xentral_BOM handles mock logic internally
             result = xentral_BOM(merged)
+
             return AgentResponse(
                 response_id=f"msg_{uuid.uuid4()}",
                 created_at=datetime.now(timezone.utc),

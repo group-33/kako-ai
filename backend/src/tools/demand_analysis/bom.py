@@ -10,6 +10,8 @@ from backend.src.config import SUPABASE_PASSWORD, DB_HOST, DB_PORT, DB_USER, DB_
 from backend.src.models import BillOfMaterials
 from backend.src.tools.demand_analysis.shared import ProductInfoStore
 from backend.src.tools.demand_analysis.inventory import _fetch_bom_for_product, get_inventory_for_product
+from backend.src.auth_context import is_current_user_mock
+from backend.src.tools.demand_analysis import mock_data
 
 
 class BOMCheck(dspy.Signature):
@@ -24,6 +26,9 @@ def bom_check(product_identifier: str) -> str:
 
     The follow-up actions for CASE1/CASE2 are left as simple strings for now.
     """
+    if is_current_user_mock():
+        return mock_data.get_mock_bom_check(product_identifier)
+
     print(f"--- [BOM Check] Verifying product: {str(product_identifier)} ---")
 
     query = (product_identifier or "").strip()
@@ -88,7 +93,7 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
     Check if an order can be fulfilled based on BOM and current inventory.
 
     Args:
-        bom_input: either a BOM structure (list of items), a product ID (str), or a dict with item details.
+        bom_input: either a BOM structure (list of items), a product ID (str), or a list with item details.
         order_amount: number of parent products ordered.
 
     Returns:
@@ -103,6 +108,9 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
             "details": []           # Full line-item details
         }
     """
+    if is_current_user_mock():
+        return mock_data.get_mock_check_feasibility(bom_input, order_amount)
+
     results = {
         "feasible": True,
         "missing_items": [],

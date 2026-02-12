@@ -5,6 +5,7 @@ type BOMRow = {
     id: string;
     pos?: string | number;
     item_nr?: string;
+    xentral_number?: string;
     component: string;
     description?: string;
     quantity: number;
@@ -97,6 +98,7 @@ export const exportBOMsFromMessage = (threadId: string, currentBomId: string) =>
         const wsData = bomArgs.rows.map((row: BOMRow) => ({
             Position: row.pos,
             'Art.Nr.': row.item_nr,
+            'Xentral Nr.': row.xentral_number || '',
             Beschreibung: row.description || row.component,
             Menge: row.quantity,
             Einheit: row.unit
@@ -108,6 +110,7 @@ export const exportBOMsFromMessage = (threadId: string, currentBomId: string) =>
         ws['!cols'] = [
             { wch: 8 },  // Pos
             { wch: 15 }, // Art.Nr
+            { wch: 15 }, // Xentral Nr.
             { wch: 40 }, // Desc
             { wch: 10 }, // Qty
             { wch: 10 }  // Unit

@@ -12,6 +12,7 @@ from backend.src.tools.bom_extraction.file_utils import (
     get_pdf_orientation,
 )
 from backend.src.tools.demand_analysis.bom import perform_bom_matching
+from backend.src.auth_context import is_current_user_mock
 from backend.src.tools.bom_extraction.bom_cache import BOMCache
 from backend.src.config import BOM_CACHE_ENABLED, BOM_CACHE_PATH
 
@@ -63,6 +64,10 @@ def _resolve_local_path(file_path: str) -> tuple[str, str, bool]:
     # 1. Resolve the input into a local path (User upload or local dev)
     if os.path.exists(file_path):
         return file_path, os.path.basename(file_path), True
+
+    # Check Mock User Restriction
+    if is_current_user_mock():
+        raise PermissionError(f"I cannot search the server for '{os.path.basename(file_path)}' in Mock Mode. Please upload the file manually.")
 
     # 2. Fallback to SSH fetch if it's a remote file reference
     return fetch_file_via_ssh(file_path)
@@ -146,5 +151,7 @@ def perform_bom_extraction(file_path: str) -> str | tuple[BillOfMaterials, str]:
         print(f"--- [BOM Extraction] Saved as {bom_id} ---")
 
         return summary
+    except PermissionError as e:
+        return f"{e}"
     except Exception as exc:
         return f"Error extracting BOM: {exc}"
