@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import dspy
-from dspy import Example
-from dspy.teleprompt import BootstrapFewShot
 
 from backend.src.tools.bom_extraction.bom_tool import perform_bom_extraction
 from backend.src.tools.demand_analysis.inventory import (

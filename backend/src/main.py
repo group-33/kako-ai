@@ -9,7 +9,6 @@ from fastapi import FastAPI, Depends, Form, Request, HTTPException, UploadFile, 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import tempfile
-import os
 
 import os
 import jwt

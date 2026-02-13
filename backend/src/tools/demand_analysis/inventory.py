@@ -4,11 +4,9 @@ import requests
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple, Union
 from dateutil.relativedelta import relativedelta
-import json
 
 from backend.src.config import XENTRAL_BEARER_TOKEN, XENTRAL_BASE_URL, XENTRAL_TIMEOUT_SECONDS
 from backend.src.models import BillOfMaterials
-from backend.src.store import BOMStore
 from backend.src.tools.demand_analysis.shared import ProductInfoStore
 from backend.src.auth_context import is_current_user_mock
 from backend.src.tools.demand_analysis import mock_data

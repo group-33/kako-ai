@@ -1,9 +1,7 @@
 import psycopg2
-import urllib.parse
 import requests
 from typing import Any, Dict, List, Optional, Tuple
 from backend.src.config import SUPABASE_PASSWORD, XENTRAL_BASE_URL, XENTRAL_BEARER_TOKEN, XENTRAL_TIMEOUT_SECONDS
-import socket
 
 from backend.src.tools.demand_analysis.embeddings import get_vertex_embedding
 
