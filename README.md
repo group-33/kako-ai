@@ -14,11 +14,7 @@ This section guides evaluators through the core functionality of KakoAI using ou
 
 ### 1. Login with Mock Credentials
 
-Please use the following credentials to access the evaluation environment. This account has access to cached data.
-
-| Role          | Email            | Password            |
-| :------------ | :--------------- | :------------------ |
-| **Evaluator** | `add email here` | `add password here` |
+For evaluation purposes, we created a "Mock User" account that has a reduced feature set to comply with data privacy (missing NDA). The login credentials can be found in the `report/1_user-guide.pdf` under Section 2.1. "Accessing KakoAI". Use these credentials to log in and explore the system. Running the system locally will not be possible without valid credentials for the integrated services (Vertex AI, Nexar API, Xentral ERP), therefore, we ask you to use the deployed version for testing [https://kakoai.de/](https://kakoai.de/).
 
 > [!IMPORTANT]
 > **Data Privacy & Caching:** The "Mock User" operates in a restricted environment. BOM extractions are processed live (using Gemini 2.5), but **pricing and inventory data will return cached/mocked responses** to prevent live API charges and ensure GDPR compliance for non-NDA users.
