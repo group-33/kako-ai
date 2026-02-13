@@ -217,3 +217,10 @@ __marimo__/
 
 # Secrets
 src/kako-ai_auth.json
+
+src/tools/database_agent/
+
+MOCK-Drawing.pdf
+Test_1.pdf
+
+execution.ipynb

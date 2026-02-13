@@ -77,7 +77,6 @@ def get_inventory_for_product(product_id: str) -> Optional[dict]:
         }
 
     # Strategy 1: Direct ID Lookup (Most likely for 'product_id')
-    # Endpoint: /api/v1/artikel/{id}
     url_direct = f"{XENTRAL_BASE_URL}/api/v1/artikel/{product_id}"
     params_direct = {"include": "lagerbestand"}
     

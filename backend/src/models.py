@@ -4,20 +4,6 @@ from typing import List, Literal, Union, Dict, Any, Optional
 
 from pydantic import BaseModel, Field
 
-"""
-class BOMItem(BaseModel):
-    part_number: str = Field(description="Position/part number as referenced in the drawing or ERP.")
-    quantity: int = Field(description="Units of this component needed for one finished product.")
-    description_of_part: str = Field(description="Human-readable label or description of the component.")
-    no_of_poles: int = Field(description="Number of poles for the part (e.g., connector pins).")
-    order_number: int = Field(description="Line or order position number from the source document.")
-    hdm_no: int = Field(description="HDM identifier associated with the component.")
-    measurements_in_description: str = Field(description="Dimension details captured from the drawing/description.")
-
-
-class BillOfMaterials(BaseModel):
-    items: List[BOMItem] = Field(description="All component line items that make up the BOM.")
-"""
 class RawBOMItem(BaseModel):
     part_number: int = Field(
         "1",
@@ -91,7 +77,7 @@ class BOMRow(BaseModel):
     pos: str | int | None = None
     item_nr: str | None = None
     xentral_number: str | None = None
-    component: str  # Kept for backward compat (will map to description usually)
+    component: str 
     description: str | None = None
     quantity: float
     unit: str
@@ -128,7 +114,7 @@ class BOMOverride(BaseModel):
     xentral_number: str | None = None
     description: str | None = None
     unit: str | None = None
-    component: str | None = None # Deprecated but kept for safety
+    component: str | None = None
 
 
 class BOMUpdate(BaseModel):

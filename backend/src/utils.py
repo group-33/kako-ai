@@ -113,7 +113,6 @@ def build_bom_tool_block(
         unit = item.unit or "Stk" # Default only if missing
         xentral_nr = item.xentral_number
         
-        # "Component" is a legacy field for the UI, usually same as description or combined
         component_display = description if description else f"Item {idx+1}"
 
         rows.append(

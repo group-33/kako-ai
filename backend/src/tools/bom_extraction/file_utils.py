@@ -55,16 +55,8 @@ def fetch_file_via_ssh(filename: str) -> tuple[str, str, bool]:
             print(f"Downloading: {remote_path}")
             scp.get(remote_path, local_path)
         
-        # Determine if it was an exact match (ignoring case maybe, but file systems are picky)
-        # We'll treat case-insensitive equality as "exact enough" for valid files
         is_exact = (filename.lower() == best_filename.lower()) or (filename.lower() in best_filename.lower() and score == 100) # Strict exactness usually implies score 100
         
-        # Actually, let's just trust string equality for "Exact".
-        # If user asked for "Drawing-123" and we found "Drawing-123.pdf", that's usually considered exact in this tool context? 
-        # But `filename` input might not have extension.
-        # Let's say: if input is contained in output with high score, or equals.
-        # Simplest: if filename.lower().strip() == best_filename.lower().strip() (ignoring extension if user omitted it?)
-        # Let's stick to strict equality check for "Exact" vs "Did you mean".
         is_exact = filename == best_filename
         
         return local_path, best_filename, is_exact
@@ -105,16 +97,11 @@ def get_pdf_orientation(local_path: str) -> str:
         page = reader.pages[0]
         
         # 1. Get Physical Dimensions (MediaBox)
-        # MediaBox is usually [0, 0, width, height] but can be arbitrary rect.
-        # We need absolute width/height.
         mbox = page.mediabox
         width = float(mbox.width)
         height = float(mbox.height)
         
         # 2. Check for Rotation
-        # Some PDFs are physically portrait but have /Rotate 90 -> visual Landscape.
-        # Rotation is usually 0, 90, 180, 270.
-        # If 90 or 270, we must swap width and height.
         rotation = page.get("/Rotate", 0)
         rotation = int(rotation) % 360
         

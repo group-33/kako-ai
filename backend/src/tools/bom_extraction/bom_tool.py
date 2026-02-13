@@ -4,6 +4,7 @@ import os
 import hashlib
 import cv2
 import dspy
+import time
 
 from backend.src.models import RawBillOfMaterials, BillOfMaterials, BOMItem
 from backend.src.tools.bom_extraction.file_utils import (
@@ -92,11 +93,13 @@ def _prepare_image_for_model(local_path: str) -> str:
 
 def perform_bom_extraction(file_path: str) -> str | tuple[BillOfMaterials, str]:
     """Extract a BOM from a local path or a remote filename."""
+
     try:
         # 1. Get the actual file (PDF or Image) - works for both local uploads and remote lookups
         display_path, resolved_filename, is_exact_match = _resolve_local_path(file_path)
         if not is_exact_match:
             return f"Did not find drawing '{file_path}'. Did you mean '{resolved_filename}'?"
+        
 
         # 2. Get an image version for the AI model
         model_image_path = _prepare_image_for_model(display_path)
@@ -127,7 +130,7 @@ def perform_bom_extraction(file_path: str) -> str | tuple[BillOfMaterials, str]:
             CACHE.set_full_bom(model_image_path, full_bom)
 
         # 4. Enrich Data (Database Step)
-        # Now we look up the Xentral IDs using the clean extracted data
+
         enriched_bom = perform_bom_matching(full_bom)
         
         # 5. Save to BOM Store (Context)
@@ -138,10 +141,6 @@ def perform_bom_extraction(file_path: str) -> str | tuple[BillOfMaterials, str]:
         store = BOMStore()
         store.save_bom(bom_id, enriched_bom, source_document=resolved_filename)
 
-        # Return a summarized text response + ID for the agent to use
-        # RESTORED: Full details for User Visibility and Context Backup
-        # Return a summarized text response + ID for the agent to use
-        # Split into User View (clean) and Agent Data (context)
         title = enriched_bom.title or 'Untitled'
         summary = (
             f"USER_VIEW: BOM '{title}' extracted successfully.\n"

@@ -119,13 +119,10 @@ def check_feasibility(bom_input: Union[BillOfMaterials, list, str], order_amount
     }
 
     print(f"--- [Feasibility Check] Checking BOM: {bom_input} | Amount: {order_amount} ---")
-
-    # Normalize input to a list of items
+    
     items = []
     parent_product_name = "Unknown Product"
 
-    # Resolve input to standard list of items
-    # Check string first to avoid ambiguity
     if isinstance(bom_input, str):
         bom_str = bom_input.strip()
         

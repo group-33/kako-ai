@@ -36,44 +36,6 @@ from backend.src.utils import (
 )
 
 ## --- Configure LLM globally ---
-## 1. Save the original request method
-## We patch the class's __call__ method because instance-level patching of __call__ doesn't work for dunder methods,
-## and basic_request appears to be missing in this version of DSPy.
-#LMClass = type(GEMINI_2_5_FLASH)
-#original_call = LMClass.__call__
-#
-## 2. Define the "Spy" function
-#def verbose_call_spy(self, *args, **kwargs):
-#    """
-#    Wraps the LLM request to print the Agent's 'Thoughts' in real-time.
-#    """
-#    # (Optional) Print the Prompt to see what the agent is seeing
-#    prompt_or_messages = kwargs.get("messages") or kwargs.get("prompt") or (args[0] if args else "Unknown")
-#    import pprint
-#    print(f"\n📩 [SENDING PROMPT/MESSAGES]:")
-#    if isinstance(prompt_or_messages, list):
-#        for msg in prompt_or_messages:
-#            print(msg)
-#    else:
-#        print(prompt_or_messages)
-#    print("-" * 20 + "\n")
-#
-#    # Execute the actual API call
-#    completions = original_call(self, *args, **kwargs)
-#    
-#    # Print the Agent's immediate response (The "Thought")
-#    # completions is usually a list of strings or dicts in DSPy
-#    for i, c in enumerate(completions):
-#        # Handle simple string or object response
-#        text = c if isinstance(c, str) else str(c)
-#        print(f"\n🧠 [AGENT THOUGHT]:\n{text}\n{'='*40}")
-#        
-#    return completions
-#
-## 3. Apply the patch
-#print("🕵️♂️ Injection: Real-time Thought Spy activated (Class Level, Kwargs Support).")
-#LMClass.__call__ = verbose_call_spy
-#
 dspy.configure(lm=GEMINI_2_5_FLASH)
 
 app = FastAPI(title="KakoAI")
@@ -114,8 +76,6 @@ def get_agent(request: Request) -> KakoAgent:
 
 def _get_history_for_thread(thread_id: str | None) -> dspy.History:
     """Return a per-thread DSPy History (in-memory)."""
-    # For MVP: in-memory, single-process storage. If thread_id is missing, use a shared default.
-    # For production, use explicit thread IDs + an external store (Redis/DB).
     tid = thread_id or "default"
     histories = app.state.histories
     history = histories.get(tid)
@@ -133,7 +93,6 @@ async def verify_user(credentials: HTTPAuthorizationCredentials = Depends(securi
     """
     token = credentials.credentials
     
-    # Default to False
     is_mock_user_context.set(False)
 
     if not SUPABASE_JWT_SECRET:
@@ -142,10 +101,6 @@ async def verify_user(credentials: HTTPAuthorizationCredentials = Depends(securi
         return
 
     try:
-        # Decode without verification first to check alg, or just verify if we know it's HS256
-        # Supabase usually uses HS256 with the JWT Secret
-        # Supabase usually uses HS256 with the JWT Secret
-        # "aud" is usually "authenticated"
         payload = jwt.decode(token, SUPABASE_JWT_SECRET, algorithms=["HS256"], options={"verify_exp": True}, audience="authenticated")
         
         app_metadata = payload.get("app_metadata", {})
@@ -195,8 +150,7 @@ async def run_agent(
             bom_update = payload.bom_update
             model_id = payload.model_id
         except Exception:
-             pass # Will fall through to form check
-
+             pass
     if user_query is None:
          raise HTTPException(
             status_code=400,

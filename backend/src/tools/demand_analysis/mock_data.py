@@ -59,12 +59,8 @@ def _get_deterministic_stock(key: str) -> Dict[str, int]:
     seed_val = _hash_str_to_int(str(key))
     random.seed(seed_val)
     
-    # 70% chance -> Good Stock
-    # 20% chance -> Low Stock
-    # 10% chance -> Out of Stock
     scenario_roll = random.random()
     
-    # Base stock ranges - consistent for a key
     if scenario_roll < 0.7:
         stock = random.randint(50, 500)
         min_stock = random.randint(1, 10)
