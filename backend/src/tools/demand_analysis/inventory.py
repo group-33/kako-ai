@@ -535,10 +535,6 @@ def _create_product(name: str) -> Tuple[str | None, str | None]:
     return None, None
 
 
-def _delete_bom_part_v2(parent_id: str, entry_id: str) -> bool:
-    """STUB: V1 has no delete. Returning True to bypass."""
-    return True 
-
 
 def _create_bom_part_v1(parent_id: str, child_part_id: int, quantity: float) -> bool:
     """
