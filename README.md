@@ -4,7 +4,7 @@ AI-powered copilot that automates critical workflows, enables detailed feasibili
 and assists in finding optimal procurement options.
 
 > [!TIP]
-> **Watch our Demo Video:** [Link to Video (Placeholder)](https://youtube.com)
+> **Watch our Demo Video:** [Link to Video](https://www.youtube.com/watch?v=QuFLDyXQVxw)
 
 ## Getting Started (University Project Evaluation)
 
